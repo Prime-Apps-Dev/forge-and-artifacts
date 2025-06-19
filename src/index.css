@@ -19,7 +19,7 @@ body {
     font-weight: 700 !important;
     font-style: normal !important;
 }
-.text-shadow-glow { /* Оставляем на случай, если где-то еще используется, но для .font-cinzel он уже не нужен */
+.text-shadow-glow {
     text-shadow: 0 0 8px var(--accent-glow-color, #e67e22) !important;
 }
 .accent-glow-color { color: var(--accent-glow-color, #e67e22) !important; }
@@ -28,13 +28,10 @@ body {
     -ms-overflow-style: none; /* Скрывает скроллбар для IE/Edge */
     scrollbar-width: none; /* Скрывает скроллбар для Firefox */
 }
-/* Скрывает скроллбар для Webkit-браузеров (Chrome, Safari) */
 .tabs::-webkit-scrollbar,
 .left-panel::-webkit-scrollbar,
 .right-panel::-webkit-scrollbar,
-.overflow-y-auto::-webkit-scrollbar,
-/* НОВОЕ: Добавляем правило для скрытия скроллбара в описании SkillNode */
-.fade-scroll-content::-webkit-scrollbar { /* Этот класс больше не используется, но оставляем его в списке для полноты */
+.overflow-y-auto::-webkit-scrollbar {
     display: none;
 }
 
@@ -77,7 +74,6 @@ body {
 
 .tabs { overflow-x: auto; overflow-y: hidden; flex-wrap: nowrap; }
 
-/* Обновляем стили для .skills-tree-container и .skills-content */
 .skills-tree-container {
     position: relative;
     height: 100%;
@@ -107,4 +103,18 @@ body {
 @media (min-width: 1024px) {
     .left-panel { width: 60%; min-width: 60%; overflow-x: hidden; }
     .right-panel { width: 40%; min-width: 40%; overflow-x: hidden; }
+}
+
+/* Обновленные стили для контейнера тостов */
+.toast-container {
+    position: fixed !important; /* Гарантируем фиксированное позиционирование */
+    bottom: calc(16px + 64px + 8px) !important; /* Убедимся, что отступ от BottomBar сохраняется */
+    right: 16px !important; /* Отступ от правого края */
+    z-index: 10000 !important; /* Очень высокий z-index, чтобы быть поверх всего */
+    display: flex !important; /* Гарантируем flexbox */
+    flex-direction: column !important;
+    align-items: flex-end !important;
+    gap: 8px !important;
+    max-width: 320px !important;
+    pointer-events: none !important; /* Важно, чтобы не перехватывал клики */
 }
