@@ -1,12 +1,30 @@
-# React + Vite
+# Forge & Artifacts Beta Test
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Добро пожаловать в бета-версию Forge & Artifacts - инкрементальной кузнечной RPG!
 
-Currently, two official plugins are available:
+## Описание игры
+Forge & Artifacts — это уникальная игра-кликер, где вы станете великим кузнецом. Вы будете добывать руду, плавить слитки, ковать легендарные артефакты, управлять своей мастерской, нанимать подмастерьев, торговать на рынке, выполнять заказы фракций и даже путешествовать между регионами в поисках новых материалов и знаний.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Цель бета-теста
+Мы ищем вашу помощь в тестировании игры, чтобы найти ошибки, оценить баланс и получить обратную связь по игровому процессу и вашему опыту.
 
-## Expanding the ESLint configuration
+## Как играть
+[Здесь вы можете кратко описать основные механики: клик по наковальне, вкладки, ресурсы, навыки и т.д.]
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Ссылка на игру
+[Здесь будет ссылка на развернутую игру на Netlify, которую мы получим позже]
+
+## Обратная связь
+Если вы столкнулись с ошибкой или у вас есть предложения, пожалуйста, свяжитесь с нами:
+* Discord: [Ваш ник в Discord]
+* Email: [Ваш email]
+* Или создайте Issue прямо здесь, на GitHub: [Ссылка на Issues вашего репозитория]
+
+## Технологии
+* React
+* Vite
+* Tailwind CSS
+* Tone.js
+
+---
+Спасибо за вашу помощь!
