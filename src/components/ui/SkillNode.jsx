@@ -1,6 +1,8 @@
+// src/components/ui/SkillNode.jsx
 import React, { memo } from 'react';
 import { definitions } from '../../data/definitions';
 import { formatCosts } from '../../utils/helpers';
+import Tooltip from './Tooltip'; // Убедитесь, что Tooltip импортирован
 
 const SkillNode = memo(({ skillId, gameState, onBuySkill }) => {
     const skill = definitions.skills[skillId];
@@ -8,15 +10,11 @@ const SkillNode = memo(({ skillId, gameState, onBuySkill }) => {
 
     const isPurchased = gameState.purchasedSkills && gameState.purchasedSkills[skillId];
 
-    // ИЗМЕНЕНИЕ: Новая логика проверки требований
     const requirementsMet = skill.requires.every(reqId => {
         const requiredSkillDef = definitions.skills[reqId];
-        // Если это первое прохождение И требуемый навык заблокирован для первого прохождения (firstPlaythroughLocked),
-        // то это требование игнорируется (считается выполненным для целей разблокировки следующего навыка).
         if (gameState.isFirstPlaythrough && requiredSkillDef?.firstPlaythroughLocked) {
             return true;
         }
-        // В противном случае, навык должен быть куплен.
         return gameState.purchasedSkills && gameState.purchasedSkills[reqId];
     });
     
@@ -74,37 +72,44 @@ const SkillNode = memo(({ skillId, gameState, onBuySkill }) => {
     }
     
     return (
-        <div
-            className={`interactive-element w-48 h-56 p-3 border-2 rounded-lg text-center flex flex-col transition-all duration-200 ${nodeClass}`}
-            onClick={() => {
-                if (!isPurchased && !isLocked) {
-                    onBuySkill(skillId);
-                } else if (isLockedByFirstPlaythrough) {
-                    // Можно добавить тост, если хотим информировать пользователя
-                    // showToast("Этот навык будет доступен после первого Переселения!", "info");
-                }
-            }}
-        >
-            <div className="w-full flex items-center justify-center mb-2">
-                <span className={`material-icons-outlined text-4xl`}>{skill.icon}</span>
-            </div>
-            <h4 className="font-cinzel text-sm font-bold">{skill.name}</h4>
-            <div className="fade-scroll-wrapper my-1">
-                <p className="text-xs text-gray-400 fade-scroll-content">
+        <Tooltip text={skill.description}> {/* Тултип теперь берет описание напрямую */}
+            <div
+                className={`interactive-element w-48 h-56 p-3 border-2 rounded-lg text-center flex flex-col transition-all duration-200 ${nodeClass}`}
+                onClick={() => {
+                    if (!isPurchased && !isLocked) {
+                        onBuySkill(skillId);
+                    } else if (isLockedByFirstPlaythrough) {
+                        // showToast("Этот навык будет доступен после первого Переселения!", "info");
+                    }
+                }}
+            >
+                <div className="w-full flex items-center justify-center mb-2">
+                    <span className={`material-icons-outlined text-4xl`}>{skill.icon}</span>
+                </div>
+                <h4 className="font-cinzel text-sm font-bold">{skill.name}</h4>
+                {/* ИЗМЕНЕНО: Удалены классы fade-scroll-wrapper и fade-scroll-content, тени */}
+                <p className="text-xs text-gray-400 my-1 overflow-y-auto flex-grow">
+                    {/* УДАЛЕНА АНИМАЦИЯ И ЗАГЛУШКА ПРОКРУТКИ */}
                     {skill.description}
                 </p>
+                {/* УДАЛЕНА ТЕНЬ СВЕРХУ/СНИЗУ */}
+                {/* <div className="fade-scroll-wrapper my-1">
+                    <p className="text-xs text-gray-400 fade-scroll-content">
+                        {skill.description}
+                    </p>
+                </div> */}
+                {
+                    isPurchased ? (
+                        <span className="font-bold mt-1 text-sm">Изучено</span>
+                    ) : isLockedByFirstPlaythrough ? (
+                        <span className="font-bold mt-1 text-sm text-red-400">После Переселения</span>
+                    ) : (
+                        <div className='mt-1 text-sm flex flex-col items-start w-full' dangerouslySetInnerHTML={{ __html: formatCosts(displayCosts, gameState) }}></div>
+                    )
+                }
+                {isOffSpec && !isPurchased && <div className='text-xs text-indigo-400'>(Вне специализации)</div>}
             </div>
-            {
-                isPurchased ? (
-                    <span className="font-bold mt-1 text-sm">Изучено</span>
-                ) : isLockedByFirstPlaythrough ? (
-                    <span className="font-bold mt-1 text-sm text-red-400">После Переселения</span>
-                ) : (
-                    <div className='mt-1 text-sm flex flex-col items-start w-full' dangerouslySetInnerHTML={{ __html: formatCosts(displayCosts, gameState) }}></div>
-                )
-            }
-            {isOffSpec && !isPurchased && <div className='text-xs text-indigo-400'>(Вне специализации)</div>}
-        </div>
+        </Tooltip>
     )
 });
 

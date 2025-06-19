@@ -30,7 +30,6 @@ import WorldMapModal from './components/modals/WorldMapModal';
 import EternalSkillsView from './components/views/EternalSkillsView';
 import AudioVisualizer from './components/effects/AudioVisualizer';
 import AchievementRewardModal from './components/modals/AchievementRewardModal';
-import AvatarSelectionModal from './components/modals/AvatarSelectionModal'; // <-- НОВЫЙ ИМПОРТ
 
 const LeftPanelButton = memo(({ viewId, icon, label, onClick, activeView }) => (
     <button onClick={() => onClick(viewId)} className={`interactive-element h-full flex-shrink-0 min-w-max px-4 font-cinzel text-base flex items-center justify-center gap-2 border-b-4 ${activeView === viewId ? 'text-orange-400 border-orange-400 bg-black/20' : 'text-gray-500 border-transparent hover:text-orange-400/70'}`}>
@@ -54,7 +53,7 @@ export default function App() {
         isWorldMapModalOpen,
         isAchievementRewardModalOpen,
         achievementToDisplay,
-        isAvatarSelectionModalOpen, // <-- НОВОЕ СОСТОЯНИЕ
+        isAvatarSelectionModalOpen,
         handlers,
         removeToast,
         activeInfoModal,
@@ -74,21 +73,34 @@ export default function App() {
     useEffect(() => {
         const handleWheelScroll = (evt, element) => {
             if (element) {
-                evt.preventDefault();
+                evt.preventDefault(); // Предотвращаем дефолтное поведение (например, вертикальную прокрутку всей страницы)
                 element.scrollLeft += evt.deltaY;
             }
         };
         const leftTabsElement = leftTabsRef.current;
         const rightTabsElement = rightTabsRef.current;
+        
+        // Обработчик для левой панели
         const leftWheelHandler = (e) => handleWheelScroll(e, leftTabsElement);
+        if (leftTabsElement) {
+            leftTabsElement.addEventListener('wheel', leftWheelHandler, { passive: false }); // { passive: false } для preventDefault
+        }
+
+        // НОВОЕ: Обработчик для правой панели
         const rightWheelHandler = (e) => handleWheelScroll(e, rightTabsElement);
-        if (leftTabsElement) leftTabsElement.addEventListener('wheel', leftWheelHandler);
-        if (rightTabsElement) rightTabsElement.removeEventListener('wheel', rightWheelHandler);
+        if (rightTabsElement) {
+            rightTabsElement.addEventListener('wheel', rightWheelHandler, { passive: false }); // { passive: false } для preventDefault
+        }
+
         return () => {
-            if (leftTabsElement) leftTabsElement.removeEventListener('wheel', leftWheelHandler);
-            if (rightTabsElement) rightTabsElement.removeEventListener('wheel', rightWheelHandler);
+            if (leftTabsElement) {
+                leftTabsElement.removeEventListener('wheel', leftWheelHandler);
+            }
+            if (rightTabsElement) { // НОВОЕ: Удаляем обработчик для правой панели
+                rightTabsElement.removeEventListener('wheel', rightWheelHandler);
+            }
         };
-    }, []);
+    }, []); // Зависимости: пустой массив, чтобы эффект выполнялся один раз
 
     const handleLeftViewChange = (viewId) => { audioController.play('click', 'C4', '16n'); setActiveLeftView(viewId); };
     const handleRightViewChange = (viewId) => { audioController.play('click', 'C4', '16n'); setActiveRightView(viewId); };
@@ -133,7 +145,7 @@ export default function App() {
             {isAvatarSelectionModalOpen && (
                 <AvatarSelectionModal
                     isOpen={isAvatarSelectionModalOpen}
-                    onClose={handlers.handleCloseAvatarSelectionModal} // Будет создано в usePlayerActions
+                    onClose={handlers.handleCloseAvatarSelectionModal}
                     gameState={displayedGameState}
                     onSelectAvatar={handlers.handleSelectAvatar}
                 />

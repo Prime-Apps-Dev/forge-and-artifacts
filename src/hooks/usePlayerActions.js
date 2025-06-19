@@ -23,7 +23,8 @@ export function usePlayerActions(
     setIsWorldMapModalOpen,
     setIsAchievementRewardModalOpen,
     setAchievementToDisplay,
-    setIsAvatarSelectionModalOpen // <-- ПРИНИМАЕМ НОВОЕ СОСТОЯНИЕ
+    setIsAvatarSelectionModalOpen,
+    setIsCreditsModalOpen // <-- ПРИНИМАЕМ НОВОЕ СОСТОЯНИЕ
 ) {
     const clickData = useRef({ count: 0, lastTime: 0 });
 
@@ -108,19 +109,31 @@ export function usePlayerActions(
         setAchievementToDisplay(null);
     }, [showToast, setIsAchievementRewardModalOpen, setAchievementToDisplay]);
 
-    // НОВОЕ: Открытие модалки выбора аватара
     const handleOpenAvatarSelectionModal = useCallback(() => {
         setIsAvatarSelectionModalOpen(true);
     }, [setIsAvatarSelectionModalOpen]);
 
-    // НОВОЕ: Выбор аватара
+    const handleCloseAvatarSelectionModal = useCallback(() => {
+        setIsAvatarSelectionModalOpen(false);
+    }, [setIsAvatarSelectionModalOpen]);
+
+    // НОВОЕ: Открытие модалки Благодарностей
+    const handleOpenCreditsModal = useCallback(() => {
+        setIsCreditsModalOpen(true);
+    }, [setIsCreditsModalOpen]);
+
+    // НОВОЕ: Закрытие модалки Благодарностей
+    const handleCloseCreditsModal = useCallback(() => {
+        setIsCreditsModalOpen(false);
+    }, [setIsCreditsModalOpen]);
+
     const handleSelectAvatar = useCallback((avatarId) => {
         updateState(state => {
             state.playerAvatarId = avatarId;
             showToast(`Аватар изменен на "${definitions.avatars[avatarId]?.name}"!`, 'info');
             return state;
         });
-        setIsAvatarSelectionModalOpen(false); // Закрываем модалку после выбора
+        setIsAvatarSelectionModalOpen(false);
     }, [updateState, showToast, setIsAvatarSelectionModalOpen]);
 
 
@@ -574,8 +587,11 @@ export function usePlayerActions(
             handleCloseWorldMapModal,
             handleCloseAchievementRewardModal,
             handleClaimAchievementReward,
-            handleOpenAvatarSelectionModal, // <-- ВОЗВРАЩАЕМ НОВУЮ ФУНКЦИЮ
-            handleSelectAvatar, // <-- ВОЗВРАЩАЕМ НОВУЮ ФУНКЦИЮ
+            handleOpenAvatarSelectionModal,
+            handleCloseAvatarSelectionModal, // <-- ВОЗВРАЩАЕМ НОВУЮ ФУНКЦИЮ
+            handleSelectAvatar,
+            handleOpenCreditsModal, // <-- ВОЗВРАЩАЕМ НОВУЮ ФУНКЦИЮ
+            handleCloseCreditsModal, // <-- ВОЗВРАЩАЕМ НОВУЮ ФУНКЦИЮ
             handleSelectRegion,
             checkForNewQuests: (state) => checkForNewQuests(state, showToast),
             handleBuySkill,
@@ -612,7 +628,7 @@ export function usePlayerActions(
             handleCloseRewardModal: coreHandlers.handleCloseRewardModal,
         };
     }, [
-        handleCloseInfoModal, handleCloseWorldMapModal, handleCloseAchievementRewardModal, handleClaimAchievementReward, handleOpenAvatarSelectionModal, handleSelectAvatar, showToast, updateState, canAffordAndPay,
+        handleCloseInfoModal, handleCloseWorldMapModal, handleCloseAchievementRewardModal, handleClaimAchievementReward, handleOpenAvatarSelectionModal, handleCloseAvatarSelectionModal, handleSelectAvatar, handleOpenCreditsModal, handleCloseCreditsModal, showToast, updateState, canAffordAndPay,
         handleBuySkill, handleSelectSpecialization, handleBuyFactionUpgrade,
         handleVolumeChange, handleMoveItemToShelf, handleRemoveItemFromShelf,
         handleGenerateNewOrderInQueue, handleAcceptOrder, handleStartFreeCraft,

@@ -2,7 +2,7 @@
 
 import { regions as importedRegions } from './regions.js';
 import { eternalSkills as importedEternalSkills } from './eternalSkills.js';
-import { avatars as importedAvatars } from './avatars.js'; // <-- НОВЫЙ ИМПОРТ
+import { avatars as importedAvatars } from './avatars.js';
 
 export const {
     factions,
@@ -239,13 +239,13 @@ export const {
     },
 
     recipes: {
-        iron: { name: "Железный слиток", input: { ironOre: 10 }, output: { ironIngots: 1 }, requiredProgress: 20 },
-        copper: { name: "Медный слиток", input: { copperOre: 10 }, output: { copperIngots: 1 }, requiredProgress: 20, requiredSkill: 'findCopper' },
-        mithril: { name: "Мифриловый слиток", input: { mithrilOre: 15 }, output: { mithrilIngots: 1 }, requiredProgress: 30, requiredSkill: 'mithrilProspecting' },
-        adamantite: { name: "Адамантитовый слиток", input: { adamantiteOre: 20 }, output: { adamantiteIngots: 1 }, requiredProgress: 50, requiredSkill: 'adamantiteMining' },
-        bronze: { name: "Бронзовый слиток", input: { ironIngots: 1, copperIngots: 1 }, output: { bronzeIngots: 1 }, requiredSkill: 'artOfAlloys' },
-        sparksteel: { name: "Слиток Искростали", input: { bronzeIngots: 2, sparks: 1000 }, output: { sparksteelIngots: 1 }, requiredSkill: 'artOfAlloys' },
-        arcanite: { name: "Арканитовый слиток", input: { adamantiteIngots: 1, matter: 500 }, output: { arcaniteIngots: 1 }, requiredSkill: 'arcaneMetallurgy' },
+        iron: { name: "Железный слиток", input: { ironOre: 10 }, output: { ironIngots: 1 }, requiredProgress: 20, icon: '/img/ingots/iron_ingot.png' }, // <-- ИЗМЕНЕНО
+        copper: { name: "Медный слиток", input: { copperOre: 10 }, output: { copperIngots: 1 }, requiredProgress: 20, requiredSkill: 'findCopper', icon: '/img/ingots/copper_ingot.png' }, // <-- ИЗМЕНЕНО
+        mithril: { name: "Мифриловый слиток", input: { mithrilOre: 15 }, output: { mithrilIngots: 1 }, requiredProgress: 30, requiredSkill: 'mithrilProspecting', icon: '/img/ingots/mithril_ingot.png' }, // <-- ИЗМЕНЕНО
+        adamantite: { name: "Адамантитовый слиток", input: { adamantiteOre: 20 }, output: { adamantiteIngots: 1 }, requiredProgress: 50, requiredSkill: 'adamantiteMining', icon: '/img/ingots/adamantite_ingot.png' }, // <-- ИЗМЕНЕНО
+        bronze: { name: "Бронзовый слиток", input: { ironIngots: 1, copperIngots: 1 }, output: { bronzeIngots: 1 }, requiredSkill: 'artOfAlloys', icon: '/img/ingots/bronze_ingot.png' }, // <-- ИЗМЕНЕНО
+        sparksteel: { name: "Слиток Искростали", input: { bronzeIngots: 2, sparks: 1000 }, output: { sparksteelIngots: 1 }, requiredSkill: 'artOfAlloys', icon: '/img/ingots/sparksteel_ingot.png' }, // <-- ИЗМЕНЕНО
+        arcanite: { name: "Арканитовый слиток", input: { adamantiteIngots: 1, matter: 500 }, output: { arcaniteIngots: 1 }, requiredSkill: 'arcaneMetallurgy', icon: '/img/ingots/arcanite_ingot.png' }, // <-- ИЗМЕНЕНО
     },
 
     worldEvents: [
@@ -287,8 +287,8 @@ export const {
             bonusReward: { sparksPerQualityPoint: 100 }
         }
     },
-    // Вместо пустых объектов, присваиваем импортированные!
-    regions: {},
-    eternalSkills: {},
-    avatars: {} // <-- НОВЫЙ ЭКСПОРТ (будет заполнен из importedAvatars)
+    // Важно: здесь присваиваем ИМПОРТИРОВАННЫЕ объекты, а не пустые!
+    regions: importedRegions,
+    eternalSkills: importedEternalSkills,
+    avatars: importedAvatars // <-- НОВЫЙ ЭКСПОРТ (будет заполнен из importedAvatars)
 };

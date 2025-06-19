@@ -45,12 +45,14 @@ export const getItemImageSrc = (itemKey, size = 64) => {
         return `https://placehold.co/${size}x${size}/333/FFF?text=ITEM`;
     }
 
-    if (itemDef.icon.startsWith('img_placeholder:')) {
-        const text = itemDef.icon.split(':')[1].split('_').map(n => n.slice(0, 1)).join('').toUpperCase();
-        return `https://placehold.co/${size}x${size}/333/FFF?text=${text}`;
-    }
+    // ИЗМЕНЕНО: Удалена логика img_placeholder:
+    // if (itemDef.icon.startsWith('img_placeholder:')) {
+    //     const text = itemDef.icon.split(':')[1].split('_').map(n => n.slice(0, 1)).join('').toUpperCase();
+    //     return `https://placehold.co/${size}x${size}/333/FFF?text=${text}`;
+    // }
     
-    return `https://placehold.co/${size}x${size}/333/FFF?text=ITEM`;
+    // Если icon теперь является прямым путем, просто возвращаем его
+    return itemDef.icon; // Теперь icon - это прямой путь к файлу
 };
 
 // ИЗМЕНЕНИЕ: Форматирование множественной стоимости - убран плюсик, добавлены пробелы
@@ -92,12 +94,11 @@ export const formatCosts = (costs, state) => {
 
         const textColor = currentAmount >= costAmount ? 'text-white' : 'text-red-400';
 
-        // ИЗМЕНЕНИЕ: Используем formatNumber для сокращенного отображения стоимости
         return (
             `<span class="flex items-center gap-1 ${textColor} whitespace-nowrap">` +
             `<span class="material-icons-outlined text-sm ${colorClass}">${icon}</span>` +
-            `${formatNumber(costAmount)} <span class="text-xs">${resourceName}</span>` + // Применяем formatNumber здесь
+            `${formatNumber(costAmount)} <span class="text-xs">${resourceName}</span>` +
             `</span>`
         );
-    }).join(' '); // ИЗМЕНЕНИЕ: Разделяем элементы пробелом вместо плюсика
+    }).join(' ');
 };
