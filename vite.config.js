@@ -5,4 +5,7 @@ export default defineConfig({
   plugins: [
     react(),
   ],
+  build: {
+    outDir: 'dist', // Папка, куда Vite соберет проект (по умолчанию 'dist')
+  }
 });
