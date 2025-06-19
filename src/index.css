@@ -1,0 +1,161 @@
+/* src/index.css */
+@import 'tailwindcss';
+
+/* Общие стили для фона страницы и базового текста */
+body {
+    font-family: 'Roboto', sans-serif !important;
+    background-color: #1c1c1e !important;
+    overflow: hidden;
+    background-attachment: fixed;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+/* ИЗМЕНЕНО: Заменяем импорт Old Standard TT на Yeseva One */
+@import url('https://fonts.googleapis.com/css2?family=Yeseva+One&display=swap');
+
+/* ИЗМЕНЕНО: Обновляем правило для .font-cinzel */
+.font-cinzel {
+    font-family: "Dela Gothic One", sans-serif !important;
+    font-weight: 700 !important; /* Устанавливаем вес, так как Yeseva One обычно имеет один вес */
+    font-style: normal !important; /* Устанавливаем стиль */
+}
+.text-shadow-glow { text-shadow: 0 0 8px var(--accent-glow-color, #e67e22) !important; }
+.accent-glow-color { color: var(--accent-glow-color, #e67e22) !important; }
+
+.tabs, .left-panel, .right-panel, .overflow-y-auto {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar, .left-panel::-webkit-scrollbar, .right-panel::-webkit-scrollbar, .overflow-y-auto::-webkit-scrollbar {
+    display: none;
+}
+
+@keyframes toast-fade-in-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up { animation: toast-fade-in-up 0.5s ease-out forwards !important; }
+
+/* Анимация для плавного исчезновения тоста */
+@keyframes toast-fade-out {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(-20px); } /* Смещаем вверх при исчезновении */
+}
+/* Класс, который будет применяться при исчезновении */
+.animate-fade-out {
+    animation: toast-fade-out 0.4s ease-out forwards !important;
+}
+
+
+.interactive-element { transition: transform 0.1s ease, box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease !important; }
+.interactive-element:not(:disabled):active {
+    transform: scale(0.95) !important;
+    transition-duration: 0.05s !important;
+}
+
+.modal-backdrop { animation: fade-in 0.3s ease-out forwards !important; }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+.modal-content { animation: fade-in-up 0.4s ease-out forwards !important; }
+
+@keyframes anvil-strike {
+  0% { transform: translateY(0); }
+  20% { transform: translateY(-5px) rotate(-3deg); }
+  50% { transform: translateY(2px); }
+  100% { transform: translateY(0); }
+}
+.anvil-working { animation: anvil-strike 0.2s ease-out !important; }
+
+.icon-sprite { width: 32px !important; height: 32px !important; fill: currentColor !important; }
+.icon-sprite-lg { width: 64px !important; height: 64px !important; fill: currentColor !important; }
+
+.tabs { overflow-x: auto; overflow-y: hidden; flex-wrap: nowrap; }
+
+/* Обновляем стили для .skills-tree-container и .skills-content */
+.skills-tree-container {
+    position: relative;
+    height: 100%; /* Убежимся, что контейнер занимает всю доступную высоту */
+    width: 100%;
+    overflow-y: auto; /* Позволяем прокручиваться только внутри этого контейнера */
+    padding-top: 4px; /* Отступ сверху, чтобы заголовок не прилипал к краям */
+    padding-bottom: 4px; /* Отступ снизу */
+}
+
+.skills-tree-container .skills-content {
+    position: relative;
+    z-index: 1;
+    padding-top: 20px; /* Дополнительный отступ для содержимого, если нужно */
+    padding-bottom: 20px;
+}
+
+.skills-tree-container .sticky { /* Целевой класс для заголовков, чтобы они прилипали внутри контейнера */
+    position: sticky;
+    top: 0;
+    background-color: var(--background-color, #1f2937); /* Или другой фон, чтобы перекрыть прокручивающийся контент */
+    z-index: 2; /* Заголовок должен быть выше остального контента, но ниже вкладок */
+}
+
+.skills-svg { position: absolute; top: 0; left: 0; width: 100%; pointer-events: none; z-index: 0; }
+.skills-row > div { position: relative; z-index: 1; width: 192px; height: 224px; flex-shrink: 0; }
+
+@media (min-width: 1024px) {
+    .left-panel { width: 60%; min-width: 60%; overflow-x: hidden; }
+    .right-panel { width: 40%; min-width: 40%; overflow-x: hidden; }
+}
+
+/* Обновленные стили для контейнера тостов */
+.toast-container {
+    position: fixed;
+    bottom: calc(16px + 64px + 8px);
+    right: 16px;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    max-width: 320px;
+    pointer-events: none;
+}
+
+
+/* === СТИЛИ ДЛЯ СКРОЛЛИРУЕМОГО ОПИСАНИЯ В SkillNode === */
+.fade-scroll-wrapper {
+    position: relative;
+    overflow: hidden;
+    flex-grow: 1;
+}
+
+.fade-scroll-wrapper::before,
+.fade-scroll-wrapper::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 15px;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.fade-scroll-wrapper::before {
+    top: 0;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.2) 0%, transparent 100%);
+}
+
+.fade-scroll-wrapper::after {
+    bottom: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.2) 0%, transparent 100%);
+}
+
+.fade-scroll-content {
+    height: 100%;
+    overflow-y: auto;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.fade-scroll-content::-webkit-scrollbar {
+    display: none;
+}
