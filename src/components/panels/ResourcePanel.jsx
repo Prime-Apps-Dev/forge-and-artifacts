@@ -8,23 +8,24 @@ const ResourcePanel = React.memo(({ gameState }) => {
         <div className="panel-section">
             <h3 className="font-cinzel text-lg text-gray-400 border-b border-gray-700/50 pb-1 mb-4">Склад</h3>
             <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                <ResourceItem icon="bolt" name="Искры" initialValue={gameState.sparks} iconClass="text-yellow-400" />
-                <ResourceItem icon="bubble_chart" name="Материя" initialValue={gameState.matter} iconClass="text-purple-400" />
+                {/* ИЗМЕНЕНО: Искры и Материя - используем иконки Material Icons */}
+                <ResourceItem icon="bolt" name="Искры" initialValue={gameState.sparks} iconClass="text-yellow-400" iconType="icon" />
+                <ResourceItem icon="bubble_chart" name="Материя" initialValue={gameState.matter} iconClass="text-purple-400" iconType="icon" />
                 
-                <ResourceItem icon="lens" name="Железная руда" initialValue={gameState.ironOre} iconClass="text-gray-400" />
-                {gameState.purchasedSkills.findCopper && <ResourceItem icon="filter_alt" name="Медная руда" initialValue={gameState.copperOre} iconClass="text-orange-400" />}
-                {gameState.purchasedSkills.mithrilProspecting && <ResourceItem icon="ac_unit" name="Мифриловая руда" initialValue={gameState.mithrilOre} iconClass="text-cyan-400" />}
-                {gameState.purchasedSkills.adamantiteMining && <ResourceItem icon="diamond" name="Адамантитовая руда" initialValue={gameState.adamantiteOre} iconClass="text-indigo-400" />}
+                {/* Руды (оставляем изображения, если они были настроены) */}
+                <ResourceItem iconType="img" iconSrc={definitions.resourceIcons.ironOre} name="Железная руда" initialValue={gameState.ironOre} />
+                {gameState.purchasedSkills.findCopper && <ResourceItem iconType="img" iconSrc={definitions.resourceIcons.copperOre} name="Медная руда" initialValue={gameState.copperOre} />}
+                {gameState.purchasedSkills.mithrilProspecting && <ResourceItem iconType="img" iconSrc={definitions.resourceIcons.mithrilOre} name="Мифриловая руда" initialValue={gameState.mithrilOre} />}
+                {gameState.purchasedSkills.adamantiteMining && <ResourceItem iconType="img" iconSrc={definitions.resourceIcons.adamantiteOre} name="Адамантитовая руда" initialValue={gameState.adamantiteOre} />}
                 
-                <ResourceItem icon="view_in_ar" name="Железные слитки" initialValue={gameState.ironIngots} iconClass="text-gray-300" />
-                {gameState.purchasedSkills.findCopper && <ResourceItem icon="view_in_ar" name="Медные слитки" initialValue={gameState.copperIngots} iconClass="text-orange-400" />}
-                {gameState.purchasedSkills.artOfAlloys && <ResourceItem icon="shield" name="Бронзовые слитки" initialValue={gameState.bronzeIngots} iconClass="text-orange-600" />}
-                
-                {gameState.purchasedSkills.artOfAlloys && <ResourceItem icon="bolt" name="Слитки Искростали" initialValue={gameState.sparksteelIngots} iconClass="text-blue-400" />}
-
-                {gameState.purchasedSkills.mithrilProspecting && <ResourceItem icon="shield_moon" name="Мифриловые слитки" initialValue={gameState.mithrilIngots} iconClass="text-cyan-300" />}
-                {gameState.purchasedSkills.adamantiteMining && <ResourceItem icon="security" name="Адамантитовые слитки" initialValue={gameState.adamantiteIngots} iconClass="text-indigo-300" />}
-                {gameState.purchasedSkills.arcaneMetallurgy && <ResourceItem icon="auto_fix_high" name="Арканитовые слитки" initialValue={gameState.arcaniteIngots} iconClass="text-fuchsia-500" />}
+                {/* Слитки (используют изображения) */}
+                <ResourceItem iconType="img" iconSrc={definitions.recipes.iron.icon} name="Железные слитки" initialValue={gameState.ironIngots} />
+                {gameState.purchasedSkills.findCopper && <ResourceItem iconType="img" iconSrc={definitions.recipes.copper.icon} name="Медные слитки" initialValue={gameState.copperIngots} />}
+                {gameState.purchasedSkills.artOfAlloys && <ResourceItem iconType="img" iconSrc={definitions.recipes.bronze.icon} name="Бронзовые слитки" initialValue={gameState.bronzeIngots} />}
+                {gameState.purchasedSkills.artOfAlloys && <ResourceItem iconType="img" iconSrc={definitions.recipes.sparksteel.icon} name="Слитки Искростали" initialValue={gameState.sparksteelIngots} />}
+                {gameState.purchasedSkills.mithrilProspecting && <ResourceItem iconType="img" iconSrc={definitions.recipes.mithril.icon} name="Мифриловые слитки" initialValue={gameState.mithrilIngots} />}
+                {gameState.purchasedSkills.adamantiteMining && <ResourceItem iconType="img" iconSrc={definitions.recipes.adamantite.icon} name="Адамантитовые слитки" initialValue={gameState.adamantiteIngots} />}
+                {gameState.purchasedSkills.arcaneMetallurgy && <ResourceItem iconType="img" iconSrc={definitions.recipes.arcanite.icon} name="Арканитовые слитки" initialValue={gameState.arcaniteIngots} />}
             </ul>
 
             {Object.values(gameState.specialItems).some(val => val > 0) && (
@@ -32,6 +33,7 @@ const ResourcePanel = React.memo(({ gameState }) => {
             )}
            
             <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {/* Особые предметы (оставляем Material Icons, так как они не имеют отдельных изображений в items.js) */}
                 <ResourceItem icon="diamond" name="Самоцветы" initialValue={gameState.specialItems.gem} iconClass="text-pink-400" />
                 {gameState.specialItems.expeditionMap > 0 && <ResourceItem icon="map" name="Карты вылазок" initialValue={gameState.specialItems.expeditionMap} iconClass="text-yellow-600" />}
                 {gameState.specialItems.material_guardianHeart > 0 && <ResourceItem icon="heart_plus" name="Сердце стража" initialValue={gameState.specialItems.material_guardianHeart} iconClass="text-red-400" />}

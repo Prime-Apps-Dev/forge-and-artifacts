@@ -20,7 +20,7 @@ const MineView = ({ gameState, handlers }) => {
                     <MineButton
                         oreType="ironOre"
                         name="Железная руда"
-                        imgSrc="https://placehold.co/150x150/808080/FFFFFF?text=Fe"
+                        imgSrc="/img/ores/iron_ore.png"
                         onClick={handlers.handleMineOre}
                     />
                     <p className="text-sm text-gray-400 mt-2">В наличии: {formatNumber(gameState.ironOre)}</p>
@@ -32,7 +32,7 @@ const MineView = ({ gameState, handlers }) => {
                         <MineButton
                             oreType="copperOre"
                             name="Медная руда"
-                            imgSrc="https://placehold.co/150x150/b87333/FFFFFF?text=Cu"
+                            imgSrc="/img/ores/copper_ore.png"
                             onClick={handlers.handleMineOre}
                             isLocked={false}
                             lockText=""
@@ -47,7 +47,7 @@ const MineView = ({ gameState, handlers }) => {
                         <MineButton
                             oreType="mithrilOre"
                             name="Мифриловая руда"
-                            imgSrc="https://placehold.co/150x150/e0ffff/000000?text=Mithril"
+                            imgSrc="/img/ores/mithril_ore.png"
                             onClick={handlers.handleMineOre}
                             isLocked={false}
                             lockText=""
@@ -62,7 +62,7 @@ const MineView = ({ gameState, handlers }) => {
                                 oreType="mithrilOre"
                                 name="Мифриловая руда"
                                 description=""
-                                imgSrc="https://placehold.co/150x150/e0ffff/000000?text=Mithril"
+                                imgSrc="/img/ores/mithril_ore.png"
                                 onClick={() => {}} // Пустой onClick
                                 isLocked={true}
                                 lockText="Доступно после первого Переселения."
@@ -78,7 +78,7 @@ const MineView = ({ gameState, handlers }) => {
                         <MineButton
                             oreType="adamantiteOre"
                             name="Адамантитовая руда"
-                            imgSrc="https://placehold.co/150x150/483d8b/FFFFFF?text=Adamantite"
+                            imgSrc="/img/ores/adamantite_ore.png"
                             onClick={handlers.handleMineOre}
                             isLocked={false}
                             lockText=""
@@ -93,7 +93,7 @@ const MineView = ({ gameState, handlers }) => {
                                 oreType="adamantiteOre"
                                 name="Адамантитовая руда"
                                 description=""
-                                imgSrc="https://placehold.co/150x150/483d8b/FFFFFF?text=Adamantite"
+                                imgSrc="/img/ores/adamantite_ore.png"
                                 onClick={() => {}}
                                 isLocked={true}
                                 lockText="Доступно после первого Переселения."

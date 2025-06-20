@@ -7,35 +7,37 @@ const AchievementCard = memo(({ achievement, status, index }) => {
     const progressPercentage = status.target > 0 ? (status.current / status.target) * 100 : 0;
     const isComplete = status.isComplete;
 
+    // ИЗМЕНЕНО: Используем achievement.icon напрямую
+    const imgSrc = achievement.icon; // Теперь icon содержит прямой путь
+
+    // Если по какой-то причине icon отсутствует, можно использовать заглушку
     const defaultImgSrc = 'https://placehold.co/128x128/333/FFF?text=ACH';
 
     return (
         <Tooltip text={achievement.description}>
             <div className={`
                 relative flex flex-col items-center justify-between
-                w-32 h-32 sm:w-36 sm:h-36 lg:w-40 lg:h-40 xl:w-48 xl:h-48 /* Адаптивные размеры */
+                w-32 h-32 sm:w-36 sm:h-36 lg:w-40 lg:h-40 xl:w-48 xl:h-48
                 bg-black/20 rounded-lg p-2
                 border-2 transition-all duration-200 ease-in-out
-                transform-gpu /* Для плавных анимаций */
-                z-10 /* Базовый z-index */
+                transform-gpu
+                z-10
                 
                 ${isComplete ? 'border-green-500 shadow-md shadow-green-500/20' : 'border-gray-700'}
                 
-                /* Стили для hover эффекта: СЛЕГКА УВЕЛИЧИВАЕМ И ПОДСВЕЧИВАЕМ НА МЕСТЕ */
-                hover:scale-105 /* Карточка слегка увеличится (например, на 5%) */
-                hover:border-orange-500 /* Рамка станет оранжевой */
-                hover:shadow-xl hover:shadow-orange-500/20 /* Усиленная оранжевая тень */
-                hover:z-20 /* Поднимаем над соседними */
-                /* УДАЛЕНО: hover:translate-x-1/4, так как мы хотим только увеличение на месте */
+                hover:scale-105
+                hover:border-orange-500
+                hover:shadow-xl hover:shadow-orange-500/20
+                hover:z-20
                 
-                backdrop-filter backdrop-blur-md /* Размытие фона за карточкой */
-                bg-opacity-80 /* Увеличим непрозрачность фона для лучшего эффекта размытия */
+                backdrop-filter backdrop-blur-md
+                bg-opacity-80
 
             `}>
                 {/* Квадратное изображение */}
                 <div className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-md flex-shrink-0">
                     <img
-                        src={defaultImgSrc}
+                        src={imgSrc || defaultImgSrc} // Используем imgSrc, с fallback на defaultImgSrc
                         alt={achievement.title}
                         className={`
                             object-cover w-full h-full

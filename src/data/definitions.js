@@ -7,7 +7,7 @@ import { specializations } from './definitions/specializations.js';
 import { factionUpgrades } from './definitions/factionUpgrades.js';
 import { regions } from './definitions/regions.js';
 import { eternalSkills } from './definitions/eternalSkills.js';
-import { avatars } from './definitions/avatars.js'; // <-- НОВЫЙ ИМПОРТ
+import { avatars } from './definitions/avatars.js';
 import {
     factions,
     reputationLevels,
@@ -21,7 +21,8 @@ import {
     recipes,
     worldEvents,
     gameConfig,
-    missions
+    missions,
+    resourceIcons // <-- НОВЫЙ ИМПОРТ И ЭКСПОРТ
 } from './definitions/main.js';
 
 export const definitions = {
@@ -33,7 +34,7 @@ export const definitions = {
     factionUpgrades,
     regions,
     eternalSkills,
-    avatars, // <-- НОВЫЙ ЭКСПОРТ
+    avatars,
     missions,
     factions,
     reputationLevels,
@@ -46,5 +47,6 @@ export const definitions = {
     shopUpgrades,
     recipes,
     worldEvents,
-    gameConfig
+    gameConfig,
+    resourceIcons // <-- НОВЫЙ ЭКСПОРТ
 };

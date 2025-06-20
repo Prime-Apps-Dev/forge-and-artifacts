@@ -503,7 +503,7 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
 
             <div id="forge-area" className="flex items-center justify-center">
                 <div onClick={handlers.handleStrikeAnvil} className={`interactive-element cursor-pointer rounded-full p-4 transition-transform ${isWorkButtonDisabled ? 'filter grayscale opacity-50' : ''} ${isWorking ? 'anvil-working' : ''}`}>
-                    <img src="/img/anvil.png" alt="Наковальня" className="w-48 h-48 drop-shadow-lg" />
+                    <img src="/img/ui/anvil.png" alt="Наковальня" className="w-48 h-48 drop-shadow-lg" />
                 </div>
             </div>
         </div>

@@ -2,7 +2,7 @@
 
 import * as Tone from 'tone';
 
-// ИЗМЕНЕНО: Исправлены пути к музыкальным трекам - теперь они абсолютные от корня сайта
+// ИЗМЕНЕНО: Исправлены пути к музыкальным трекам - теперь они абсолютные от корня сайта, БЕЗ 'public/'
 const musicTracks = [
     '/audio/cithare-medieval-1-307558.mp3',
     '/audio/fantasy-medieval-ambient-237371.mp3',

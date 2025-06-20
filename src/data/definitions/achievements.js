@@ -8,6 +8,7 @@ export const achievements = {
         title: 'Эхо Древних Мастеров',
         description: 'Мастер, создавший все Великие Артефакты, получает небывалое вдохновение, увеличивающее базовый доход в Искрах и Материи на 5%.',
         effectName: 'Вдохновение Мастера',
+        icon: '/img/achievements/main_goal.png', // <-- НОВОЕ ПОЛЕ ICON
         check: (state, defs) => {
             const completed = Object.values(state.artifacts).filter(a => a.status === 'completed').length;
             const total = Object.keys(defs.greatArtifacts).length;
@@ -26,6 +27,7 @@ export const achievements = {
         title: 'Золотые Нити Доверия',
         description: 'Ваша безупречная репутация с Торговой Гильдией делает вас желанным партнером, ускоряя продажу товаров в вашем магазине на 5%.',
         effectName: 'Признание Гильдии',
+        icon: '/img/achievements/faction_merchants.png', // <-- НОВОЕ ПОЛЕ ICON
         check: (state, defs) => {
             const exaltedThreshold = defs.reputationLevels.find(l => l.id === 'exalted').threshold;
             const currentRep = state.reputation.merchants || 0;
@@ -42,6 +44,7 @@ export const achievements = {
         title: 'Путь Неустрашимого',
         description: 'Ваш авторитет среди Авантюристов вдохновляет вас на более смелые удары, увеличивая прогресс за клик на 2.',
         effectName: 'Смелость Авантюриста',
+        icon: '/img/achievements/faction_adventurers.png', // <-- НОВОЕ ПОЛЕ ICON
         check: (state, defs) => {
             const exaltedThreshold = defs.reputationLevels.find(l => l.id === 'exalted').threshold;
             const currentRep = state.reputation.adventurers || 0;
@@ -58,6 +61,7 @@ export const achievements = {
         title: 'Корона Благосклонности',
         description: 'Благосклонность Королевского Двора открывает вам доступ к редким материалам, снижая стоимость Материи для навыков на 10%.',
         effectName: 'Благословение Короны',
+        icon: '/img/achievements/faction_court.png', // <-- НОВОЕ ПОЛЕ ICON
         check: (state, defs) => {
             const exaltedThreshold = defs.reputationLevels.find(l => l.id === 'exalted').threshold;
             const currentRep = state.reputation.court || 0;
@@ -75,6 +79,7 @@ export const achievements = {
         title: 'Энциклопедия Знаний',
         description: 'Изучение всех доступных навыков делает вас настоящим полиматом, значительно повышая эффективность ваших подмастерьев на 10%.',
         effectName: 'Мудрость Полимата',
+        icon: '/img/achievements/mastery_skills.png', // <-- НОВОЕ ПОЛЕ ICON
         check: (state, defs) => {
             const completed = Object.keys(state.purchasedSkills).length;
             const availableSkillsInCurrentPlaythrough = Object.values(defs.skills).filter(skill =>
@@ -94,6 +99,7 @@ export const achievements = {
         title: 'Хранитель Легенд',
         description: 'Выполнение всех особых заданий доказывает вашу универсальность и увеличивает награды в Искрах и Материи от квестов на 10%.',
         effectName: 'Заслуги Искателя',
+        icon: '/img/achievements/mastery_quests.png', // <-- НОВОЕ ПОЛЕ ICON
         check: (state, defs) => {
             const completed = state.journal.completedQuests.length;
             const total = Object.keys(defs.quests).length;
@@ -110,6 +116,7 @@ export const achievements = {
         title: 'Легион Помощников',
         description: 'Максимальное развитие вашего персонала приводит к открытию новых, более эффективных методов добычи, увеличивая пассивную генерацию всей руды на 0.2/сек.',
         effectName: 'Армия Подмастерьев',
+        icon: '/img/achievements/mastery_personnel.png', // <-- НОВОЕ ПОЛЕ ICON
         check: (state, defs) => {
             let completed = 0;
             const total = Object.keys(defs.personnel).length;
@@ -129,16 +136,14 @@ export const achievements = {
             console.log("Достижение 'Макс. персонал' применено: +0.2 к пассивной добыче руды.");
         }
     },
-    // НОВЫЕ ДОСТИЖЕНИЯ С РАЗНООБРАЗНЫМИ БОНУСАМИ
-    // Пример: Просто выдать ресурсы
     first_forge: {
         id: 'first_forge',
         category: 'Кузнечное Дело',
         title: 'Первые Искры',
         description: 'Вы выковали свой первый предмет. Получите скромное вознаграждение, чтобы продолжить свой путь.',
         effectName: '+500 Искр',
+        icon: '/img/achievements/first_forge.png', // <-- НОВОЕ ПОЛЕ ICON
         check: (state, defs) => {
-            // Проверяем, если inventory.length > 0
             return { current: state.inventory.length > 0 ? 1 : 0, target: 1, isComplete: state.inventory.length > 0 };
         },
         apply: (state) => {
@@ -146,17 +151,15 @@ export const achievements = {
             console.log("Достижение 'Первые Искры' применено: +500 Искр.");
         }
     },
-    // Пример: Бонус к скорости плавки
     master_smelter: {
         id: 'master_smelter',
         category: 'Мастерство',
         title: 'Плавильный Тигель',
         description: 'Вы переплавили 100 слитков. Ваши знания о металлах углубляются, увеличивая скорость плавки на 5%.',
         effectName: '+5% к скорости плавки',
+        icon: '/img/achievements/master_smelter.png', // <-- НОВОЕ ПОЛЕ ICON
         check: (state, defs) => {
-            // Проверяем количество переплавленных слитков (нужно добавить счетчик в gameState)
-            // Пока используем totalIronIngots, как заглушку, в реальной игре нужен счетчик произведенных слитков.
-            const totalIngotsSmelted = (state.ironIngots || 0) + (state.copperIngots || 0) + (state.mithrilIngots || 0) + (state.adamantiteIngots || 0); // Временно суммируем все слитки
+            const totalIngotsSmelted = (state.ironIngots || 0) + (state.copperIngots || 0) + (state.mithrilIngots || 0) + (state.adamantiteIngots || 0);
             return { current: totalIngotsSmelted, target: 100, isComplete: totalIngotsSmelted >= 100 };
         },
         apply: (state) => {
@@ -164,15 +167,14 @@ export const achievements = {
             console.log("Достижение 'Плавильный Тигель' применено: +5% к скорости плавки.");
         }
     },
-    // Пример: Добавление подмастерья (виртуально, через увеличение passiveGeneration)
     first_apprentice_hire: {
         id: 'first_apprentice_hire',
         category: 'Персонал',
         title: 'Первый Ученик',
         description: 'Вы наняли своего первого подмастерья. Он приносит вам вдохновение, увеличивая пассивную добычу железной руды на 0.1/сек.',
         effectName: '+0.1/сек Железной Руды',
+        icon: '/img/achievements/first_apprentice_hire.png', // <-- НОВОЕ ПОЛЕ ICON
         check: (state, defs) => {
-            // Проверяем, если хоть один подмастерье нанят (уровень > 0)
             const hasApprentice = Object.values(defs.personnel).some(p => (state.upgradeLevels[p.id] || 0) > 0);
             return { current: hasApprentice ? 1 : 0, target: 1, isComplete: hasApprentice };
         },
@@ -181,25 +183,20 @@ export const achievements = {
             console.log("Достижение 'Первый Ученик' применено: +0.1/сек Железной Руды.");
         }
     },
-    // Пример: Новая полка в магазине
     shop_expansion: {
         id: 'shop_expansion',
         category: 'Магазин',
         title: 'Магазинное Пространство',
         description: 'Вы продали 5 предметов в вашем магазине. Ваше дело расширяется, и вы открываете новую торговую полку.',
         effectName: '+1 Торговая Полка',
+        icon: '/img/achievements/shop_expansion.png', // <-- НОВОЕ ПОЛЕ ICON
         check: (state, defs) => {
-            // Нужно отслеживать количество проданных предметов.
-            // Пока нет прямого счетчика проданных предметов, используем shopReputation как прокси.
-            // В идеале, нужно добавить state.itemsSoldCount.
             return { current: state.shopReputation, target: 500, isComplete: state.shopReputation >= 500 };
         },
         apply: (state) => {
-            // Добавляем полку только если она еще не была добавлена этим достижением
-            if (!state.completedAchievements.includes('shop_expansion_applied')) { // Используем маркер
+            if (!state.completedAchievements.includes('shop_expansion_applied')) {
                 state.shopShelves.push({ itemId: null, customer: null, saleProgress: 0, saleTimer: 0 });
-                // Убедимся, что это достижение не добавляет полку повторно
-                state.completedAchievements.push('shop_expansion_applied'); // Временный маркер для предотвращения повтора
+                state.completedAchievements.push('shop_expansion_applied');
             }
             console.log("Достижение 'Магазинное Пространство' применено: +1 Торговая Полка.");
         }

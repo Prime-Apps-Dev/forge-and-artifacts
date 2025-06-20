@@ -1,8 +1,12 @@
 // src/data/definitions/main.js
 
-import { regions as importedRegions } from './regions.js';
-import { eternalSkills as importedEternalSkills } from './eternalSkills.js';
-import { avatars as importedAvatars } from './avatars.js';
+// Убедитесь, что эти импорты существуют и корректны в вашем файле definitions.js
+// и экспортируются из него.
+// Например, regions из './regions.js', eternalSkills из './eternalSkills.js', avatars из './avatars.js'
+// import { regions as importedRegions } from './regions.js';
+// import { eternalSkills as importedEternalSkills } from './eternalSkills.js';
+// import { avatars as importedAvatars } from './avatars.js';
+
 
 export const {
     factions,
@@ -17,7 +21,8 @@ export const {
     recipes,
     worldEvents,
     gameConfig,
-    missions
+    missions,
+    resourceIcons
 } = {
     factions: {
         merchants: { name: 'Гильдия Торговцев', color: 'yellow-500', icon: 'storefront' },
@@ -149,11 +154,23 @@ export const {
     },
 
     clients: [
-        { id: 'farmer', name: 'Фермер', faceImg: 'https://placehold.co/64x64/665432/FFF?text=F', demands: { quality: 0.8, speed: 1.2, reward: 0.9, saleSpeedModifier: 1.2, tipChance: 0.05 } },
-        { id: 'adventurer', name: 'Авантюрист', faceImg: 'https://placehold.co/64x64/326647/FFF?text=A', demands: { quality: 1.0, speed: 0.8, reward: 1.1, saleSpeedModifier: 1.0, tipChance: 0.1 } },
-        { id: 'noble', name: 'Дворянин', faceImg: 'https://placehold.co/64x64/882323/FFF?text=N', demands: { quality: 1.5, speed: 1.0, reward: 1.5, saleSpeedModifier: 0.8, tipChance: 0.2 } },
-        { id: 'shadowyFigure', name: 'Тайный Заказчик', faceImg: 'https://placehold.co/64x64/333333/FFF?text=S', demands: { quality: 1.8, speed: 0.5, reward: 2.5 }, isRisky: true },
-        { id: 'collector', name: 'Коллекционер', faceImg: 'https://placehold.co/64x64/a2885f/FFF?text=C', demands: { quality: 2.5, speed: 1.0, reward: 3.0, saleSpeedModifier: 0.7, tipChance: 0.3 }, isCollector: true },
+        { id: 'farmer', name: 'Фермер', faceImg: '/img/clients/farmer.png', demands: { quality: 0.8, speed: 1.2, reward: 0.9, saleSpeedModifier: 1.2, tipChance: 0.05 }, unlockLevel: 0, unlockSkill: null },
+        { id: 'adventurer', name: 'Авантюрист', faceImg: '/img/clients/adventurer.png', demands: { quality: 1.0, speed: 0.8, reward: 1.1, saleSpeedModifier: 1.0, tipChance: 0.1 }, unlockLevel: 0, unlockSkill: 'advancedClients' }, // <-- ИЗМЕНЕНО: Добавлен unlockSkill
+        { id: 'noble', name: 'Дворянин', faceImg: '/img/clients/noble.png', demands: { quality: 1.5, speed: 1.0, reward: 1.5, saleSpeedModifier: 0.8, tipChance: 0.2 }, unlockLevel: 0, unlockSkill: null },
+        { id: 'shadowyFigure', name: 'Тайный Заказчик', faceImg: '/img/clients/shadowy_figure.png', demands: { quality: 1.8, speed: 0.5, reward: 2.5 }, isRisky: true, unlockLevel: 0, unlockSkill: null },
+        { id: 'collector', name: 'Коллекционер', faceImg: '/img/clients/collector.png', demands: { quality: 2.5, speed: 1.0, reward: 3.0, saleSpeedModifier: 0.7, tipChance: 0.3 }, isCollector: true, unlockLevel: 0, unlockSkill: null },
+
+        // Новые клиенты, которые мы добавили ранее (их unlockSkill/unlockLevel остаются как были или обновятся, если вы их переопределили)
+        { id: 'alchemist', name: 'Алхимик', faceImg: '/img/clients/alchemist.png', demands: { quality: 1.8, speed: 0.7, reward: 2.0, saleSpeedModifier: 0.6, tipChance: 0.15 }, unlockLevel: 5, unlockSkill: 'advancedClients' },
+        { id: 'scholar', name: 'Ученый-Археолог', faceImg: '/img/clients/scholar.png', demands: { quality: 1.2, speed: 1.0, reward: 1.3, saleSpeedModifier: 0.8, tipChance: 0.08 }, unlockLevel: 3, unlockSkill: null },
+        { id: 'barbarian', name: 'Варвар-Воин', faceImg: '/img/clients/barbarian.png', demands: { quality: 0.7, speed: 1.5, reward: 0.8, saleSpeedModifier: 1.3, tipChance: 0.03 }, unlockLevel: 2, unlockSkill: null },
+        { id: 'bard', name: 'Бард-Путешественник', faceImg: '/img/clients/bard.png', demands: { quality: 1.0, speed: 1.1, reward: 1.0, saleSpeedModifier: 1.0, tipChance: 0.12 }, unlockLevel: 4, unlockSkill: 'advancedClients' },
+        { id: 'artisan', name: 'Придворный Ремесленник', faceImg: '/img/clients/artisan.png', demands: { quality: 2.0, speed: 0.5, reward: 2.8, saleSpeedModifier: 0.4, tipChance: 0.25 }, isCollector: true, unlockLevel: 7, unlockSkill: 'legendaryClients' },
+        { id: 'miner', name: 'Старатель', faceImg: '/img/clients/miner.png', demands: { quality: 0.9, speed: 1.3, reward: 0.95, saleSpeedModifier: 1.1, tipChance: 0.06 }, unlockLevel: 1, unlockSkill: null },
+        { id: 'hunter', name: 'Охотник', faceImg: '/img/clients/hunter.png', demands: { quality: 1.1, speed: 1.2, reward: 1.0, saleSpeedModifier: 1.0, tipChance: 0.07 }, unlockLevel: 2, unlockSkill: null },
+        { id: 'priestess', name: 'Жрица Света', faceImg: '/img/clients/priestess.png', demands: { quality: 2.2, speed: 0.8, reward: 3.0, saleSpeedModifier: 0.5, tipChance: 0.30 }, unlockLevel: 8, unlockSkill: 'legendaryClients' },
+        { id: 'engineer_client', name: 'Имперский Инженер', faceImg: '/img/clients/engineer_client.png', demands: { quality: 1.5, speed: 0.9, reward: 1.7, saleSpeedModifier: 0.7, tipChance: 0.18 }, unlockLevel: 6, unlockSkill: 'advancedClients' },
+        { id: 'spy', name: 'Тайный Агент', faceImg: '/img/clients/spy.png', demands: { quality: 1.0, speed: 0.4, reward: 2.5, saleSpeedModifier: 0.1, tipChance: 0.20 }, isRisky: true, unlockLevel: 5, unlockSkill: null },
     ],
 
     upgrades: {
@@ -239,13 +256,13 @@ export const {
     },
 
     recipes: {
-        iron: { name: "Железный слиток", input: { ironOre: 10 }, output: { ironIngots: 1 }, requiredProgress: 20, icon: '/img/ingots/iron_ingot.png' }, // <-- ИЗМЕНЕНО
-        copper: { name: "Медный слиток", input: { copperOre: 10 }, output: { copperIngots: 1 }, requiredProgress: 20, requiredSkill: 'findCopper', icon: '/img/ingots/copper_ingot.png' }, // <-- ИЗМЕНЕНО
-        mithril: { name: "Мифриловый слиток", input: { mithrilOre: 15 }, output: { mithrilIngots: 1 }, requiredProgress: 30, requiredSkill: 'mithrilProspecting', icon: '/img/ingots/mithril_ingot.png' }, // <-- ИЗМЕНЕНО
-        adamantite: { name: "Адамантитовый слиток", input: { adamantiteOre: 20 }, output: { adamantiteIngots: 1 }, requiredProgress: 50, requiredSkill: 'adamantiteMining', icon: '/img/ingots/adamantite_ingot.png' }, // <-- ИЗМЕНЕНО
-        bronze: { name: "Бронзовый слиток", input: { ironIngots: 1, copperIngots: 1 }, output: { bronzeIngots: 1 }, requiredSkill: 'artOfAlloys', icon: '/img/ingots/bronze_ingot.png' }, // <-- ИЗМЕНЕНО
-        sparksteel: { name: "Слиток Искростали", input: { bronzeIngots: 2, sparks: 1000 }, output: { sparksteelIngots: 1 }, requiredSkill: 'artOfAlloys', icon: '/img/ingots/sparksteel_ingot.png' }, // <-- ИЗМЕНЕНО
-        arcanite: { name: "Арканитовый слиток", input: { adamantiteIngots: 1, matter: 500 }, output: { arcaniteIngots: 1 }, requiredSkill: 'arcaneMetallurgy', icon: '/img/ingots/arcanite_ingot.png' }, // <-- ИЗМЕНЕНО
+        iron: { name: "Железный слиток", input: { ironOre: 10 }, output: { ironIngots: 1 }, requiredProgress: 20, icon: '/img/ingots/iron_ingot.png' },
+        copper: { name: "Медный слиток", input: { copperOre: 10 }, output: { copperIngots: 1 }, requiredProgress: 20, requiredSkill: 'findCopper', icon: '/img/ingots/copper_ingot.png' },
+        mithril: { name: "Мифриловый слиток", input: { mithrilOre: 15 }, output: { mithrilIngots: 1 }, requiredProgress: 30, requiredSkill: 'mithrilProspecting', icon: '/img/ingots/mithril_ingot.png' },
+        adamantite: { name: "Адамантитовый слиток", input: { adamantiteOre: 20 }, output: { adamantiteIngots: 1 }, requiredProgress: 50, requiredSkill: 'adamantiteMining', icon: '/img/ingots/adamantite_ingot.png' },
+        bronze: { name: "Бронзовый слиток", input: { ironIngots: 1, copperIngots: 1 }, output: { bronzeIngots: 1 }, requiredSkill: 'artOfAlloys', icon: '/img/ingots/bronze_ingot.png' },
+        sparksteel: { name: "Слиток Искростали", input: { bronzeIngots: 2, sparks: 1000 }, output: { sparksteelIngots: 1 }, requiredSkill: 'artOfAlloys', icon: '/img/ingots/sparksteel_ingot.png' },
+        arcanite: { name: "Арканитовый слиток", input: { adamantiteIngots: 1, matter: 500 }, output: { arcaniteIngots: 1 }, requiredSkill: 'arcaneMetallurgy', icon: '/img/ingots/arcanite_ingot.png' },
     },
 
     worldEvents: [
@@ -287,8 +304,19 @@ export const {
             bonusReward: { sparksPerQualityPoint: 100 }
         }
     },
+
+    resourceIcons: {
+        ironOre: '/img/ores/iron_ore.png',
+        copperOre: '/img/ores/copper_ore.png',
+        mithrilOre: '/img/ores/mithril_ore.png',
+        adamantiteOre: '/img/ores/adamantite_ore.png',
+    },
     // Важно: здесь присваиваем ИМПОРТИРОВАННЫЕ объекты, а не пустые!
-    regions: importedRegions,
-    eternalSkills: importedEternalSkills,
-    avatars: importedAvatars // <-- НОВЫЙ ЭКСПОРТ (будет заполнен из importedAvatars)
+    // Убедитесь, что эти переменные (importedRegions, importedEternalSkills, importedAvatars) импортированы в definitions.js
+    // Если эти переменные не импортированы в ЭТОТ файл, они будут undefined.
+    // Если они импортированы в definitions.js, то здесь они должны ссылаться на эти импорты, а не быть пустыми объектами.
+    // Предполагается, что в definitions.js они собираются корректно.
+    regions: {},
+    eternalSkills: {},
+    avatars: {}
 };

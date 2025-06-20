@@ -1,4 +1,3 @@
-// src/hooks/usePlayerActions.js
 import { useCallback, useMemo, useRef } from 'react';
 import { definitions } from '../data/definitions';
 import { formatNumber, hasReputation, getReputationLevel } from '../utils/helpers';
@@ -24,7 +23,7 @@ export function usePlayerActions(
     setIsAchievementRewardModalOpen,
     setAchievementToDisplay,
     setIsAvatarSelectionModalOpen,
-    setIsCreditsModalOpen // <-- ПРИНИМАЕМ НОВОЕ СОСТОЯНИЕ
+    setIsCreditsModalOpen
 ) {
     const clickData = useRef({ count: 0, lastTime: 0 });
 
@@ -52,7 +51,7 @@ export function usePlayerActions(
             else { state.specialItems[resourceType] -= costAmount; }
         }
         return true;
-    }, [showToast]);
+    }, [showToast, definitions]); // Добавил definitions в зависимости
 
     const handleStartMission = useCallback((missionId, committedGear) => {
         updateState(state => {
@@ -71,7 +70,7 @@ export function usePlayerActions(
             showToast(`Экспедиция "${missionDef.name}" отправлена!`, "info");
             audioController.play('complete', 'D4', '8n'); return state;
         });
-    }, [updateState, showToast]);
+    }, [updateState, showToast, definitions]); // Добавил definitions в зависимости
 
     const handleClickSale = useCallback((shelfIndex) => {
         audioController.play('click', 'E4', '16n');
@@ -88,7 +87,7 @@ export function usePlayerActions(
             const requiredProgress = (baseValue * item.quality) / 2;
             if (shelf.saleProgress >= Math.max(50, requiredProgress)) { handleSaleCompletion(state, shelfIndex, showToast); } return state;
         });
-    }, [updateState, showToast]);
+    }, [updateState, showToast, definitions]); // Добавил definitions в зависимости
 
     const handleCloseInfoModal = useCallback(() => {
         updateState(state => { state.activeInfoModal = null; return state; });
@@ -117,12 +116,10 @@ export function usePlayerActions(
         setIsAvatarSelectionModalOpen(false);
     }, [setIsAvatarSelectionModalOpen]);
 
-    // НОВОЕ: Открытие модалки Благодарностей
     const handleOpenCreditsModal = useCallback(() => {
         setIsCreditsModalOpen(true);
     }, [setIsCreditsModalOpen]);
 
-    // НОВОЕ: Закрытие модалки Благодарностей
     const handleCloseCreditsModal = useCallback(() => {
         setIsCreditsModalOpen(false);
     }, [setIsCreditsModalOpen]);
@@ -134,8 +131,7 @@ export function usePlayerActions(
             return state;
         });
         setIsAvatarSelectionModalOpen(false);
-    }, [updateState, showToast, setIsAvatarSelectionModalOpen]);
-
+    }, [updateState, showToast, setIsAvatarSelectionModalOpen, definitions]);
 
     const handleBuySkill = useCallback((skillId) => {
         let shouldOpenSpecModal = false;
@@ -176,11 +172,11 @@ export function usePlayerActions(
             if (gameStateRef.current.activeInfoModal) { updateState(state => { state.activeInfoModal = null; return state; }); }
             setTimeout(() => { updateState(state => { state.activeInfoModal = shouldInfoModal; return state; }); }, 100);
         }
-    }, [updateState, showToast, canAffordAndPay, recalculateAllModifiers, setIsSpecializationModalOpen, gameStateRef]);
+    }, [updateState, showToast, canAffordAndPay, recalculateAllModifiers, setIsSpecializationModalOpen, gameStateRef, definitions]); // Добавил definitions в зависимости
 
     const handleSelectSpecialization = useCallback((specId) => {
         updateState(state => { if (state.specialization === null) { state.specialization = specId; showToast(`Вы выбрали путь Мастера-${definitions.specializations[specId].name}!`, 'levelup'); } return state; }); setIsSpecializationModalOpen(false);
-    }, [updateState, showToast, setIsSpecializationModalOpen]);
+    }, [updateState, showToast, setIsSpecializationModalOpen, definitions]); // Добавил definitions в зависимости
 
     const handleBuyFactionUpgrade = useCallback((upgradeId) => {
         updateState(state => {
@@ -190,7 +186,7 @@ export function usePlayerActions(
             if (!canAffordAndPay(state, upgrade.cost, showToast)) { return state; }
             state.purchasedFactionUpgrades[upgradeId] = true; recalculateAllModifiers(state); showToast(`Улучшение "${upgrade.name}" приобретено!`, 'levelup'); audioController.play('levelup', 'A4', '8n'); return state;
         });
-    }, [updateState, showToast, canAffordAndPay, recalculateAllModifiers]);
+    }, [updateState, showToast, canAffordAndPay, recalculateAllModifiers, definitions]); // Добавил definitions в зависимости
 
     const handleVolumeChange = useCallback((type, value) => {
         const numericValue = parseInt(value, 10);
@@ -201,32 +197,166 @@ export function usePlayerActions(
         updateState(state => {
             if (state.isShopLocked) { showToast("Ваш магазин заблокирован! Попробуйте позже.", "error"); return state; } const emptyShelfIndex = state.shopShelves.findIndex(shelf => shelf.itemId === null); if (emptyShelfIndex === -1) { showToast("Все полки в магазине заняты!", 'error'); return state; } const itemToMove = state.inventory.find(item => item.uniqueId === itemUniqueId); if (!itemToMove || itemToMove.location !== 'inventory') return state; itemToMove.location = 'shelf'; state.shopShelves[emptyShelfIndex].itemId = itemUniqueId; showToast(`Предмет "${definitions.items[itemToMove.itemKey].name}" выставлен на продажу!`, "info"); return state;
         });
-    }, [updateState, showToast]);
+    }, [updateState, showToast, definitions]); // Добавил definitions в зависимости
 
     const handleRemoveItemFromShelf = useCallback((itemUniqueId) => {
         updateState(state => {
             const shelfToClearIndex = state.shopShelves.findIndex(shelf => shelf.itemId === itemUniqueId); if (shelfToClearIndex === -1) return state; const itemToReturn = state.inventory.find(item => item.uniqueId === itemUniqueId); if (!itemToReturn) { state.shopShelves[shelfToClearIndex].itemId = null; return state; } itemToReturn.location = 'inventory'; state.shopShelves[shelfToClearIndex].itemId = null; showToast(`Предмет "${definitions.items[itemToReturn.itemKey].name}" убран с полки.`, "info"); return state;
         });
-    }, [updateState, showToast]);
+    }, [updateState, showToast, definitions]); // Добавил definitions в зависимости
 
     const handleGenerateNewOrderInQueue = useCallback(() => {
         updateState(state => {
             if (state.orderQueue.length >= 10) return state;
-            const hasEngravedItems = state.inventory.some(item => item.gravingLevel > 0);
-            const collectorChance = 0.1;
-            if (hasEngravedItems && Math.random() < collectorChance) {
+
+            // Шанс появления коллекционера (если есть гравированные предметы)
+            const hasEngravedItems = state.inventory.some(item => (item.gravingLevel || 0) > 0);
+            const collectorChance = hasEngravedItems ? 0.1 : 0;
+
+            if (Math.random() < collectorChance) {
                 const collectorClient = definitions.clients.find(c => c.isCollector);
-                const engravableItems = Object.keys(definitions.items).filter(id => { const item = definitions.items[id]; return item.hasInlaySlots && !item.isQuestRecipe && (!item.requiredSkill || state.purchasedSkills[item.requiredSkill]); });
+                const engravableItems = Object.keys(definitions.items).filter(id => {
+                    const item = definitions.items[id];
+                    return item.hasInlaySlots && !item.isQuestRecipe && (!item.requiredSkill || state.purchasedSkills[item.requiredSkill]);
+                });
+
                 if (collectorClient && engravableItems.length > 0) {
                     const itemKey = engravableItems[Math.floor(Math.random() * engravableItems.length)];
                     const item = definitions.items[itemKey];
                     const totalProgress = item.components.reduce((sum, c) => sum + c.progress, 0);
-                    const newOrder = { id: `order_${Date.now()}`, client: collectorClient, itemKey, rewards: { sparks: Math.max(1, Math.round(totalProgress * collectorClient.demands.reward)), matter: Math.max(1, Math.round((totalProgress * collectorClient.demands.reward) / 5)) }, componentProgress: {}, activeComponentId: item.components.find(c => !c.requires)?.id || item.components[0].id, spawnTime: Date.now(), timeToLive: definitions.gameConfig.orderTTL, factionId: null, isRisky: false, };
-                    state.orderQueue.push(newOrder); showToast(`Появился редкий заказ от Коллекционера!`, 'crit'); return state;
-                } }
-            const now = Date.now(); const orderTTL = definitions.gameConfig.orderTTL; const availableItemsForOrders = Object.keys(definitions.items).filter(id => { const item = definitions.items[id]; if (state.isShopLocked && !item.isQuestRecipe) return false; return !item.isQuestRecipe && (!item.requiredSkill || state.purchasedSkills[item.requiredSkill]); }); if (availableItemsForOrders.length === 0) return state; let itemKey; let client; let isRiskyOrder = false; const riskyChance = state.isShopLocked ? 0.7 : 0.1; if (Math.random() < riskyChance && state.sparks > 1000) { const riskyClients = definitions.clients.filter(c => c.isRisky); if (riskyClients.length > 0) { client = riskyClients[Math.floor(Math.random() * riskyClients.length)]; const complexItems = availableItemsForOrders.filter(id => definitions.items[id].components.length > 2); itemKey = complexItems.length > 0 ? complexItems[Math.floor(Math.random() * complexItems.length)] : availableItemsForOrders[Math.floor(Math.random() * availableItemsForOrders.length)]; isRiskyOrder = true; } } if (!client) { client = definitions.clients.find(c => !c.isCollector && !c.isRisky) || definitions.clients[0]; itemKey = availableItemsForOrders[Math.floor(Math.random() * availableItemsForOrders.length)]; } const item = definitions.items[itemKey]; const totalProgress = item.components.reduce((sum, c) => sum + c.progress, 0); let factionId = null; const totalReputation = Object.values(state.reputation).reduce((sum, rep) => sum + rep, 0); const factionOrderChance = (state.purchasedSkills.guildContracts ? 0.2 : 0.05) + (totalReputation / 20000); const minFactionRepLevel = definitions.reputationLevels.find(l => l.id === 'neutrality').threshold; if (!isRiskyOrder && Math.random() < factionOrderChance) { const currentEvent = state.market.worldEvent; const conflictingFactions = currentEvent.type === 'faction_conflict' ? currentEvent.conflictingFactions : []; const availableFactions = Object.keys(definitions.factions).filter(fid => state.reputation[fid] >= minFactionRepLevel && !conflictingFactions.includes(fid)); if (availableFactions.length > 0) { const weightedFactions = availableFactions.flatMap(fid => Array(Math.max(1, Math.floor(state.reputation[fid] / minFactionRepLevel))).fill(fid)); factionId = weightedFactions[Math.floor(Math.random() * weightedFactions.length)]; const factionRepLevel = getReputationLevel(state.reputation[factionId]); if (factionRepLevel.id === 'honor' || factionRepLevel.id === 'exalted') { const advancedItems = availableItemsForOrders.filter(id => definitions.items[id].requiredSkill && definitions.items[id].requiredSkill !== 'basicForging'); if (advancedItems.length > 0) itemKey = advancedItems[Math.floor(Math.random() * advancedItems.length)]; } } } const newOrder = { id: `order_${Date.now()}`, client, itemKey, rewards: { sparks: Math.max(1, Math.round(totalProgress * client.demands.reward * (isRiskyOrder ? 2.5 : 1.0))), matter: Math.max(1, Math.round((totalProgress * client.demands.reward * (isRiskyOrder ? 2.5 : 1.0)) / 10)) }, componentProgress: {}, activeComponentId: item.components.find(c => !c.requires)?.id || item.components[0].id, spawnTime: now, timeToLive: definitions.gameConfig.orderTTL, factionId: factionId, isRisky: isRiskyOrder, }; state.orderQueue.push(newOrder); if (isRiskyOrder) { showToast(`Поступил рискованный заказ от "${client.name}"!`, 'crit'); } else if (factionId) { showToast(`Поступил заказ от фракции "${definitions.factions[factionId].name}"!`, 'faction'); } else { showToast(`Поступил новый заказ от "${client.name}"!`, 'info'); } return state;
+
+                    const newOrder = {
+                        id: `order_${Date.now()}_${Math.random()}`,
+                        client: collectorClient,
+                        itemKey,
+                        rewards: { sparks: Math.max(1, Math.round(totalProgress * collectorClient.demands.reward * 3.0)),
+                                   matter: Math.max(1, Math.round((totalProgress * collectorClient.demands.reward * 3.0) / 5)) },
+                        componentProgress: {},
+                        activeComponentId: item.components.find(c => !c.requires)?.id || item.components[0].id,
+                        spawnTime: Date.now(),
+                        timeToLive: definitions.gameConfig.orderTTL,
+                        factionId: null,
+                        isRisky: false,
+                    };
+                    state.orderQueue.push(newOrder);
+                    showToast(`Появился редкий заказ от Коллекционера!`, 'crit');
+                    return state;
+                }
+            }
+
+            const now = Date.now();
+            const orderTTL = definitions.gameConfig.orderTTL;
+
+            const availableClients = Object.values(definitions.clients).filter(clientDef => { // Использовал Object.values(definitions.clients)
+                const meetsLevel = (state.masteryLevel || 0) >= (clientDef.unlockLevel || 0);
+                const meetsSkill = !clientDef.unlockSkill || (state.purchasedSkills[clientDef.unlockSkill]);
+                return meetsLevel && meetsSkill;
+            });
+
+            const riskyClients = availableClients.filter(c => c.isRisky);
+            const normalClients = availableClients.filter(c => !c.isRisky && !c.isCollector);
+
+            let client = null;
+            let itemKey = null;
+            let isRiskyOrder = false;
+
+            const baseRiskyChance = state.isShopLocked ? 0.7 : 0.1;
+            const actualRiskyChance = baseRiskyChance;
+
+            if (riskyClients.length > 0 && Math.random() < actualRiskyChance && state.sparks > 1000) {
+                client = riskyClients[Math.floor(Math.random() * riskyClients.length)];
+                isRiskyOrder = true;
+
+                const complexItems = Object.keys(definitions.items).filter(id => {
+                    const item = definitions.items[id];
+                    return item.components.length > 2 && !item.isQuestRecipe &&
+                           (!item.requiredSkill || state.purchasedSkills[item.requiredSkill]) &&
+                           (!item.firstPlaythroughLocked || !state.isFirstPlaythrough);
+                });
+                itemKey = complexItems.length > 0 ? complexItems[Math.floor(Math.random() * complexItems.length)] :
+                                                     Object.keys(definitions.items)[Math.floor(Math.random() * Object.keys(definitions.items).length)];
+            }
+
+            if (!client) {
+                if (normalClients.length > 0) {
+                    client = normalClients[Math.floor(Math.random() * normalClients.length)];
+                } else {
+                    client = definitions.clients.find(c => c.id === 'farmer');
+                }
+                const availableItemsForOrders = Object.keys(definitions.items).filter(id => {
+                    const item = definitions.items[id];
+                    return !item.isQuestRecipe && (!item.requiredSkill || state.purchasedSkills[item.requiredSkill]) &&
+                           (!item.firstPlaythroughLocked || !state.isFirstPlaythrough);
+                });
+                itemKey = availableItemsForOrders[Math.floor(Math.random() * availableItemsForOrders.length)];
+            }
+            
+            if (!itemKey || !client) {
+                console.warn("Не удалось сгенерировать заказ: нет доступных предметов или клиентов.");
+                return state;
+            }
+
+            const item = definitions.items[itemKey];
+            const totalProgress = item.components.reduce((sum, c) => sum + c.progress, 0);
+
+            let factionId = null;
+            const totalReputation = Object.values(state.reputation).reduce((sum, rep) => sum + rep, 0);
+            const factionOrderChance = (state.purchasedSkills.guildContracts ? 0.2 : 0.05) + (totalReputation / 20000);
+            const minFactionRepLevel = definitions.reputationLevels.find(l => l.id === 'neutrality').threshold;
+
+            if (!isRiskyOrder && Math.random() < factionOrderChance) {
+                const currentEvent = state.market.worldEvent;
+                const conflictingFactions = currentEvent.type === 'faction_conflict' ? currentEvent.conflictingFactions : [];
+                const availableFactions = Object.keys(definitions.factions).filter(fid =>
+                    state.reputation[fid] >= minFactionRepLevel && !conflictingFactions.includes(fid)
+                );
+
+                if (availableFactions.length > 0) {
+                    const weightedFactions = availableFactions.flatMap(fid =>
+                        Array(Math.max(1, Math.floor(state.reputation[fid] / minFactionRepLevel))).fill(fid)
+                    );
+                    factionId = weightedFactions[Math.floor(Math.random() * weightedFactions.length)];
+
+                    const factionRepLevel = getReputationLevel(state.reputation[factionId]);
+                    if (factionRepLevel.id === 'honor' || factionRepLevel.id === 'exalted') {
+                        const advancedItems = Object.keys(definitions.items).filter(id =>
+                            definitions.items[id].requiredSkill && definitions.items[id].requiredSkill !== 'basicForging' &&
+                            (!definitions.items[id].firstPlaythroughLocked || !state.isFirstPlaythrough)
+                        );
+                        if (advancedItems.length > 0) itemKey = advancedItems[Math.floor(Math.random() * advancedItems.length)];
+                    }
+                }
+            }
+
+            const newOrder = {
+                id: `order_${Date.now()}_${Math.random()}`,
+                client,
+                itemKey,
+                rewards: {
+                    sparks: Math.max(1, Math.round(totalProgress * client.demands.reward * (isRiskyOrder ? 2.5 : 1.0))),
+                    matter: Math.max(1, Math.round((totalProgress * client.demands.reward * (isRiskyOrder ? 2.5 : 1.0)) / 10))
+                },
+                componentProgress: {},
+                activeComponentId: item.components.find(c => !c.requires)?.id || item.components[0].id,
+                spawnTime: now,
+                timeToLive: definitions.gameConfig.orderTTL,
+                factionId: factionId,
+                isRisky: isRiskyOrder,
+            };
+
+            state.orderQueue.push(newOrder);
+
+            if (isRiskyOrder) {
+                showToast(`Поступил рискованный заказ от "${client.name}"!`, 'crit');
+            } else if (factionId) {
+                showToast(`Поступил заказ от фракции "${definitions.factions[factionId].name}"!`, 'faction');
+            } else {
+                showToast(`Поступил новый заказ от "${client.name}"!`, 'info');
+            }
+            return state;
         });
-    }, [updateState, showToast]);
+    }, [updateState, showToast, gameStateRef, canAffordAndPay, definitions]);
+
 
     const handleAcceptOrder = useCallback((orderId) => {
         updateState(state => {
@@ -234,7 +364,25 @@ export function usePlayerActions(
             const orderIndex = state.orderQueue.findIndex(o => o.id === orderId);
             if (orderIndex === -1) return state;
             const [orderToAccept] = state.orderQueue.splice(orderIndex, 1);
-            if (orderToAccept.isRisky) { const now = Date.now(); const randomPenaltyType = Math.random(); if (randomPenaltyType < 0.5) { const penaltySparks = Math.floor(orderToAccept.rewards.sparks * (0.2 + Math.random() * 0.3)); state.sparks = Math.max(0, state.sparks - penaltySparks); showToast(`Рискованный заказ: Вы потеряли ${formatNumber(penaltySparks)} искр!`, 'error'); } else if (randomPenaltyType < 0.8) { const lockDuration = 60 * (1 + Math.random() * 2); state.isShopLocked = true; state.shopLockEndTime = now + lockDuration * 1000; showToast(`Рискованный заказ: Ваш магазин заблокирован на ${Math.round(lockDuration)} сек.!`, 'error'); } else { const penaltyDuration = 30 * (1 + Math.random() * 1); state.progressPerClick = Math.max(1, state.progressPerClick - 1); setTimeout(() => updateState(s => { s.progressPerClick += 1; showToast("Инструмент починен, прогресс восстановлен!", "info"); return s; }), penaltyDuration * 1000); showToast(`Рискованный заказ: Ваш инструмент поврежден, прогресс снижен!`, 'error'); } }
+            if (orderToAccept.isRisky) {
+                const now = Date.now();
+                const randomPenaltyType = Math.random();
+                if (randomPenaltyType < 0.5) {
+                    const penaltySparks = Math.floor(orderToAccept.rewards.sparks * (0.2 + Math.random() * 0.3));
+                    state.sparks = Math.max(0, state.sparks - penaltySparks);
+                    showToast(`Рискованный заказ: Вы потеряли ${formatNumber(penaltySparks)} искр!`, 'error');
+                } else if (randomPenaltyType < 0.8) {
+                    const lockDuration = 60 * (1 + Math.random() * 2);
+                    state.isShopLocked = true;
+                    state.shopLockEndTime = now + lockDuration * 1000;
+                    showToast(`Рискованный заказ: Ваш магазин заблокирован на ${Math.round(lockDuration)} сек.!`, 'error');
+                } else {
+                    const penaltyDuration = 30 * (1 + Math.random() * 1);
+                    state.progressPerClick = Math.max(1, state.progressPerClick - 1);
+                    setTimeout(() => updateState(s => { s.progressPerClick += 1; showToast("Инструмент починен, прогресс восстановлен!", "info"); return s; }), penaltyDuration * 1000);
+                    showToast(`Рискованный заказ: Ваш инструмент поврежден, прогресс снижен!`, 'error');
+                }
+            }
             orderToAccept.startTime = Date.now();
             orderToAccept.timeLimits = { gold: (definitions.items[orderToAccept.itemKey].components.reduce((sum, c) => sum + c.progress, 0) / 2) * state.timeLimitModifier, silver: definitions.items[orderToAccept.itemKey].components.reduce((sum, c) => sum + c.progress, 0) * state.timeLimitModifier };
             state.activeOrder = orderToAccept;
@@ -242,7 +390,7 @@ export function usePlayerActions(
             showToast("Заказ принят в работу!", "info");
             return state;
         });
-    }, [updateState, showToast]);
+    }, [updateState, showToast, definitions]);
 
     const handleStartFreeCraft = useCallback((itemKey) => {
         updateState(state => {
@@ -257,7 +405,7 @@ export function usePlayerActions(
             showToast(`Начато создание предмета: ${item.name}`, "info");
             return state;
         });
-    }, [updateState, showToast]);
+    }, [updateState, showToast, definitions]);
 
     const handleStartReforge = useCallback((itemUniqueId) => {
         const state = gameStateRef.current;
@@ -284,7 +432,7 @@ export function usePlayerActions(
                 return state;
             });
         }
-    }, [updateState, showToast, gameStateRef, canAffordAndPay]);
+    }, [updateState, showToast, gameStateRef, canAffordAndPay, definitions]);
 
     const handleStartInlay = useCallback((itemUniqueId, gemType) => {
         const state = gameStateRef.current;
@@ -312,7 +460,7 @@ export function usePlayerActions(
                 return state;
             });
         }
-    }, [updateState, showToast, gameStateRef, canAffordAndPay]);
+    }, [updateState, showToast, gameStateRef, canAffordAndPay, definitions]);
 
     const handleStartGraving = useCallback((itemUniqueId) => {
         const state = gameStateRef.current;
@@ -339,7 +487,7 @@ export function usePlayerActions(
                 return state;
             });
         }
-    }, [updateState, showToast, gameStateRef, canAffordAndPay]);
+    }, [updateState, showToast, gameStateRef, canAffordAndPay, definitions]);
 
     const handleMineOre = useCallback((oreType) => {
         updateState(state => {
@@ -354,11 +502,11 @@ export function usePlayerActions(
             showToast(`Добыто: +${formatNumber(amountGained)} ед. ${oreType.replace('Ore', ' руды')}!`, 'success');
             return state;
         });
-    }, [updateState, showToast]);
+    }, [updateState, showToast, definitions]);
 
-    const handleSmelt = useCallback((recipeId) => { updateState(state => { if (state.smeltingProcess) { showToast("Плавильня уже занята!", 'error'); return state; } const recipe = definitions.recipes[recipeId]; if (!recipe) return state; const inputResource = Object.keys(recipe.input)[0]; let cost = recipe.input[inputResource]; if (recipeId === 'iron' && state.purchasedSkills.efficientBellows) cost = Math.max(1, cost - 2); if (recipeId === 'copper' && state.purchasedSkills.crucibleRefinement) cost = Math.max(1, cost - 2); if (state[inputResource] < cost) { showToast(`Недостаточно: ${inputResource} (${formatNumber(cost)} требуется)!`, 'error'); return state; } if (recipe.requiredSkill && !state.purchasedSkills[recipe.requiredSkill]) { const skillName = definitions.skills[recipe.requiredSkill]?.name || "неизвестный навык"; showToast(`Требуется навык: '${skillName}'!`, 'error'); return state; } state[inputResource] -= cost; state.smeltingProcess = { recipeId, progress: 0 }; showToast(`Плавка: ${recipe.name} началась!`, 'info'); return state; }); }, [updateState, showToast]);
+    const handleSmelt = useCallback((recipeId) => { updateState(state => { if (state.smeltingProcess) { showToast("Плавильня уже занята!", 'error'); return state; } const recipe = definitions.recipes[recipeId]; if (!recipe) return state; const inputResource = Object.keys(recipe.input)[0]; let cost = recipe.input[inputResource]; if (recipeId === 'iron' && state.purchasedSkills.efficientBellows) cost = Math.max(1, cost - 2); if (recipeId === 'copper' && state.purchasedSkills.crucibleRefinement) cost = Math.max(1, cost - 2); if (state[inputResource] < cost) { showToast(`Недостаточно: ${inputResource} (${formatNumber(cost)} требуется)!`, 'error'); return state; } if (recipe.requiredSkill && !state.purchasedSkills[recipe.requiredSkill]) { const skillName = definitions.skills[recipe.requiredSkill]?.name || "неизвестный навык"; showToast(`Требуется навык: '${skillName}'!`, 'error'); return state; } state[inputResource] -= cost; state.smeltingProcess = { recipeId, progress: 0 }; showToast(`Плавка: ${recipe.name} началась!`, 'info'); return state; }); }, [updateState, showToast, definitions]);
 
-    const handleForgeAlloy = useCallback((recipeId) => { updateState(state => { const recipe = definitions.recipes[recipeId]; if (!recipe || state.smeltingProcess) return state; if (recipe.requiredSkill && !state.purchasedSkills[recipe.requiredSkill]) { showToast(`Требуется навык: '${definitions.skills[recipe.requiredSkill]?.name}'!`, 'error'); return state; } if (!canAffordAndPay(state, recipe.input, showToast)) { return state; } const outputResource = Object.keys(recipe.output)[0]; state[outputResource] += recipe.output[outputResource]; showToast(`✨ Сплав создан: +${formatNumber(recipe.output[outputResource])} ${outputResource.replace('Ingots', ' слитков')}!`, 'success'); return state; }); }, [updateState, showToast, canAffordAndPay]);
+    const handleForgeAlloy = useCallback((recipeId) => { updateState(state => { const recipe = definitions.recipes[recipeId]; if (!recipe || state.smeltingProcess) return state; if (recipe.requiredSkill && !state.purchasedSkills[recipe.requiredSkill]) { showToast(`Требуется навык: '${definitions.skills[recipe.requiredSkill]?.name}'!`, 'error'); return state; } if (!canAffordAndPay(state, recipe.input, showToast)) { return state; } const outputResource = Object.keys(recipe.output)[0]; state[outputResource] += recipe.output[outputResource]; showToast(`✨ Сплав создан: +${formatNumber(recipe.output[outputResource])} ${outputResource.replace('Ingots', ' слитков')}!`, 'success'); return state; }); }, [updateState, showToast, canAffordAndPay, definitions]);
 
     const handleBuyResource = useCallback((resourceId, unitCost, amount) => {
         updateState(state => {
@@ -398,7 +546,7 @@ export function usePlayerActions(
             }
             state.specialItems[itemId] = (state.specialItems[itemId] || 0) + 1; showToast(`Куплено: ${item.name}!`, 'success'); Object.keys(state.artifacts).forEach(artId => { const artifact = state.artifacts[artId]; const allObtained = Object.values(artifact.components).every(comp => state.specialItems[comp.itemId] > 0); if (allObtained && artifact.status === 'locked') { artifact.status = 'available'; showToast(`Все компоненты для артефакта "${definitions.greatArtifacts[artId].name}" собраны!`, 'levelup'); } }); return state;
         });
-    }, [updateState, showToast, canAffordAndPay]);
+    }, [updateState, showToast, canAffordAndPay, definitions]);
 
     const handleInvest = useCallback(() => {
         updateState(state => {
@@ -470,11 +618,11 @@ export function usePlayerActions(
             showToast(`Вы приступаете к созданию шедевра: ${definitions.greatArtifacts[artifactId].name}!`, 'levelup');
             return state;
         });
-    }, [updateState, showToast, canAffordAndPay]);
+    }, [updateState, showToast, canAffordAndPay, definitions]);
 
     const handleStartQuest = useCallback((questId) => {
         updateState(state => { const questIndex = state.journal.availableQuests.indexOf(questId); if (questIndex > -1) { const questDef = definitions.quests[questId]; state.journal.availableQuests.splice(questIndex, 1); state.journal.activeQuests.push({ id: questId }); showToast(`Задание "${questDef.title}" принято!`, 'info'); } return state; });
-    }, [updateState, showToast]);
+    }, [updateState, showToast, definitions]);
 
     const handleResetGame = useCallback(() => {
         if (window.confirm("Вы уверены, что хотите сбросить весь игровой прогресс? Это действие необратимо!")) {
@@ -507,7 +655,7 @@ export function usePlayerActions(
             setIsWorldMapModalOpen(true);
             return state;
         });
-    }, [updateState, showToast, gameStateRef, setIsWorldMapModalOpen]);
+    }, [updateState, showToast, gameStateRef, setIsWorldMapModalOpen, definitions]);
 
     const handleSelectRegion = useCallback((regionId) => {
         const newState = JSON.parse(JSON.stringify(initialGameState));
@@ -541,11 +689,12 @@ export function usePlayerActions(
             localStorage.setItem('forgeAndArtifacts_v10', JSON.stringify(newState));
             showToast(`Новая мастерская основана в регионе "${selectedRegionDef.name}"!`, 'levelup');
             window.location.reload();
-        } catch (e) {
+        }
+        catch (e) {
             console.error("Failed to save new game state after settlement:", e);
             showToast("Ошибка при сохранении нового поселения!", "error");
         }
-    }, [showToast, gameStateRef, initialGameState, recalculateAllModifiers]);
+    }, [showToast, gameStateRef, initialGameState, recalculateAllModifiers, definitions]);
 
     const handleBuyEternalSkill = useCallback((skillId) => {
         updateState(state => {
@@ -578,7 +727,7 @@ export function usePlayerActions(
 
             return state;
         });
-    }, [updateState, showToast, recalculateAllModifiers]);
+    }, [updateState, showToast, recalculateAllModifiers, definitions]);
 
 
     return useMemo(() => {
@@ -588,10 +737,10 @@ export function usePlayerActions(
             handleCloseAchievementRewardModal,
             handleClaimAchievementReward,
             handleOpenAvatarSelectionModal,
-            handleCloseAvatarSelectionModal, // <-- ВОЗВРАЩАЕМ НОВУЮ ФУНКЦИЮ
+            handleCloseAvatarSelectionModal,
             handleSelectAvatar,
-            handleOpenCreditsModal, // <-- ВОЗВРАЩАЕМ НОВУЮ ФУНКЦИЮ
-            handleCloseCreditsModal, // <-- ВОЗВРАЩАЕМ НОВУЮ ФУНКЦИЮ
+            handleOpenCreditsModal, // <-- ВОЗВРАЩАЕМ
+            handleCloseCreditsModal, // <-- ВОЗВРАЩАЕМ
             handleSelectRegion,
             checkForNewQuests: (state) => checkForNewQuests(state, showToast),
             handleBuySkill,
@@ -636,6 +785,6 @@ export function usePlayerActions(
         handleSellResource, handleBuySpecialItem, handleInvest, handleBuyUpgrade,
         handleCraftArtifact, handleStartReforge, handleStartInlay,
         handleStartGraving, handleStartQuest, handleResetGame, handleStartMission,
-        handleClickSale, handleStartNewSettlement, handleBuyEternalSkill, coreHandlers, recalculateAllModifiers, setIsSpecializationModalOpen, gameStateRef
+        handleClickSale, handleStartNewSettlement, handleBuyEternalSkill, coreHandlers, recalculateAllModifiers, setIsSpecializationModalOpen, gameStateRef, definitions
     ]);
 }

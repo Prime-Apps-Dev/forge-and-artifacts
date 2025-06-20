@@ -1,16 +1,22 @@
+// src/components/ui/ResourceItem.jsx
 import React from 'react';
-import SvgIcon from './SvgIcon';
+import SvgIcon from './SvgIcon'; // Возможно, понадобится, если SvgIcon где-то ещё используется
 import { formatNumber } from '../../utils/helpers';
 
-const ResourceItem = React.memo(({ icon, name, initialValue, resourceKey, iconClass }) => {
+// ResourceItem теперь принимает iconType ('icon' или 'img') и iconSrc (для img)
+const ResourceItem = React.memo(({ icon, name, initialValue, resourceKey, iconClass, iconType = 'icon', iconSrc }) => {
     return (
         <li className="bg-gray-800/50 border border-gray-700 rounded-md p-2 flex items-center justify-between">
             <div className="flex items-center gap-2">
-                <span className={`material-icons-outlined text-2xl ${iconClass}`}>{icon}</span>
+                {iconType === 'icon' ? (
+                    <span className={`material-icons-outlined text-2xl ${iconClass}`}>{icon}</span>
+                ) : (
+                    <img src={iconSrc} alt={name} className="w-6 h-6 object-contain flex-shrink-0" />
+                )}
                 <p className="text-sm text-gray-300">{name}</p>
             </div>
             <div className="text-right">
-                <span className="font-cinzel font-bold text-lg text-white">{formatNumber(initialValue)}</span> {/* ИЗМЕНЕНИЕ: Теперь использует сокращенное форматирование */}
+                <span className="font-cinzel font-bold text-lg text-white">{formatNumber(initialValue)}</span>
             </div>
         </li>
     );
