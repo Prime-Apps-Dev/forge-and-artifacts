@@ -1,5 +1,5 @@
 // src/logic/gameCompletions.js
-import * as Tone from 'tone'; // Убедитесь, что Tone импортирован
+import * as Tone from 'tone';
 import { definitions } from '../data/definitions';
 import { audioController } from '../utils/audioController';
 import { formatNumber, hasReputation, getReputationLevel } from '../utils/helpers';
@@ -49,8 +49,16 @@ export function handleCompleteMission(state, activeMissionId, showToast) {
     const xpEarned = Math.max(1, Math.floor(missionDef.baseReward.sparks / 100));
     state.masteryXP += xpEarned;
 
+    while (state.masteryXP >= state.masteryXPToNextLevel) {
+        state.masteryXP -= state.masteryXPToNextLevel;
+        state.masteryLevel += 1;
+        state.masteryXPToNextLevel = Math.floor(state.masteryXPToNextLevel * 1.5);
+        showToast(`Уровень Мастерства повышен! Уровень ${state.masteryLevel}!`, 'levelup');
+        audioController.play('levelup', 'A4', '4n');
+    }
+
     showToast(rewardToast.join(' '), 'success');
-    audioController.play('levelup', 'A4', '4n');
+    audioController.play('levelup', 'A4', '4n'); // Добавил проигрывание звука здесь, если его не было
 }
 
 export function handleSaleCompletion(state, shelfIndex, showToast) {
@@ -115,6 +123,7 @@ export function handleFreeCraftCompletion(state, craftProject, showToast) {
     if (state.inventory.length < state.inventoryCapacity) {
         state.inventory.push(newItem);
         showToast(`Создан предмет: "${itemDef.name}" (добавлен в инвентарь)!`, 'success');
+        state.totalItemsCrafted = (state.totalItemsCrafted || 0) + 1; // <-- Увеличиваем счетчик
     } else {
         showToast(`Инвентарь полон! Предмет "${itemDef.name}" утерян.`, 'error');
     }
@@ -244,7 +253,7 @@ export function handleCompleteGraving(state, gravingProject, showToast) {
 
 export function checkForNewQuests(state, showToast) {
     Object.values(definitions.quests).forEach(quest => {
-        if (state.journal.availableQuests.includes(quest.id) || state.journal.activeQuests.some(activeQuest => activeQuest.id === quest.id) || state.journal.completedQuests.includes(quest.id)) return; // ИЗМЕНЕНИЕ: Исправлена опечатка `q.id` на `quest.id`
+        if (state.journal.availableQuests.includes(quest.id) || state.journal.activeQuests.some(activeQuest => activeQuest.id === quest.id) || state.journal.completedQuests.includes(quest.id)) return;
         const trigger = quest.trigger;
         let canStart = false;
         if (trigger.type === 'reputation' && hasReputation(state.reputation, trigger.factionId, trigger.level)) canStart = true;
@@ -279,6 +288,9 @@ export function handleOrderCompletion(state, order, showToast, setCompletedOrder
     state.matter += finalMatter;
     const xpEarned = Math.max(1, Math.floor((definitions.items[order.itemKey].components.reduce((sum, c) => sum + c.progress, 0) / 10) * rewardMultiplier));
     state.masteryXP += xpEarned;
+    // Увеличиваем счетчик созданных предметов здесь
+    state.totalItemsCrafted = (state.totalItemsCrafted || 0) + 1; // <-- Увеличиваем счетчик
+
     while (state.masteryXP >= state.masteryXPToNextLevel) {
         state.masteryXP -= state.masteryXPToNextLevel;
         state.masteryLevel += 1;
@@ -288,7 +300,7 @@ export function handleOrderCompletion(state, order, showToast, setCompletedOrder
     }
     Object.values(definitions.quests).forEach(quest => {
         const questDef = definitions.quests[quest.id];
-        if (state.journal.activeQuests.some(activeQuest => activeQuest.id === quest.id) && questDef.target.type === 'craft' && questDef.target.itemId === order.itemKey) { // ИЗМЕНЕНИЕ: Исправлена опечатка `q.id` на `quest.id`
+        if (state.journal.activeQuests.some(activeQuest => activeQuest.id === quest.id) && questDef.target.type === 'craft' && questDef.target.itemId === order.itemKey) {
             state.journal.questProgress[quest.id] = (state.journal.questProgress[quest.id] || 0) + 1;
             if (state.journal.questProgress[quest.id] >= questDef.target.count) {
                 state.journal.completedQuests.push(quest.id);

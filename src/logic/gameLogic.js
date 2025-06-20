@@ -5,10 +5,9 @@ import { handleCompleteMission } from './gameCompletions';
 import { formatNumber } from '../utils/helpers';
 import { recalculateAllModifiers } from '../utils/gameStateUtils';
 
-let achievementCheckTimer = 0; // Таймер для проверки достижений
+let achievementCheckTimer = 0;
 
-// Основной игровой цикл
-export function startGameLoop(updateState, handlers, showToast, setAchievementToDisplay, setIsAchievementRewardModalOpen) { // <-- НОВОЕ: Принимаем эти функции
+export function startGameLoop(updateState, handlers, showToast, setAchievementToDisplay, setIsAchievementRewardModalOpen) {
     return setInterval(() => {
         updateState(state => {
             const deltaTime = 0.1;
@@ -24,15 +23,6 @@ export function startGameLoop(updateState, handlers, showToast, setAchievementTo
                 const regionMod = currentRegion?.modifiers?.miningSpeed?.copperOre || 1.0;
                 state.copperOre += state.passiveGeneration.copperOre * modifier * regionMod * deltaTime;
             }
-            // НОВОЕ: Пассивная генерация для мифрила и адамантита (если есть перс)
-            if (state.passiveGeneration.mithrilOre > 0 && state.purchasedSkills.mithrilProspecting) {
-                 const regionMod = currentRegion?.modifiers?.miningSpeed?.mithrilOre || 1.0;
-                 state.mithrilOre += state.passiveGeneration.mithrilOre * modifier * regionMod * deltaTime;
-            }
-            if (state.passiveGeneration.adamantiteOre > 0 && state.purchasedSkills.adamantiteMining) {
-                 const regionMod = currentRegion?.modifiers?.miningSpeed?.adamantiteOre || 1.0;
-                 state.adamantiteOre += state.passiveGeneration.adamantiteOre * modifier * regionMod * deltaTime;
-            }
             if (state.passiveGeneration.ironIngots > 0) {
                 const smeltAmount = state.passiveGeneration.ironIngots * modifier * deltaTime;
                 const requiredOre = smeltAmount * 10;
@@ -41,31 +31,11 @@ export function startGameLoop(updateState, handlers, showToast, setAchievementTo
                     state.ironIngots += smeltAmount;
                 }
             }
-            // НОВОЕ: Пассивная генерация искр от вечных навыков
-            if (state.passiveGeneration.sparks > 0) {
-                state.sparks += state.passiveGeneration.sparks * modifier * deltaTime;
-            }
-
-            // Процесс плавки (для игрока)
-            if (state.smeltingProcess) {
-                const recipe = definitions.recipes[state.smeltingProcess.recipeId];
-                state.smeltingProcess.progress += deltaTime * 10 * state.smeltingSpeedModifier;
-                if (state.smeltingProcess.progress >= recipe.requiredProgress) {
-                    const outputResource = Object.keys(recipe.output)[0];
-                    const outputAmount = recipe.output[outputResource];
-                    state[outputResource] += outputAmount;
-                    state.smeltingProcess = null;
-                    showToast(`Готово: +${outputAmount} ${recipe.name}`, 'success');
-                }
-            }
-
-            // --- ЛОГИКА ДЛЯ ПОДМАСТЕРЬЯ-КУЗНЕЦА ---
             if (state.passiveGeneration.forgeProgress > 0) {
                 if (!state.apprenticeOrder && state.orderQueue.length > 0) {
                     const availableOrderForApprentice = state.orderQueue.find(order =>
                         !order.isRisky && !definitions.items[order.itemKey]?.isQuestRecipe
                     );
-
                     if (availableOrderForApprentice) {
                         const orderIndex = state.orderQueue.findIndex(o => o.id === availableOrderForApprentice.id);
                         if (orderIndex !== -1) {
@@ -80,12 +50,10 @@ export function startGameLoop(updateState, handlers, showToast, setAchievementTo
                         }
                     }
                 }
-
                 if (state.apprenticeOrder) {
                     const apprenticeProject = state.apprenticeOrder;
                     const itemDef = definitions.items[apprenticeProject.itemKey];
                     let activeComponent = itemDef.components.find(c => c.id === apprenticeProject.activeComponentId);
-
                     if (!activeComponent || (apprenticeProject.componentProgress[activeComponent.id] || 0) >= activeComponent.progress) {
                         const nextComponent = itemDef.components.find(c =>
                             !c.requires || c.requires.every(reqId => (apprenticeProject.componentProgress[reqId] || 0) >= definitions.items[apprenticeProject.itemKey].components.find(comp => comp.id === reqId).progress) &&
@@ -100,11 +68,9 @@ export function startGameLoop(updateState, handlers, showToast, setAchievementTo
                             return state;
                         }
                     }
-
                     if (activeComponent) {
                         const progressAmount = state.passiveGeneration.forgeProgress * modifier * deltaTime;
                         if (!apprenticeProject.componentProgress[activeComponent.id]) apprenticeProject.componentProgress[activeComponent.id] = 0;
-
                         if (apprenticeProject.componentProgress[activeComponent.id] === 0 && activeComponent.cost) {
                             let canAfford = true;
                             for (const resource in activeComponent.cost) {
@@ -124,7 +90,6 @@ export function startGameLoop(updateState, handlers, showToast, setAchievementTo
                                 else { state.specialItems[resource] -= cost; }
                             }
                         }
-
                         apprenticeProject.componentProgress[activeComponent.id] = Math.min(
                             activeComponent.progress,
                             apprenticeProject.componentProgress[activeComponent.id] + progressAmount
@@ -132,8 +97,6 @@ export function startGameLoop(updateState, handlers, showToast, setAchievementTo
                     }
                 }
             }
-
-            // Логика мини-игры и пассивного крафта (для игрока)
             const activeProject = state.activeOrder || state.activeFreeCraft;
             if (activeProject?.minigameState?.active) {
                 const component = definitions.items[activeProject.itemKey].components.find(c => c.id === activeProject.activeComponentId);
@@ -143,10 +106,8 @@ export function startGameLoop(updateState, handlers, showToast, setAchievementTo
                 else if (newPos <= 0) { newPos = 0; activeProject.minigameState.direction = 1; }
                 activeProject.minigameState.position = newPos;
             } else if (state.passiveGeneration.forgeProgress > 0 && (state.activeOrder || state.activeFreeCraft || state.currentEpicOrder || state.activeReforge || state.activeInlay || state.activeGraving)) {
-                 handlers.applyProgress(state, state.passiveGeneration.forgeProgress * modifier * deltaTime);
+                     handlers.applyProgress(state, state.passiveGeneration.forgeProgress * modifier * deltaTime);
             }
-
-            // Логика завершения миссий
             if (state.activeMissions && state.activeMissions.length > 0) {
                 const now = Date.now();
                 const completedMissionIds = [];
@@ -159,16 +120,12 @@ export function startGameLoop(updateState, handlers, showToast, setAchievementTo
                     handleCompleteMission(state, missionId, showToast);
                 });
             }
-
-            // Логика инвестиций
             if (state.investments.merchants) {
                 state.specialItems.gem = (state.specialItems.gem || 0) + (1 / 60) * deltaTime;
                 if (Math.random() < (0.005 / 60) * deltaTime * 100) {
                     state.specialItems.material_adamantFrame = (state.specialItems.material_adamantFrame || 0) + 1;
                 }
             }
-
-            // Логика магазина игрока
             state.shopShelves.forEach((shelf, index) => {
                 if (shelf.customer) {
                     shelf.saleTimer -= deltaTime;
@@ -187,8 +144,6 @@ export function startGameLoop(updateState, handlers, showToast, setAchievementTo
                     }
                 }
             });
-
-            // Таймер для принятия заказов в очереди
             const now = Date.now();
             const orderTTL = definitions.gameConfig?.orderTTL || 90;
             state.orderQueue = state.orderQueue.filter(order => {
@@ -205,27 +160,28 @@ export function startGameLoop(updateState, handlers, showToast, setAchievementTo
                 return true;
             });
 
-            // Проверка достижений каждые 5 секунд
+            // === КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: ЛОГИКА ПРОВЕРКИ ДОСТИЖЕНИЙ ===
             achievementCheckTimer += deltaTime;
-            if (achievementCheckTimer >= 5) {
+            if (achievementCheckTimer >= 1) {
                 achievementCheckTimer = 0;
-                let shouldRecalculate = false;
                 Object.values(definitions.achievements).forEach(achievementDef => {
                     const achievementStatus = achievementDef.check(state, definitions);
                     if (achievementStatus.isComplete && !state.completedAchievements.includes(achievementDef.id)) {
                         state.completedAchievements.push(achievementDef.id);
                         showToast(`Достижение выполнено: "${achievementDef.title}"!`, 'levelup');
                         audioController.play('levelup', 'G6', '2n');
-                        shouldRecalculate = true;
-                        // НОВОЕ: Открываем модалку с достижением
-                        setAchievementToDisplay(achievementDef); // Передаем объект достижения
-                        setIsAchievementRewardModalOpen(true); // Открываем модальное окно
+                        setAchievementToDisplay(achievementDef);
+                        setIsAchievementRewardModalOpen(true);
+                        recalculateAllModifiers(state);
                     }
                 });
-                if (shouldRecalculate) {
-                    recalculateAllModifiers(state); // Применяем эффекты новых достижений
-                }
             }
+
+            // ИЗМЕНЕНО: Увеличение totalIngotsSmelted после плавки
+            if (state.smeltingProcess && state.smeltingProcess.progress >= definitions.recipes[state.smeltingProcess.recipeId].requiredProgress) {
+                state.totalIngotsSmelted = (state.totalIngotsSmelted || 0) + 1;
+            }
+
 
             return state;
         });

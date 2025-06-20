@@ -142,9 +142,10 @@ export const achievements = {
         title: 'Первые Искры',
         description: 'Вы выковали свой первый предмет. Получите скромное вознаграждение, чтобы продолжить свой путь.',
         effectName: '+500 Искр',
-        icon: '/img/achievements/first_forge.png', // <-- НОВОЕ ПОЛЕ ICON
+        icon: '/img/achievements/first_forge.png',
         check: (state, defs) => {
-            return { current: state.inventory.length > 0 ? 1 : 0, target: 1, isComplete: state.inventory.length > 0 };
+            // ИЗМЕНЕНО: Проверяем totalItemsCrafted
+            return { current: state.totalItemsCrafted, target: 1, isComplete: state.totalItemsCrafted >= 1 };
         },
         apply: (state) => {
             state.sparks += 500;
@@ -157,10 +158,10 @@ export const achievements = {
         title: 'Плавильный Тигель',
         description: 'Вы переплавили 100 слитков. Ваши знания о металлах углубляются, увеличивая скорость плавки на 5%.',
         effectName: '+5% к скорости плавки',
-        icon: '/img/achievements/master_smelter.png', // <-- НОВОЕ ПОЛЕ ICON
+        icon: '/img/achievements/master_smelter.png',
         check: (state, defs) => {
-            const totalIngotsSmelted = (state.ironIngots || 0) + (state.copperIngots || 0) + (state.mithrilIngots || 0) + (state.adamantiteIngots || 0);
-            return { current: totalIngotsSmelted, target: 100, isComplete: totalIngotsSmelted >= 100 };
+            // ИЗМЕНЕНО: Проверяем totalIngotsSmelted
+            return { current: state.totalIngotsSmelted || 0, target: 100, isComplete: (state.totalIngotsSmelted || 0) >= 100 };
         },
         apply: (state) => {
             state.smeltingSpeedModifier += 0.05;

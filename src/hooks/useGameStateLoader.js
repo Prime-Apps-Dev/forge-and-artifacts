@@ -71,7 +71,7 @@ export const initialGameState = {
     regionUnlockCostReduction: 0,
     questRewardModifier: 1.0,
     completedAchievements: [],
-    playerAvatarId: 'default_avatar_male', // <-- НОВОЕ ПОЛЕ: ID выбранного аватара
+    totalItemsCrafted: 0, // <-- НОВОЕ ПОЛЕ: Общее количество созданных предметов
 };
 
 
@@ -144,8 +144,7 @@ export function useGameStateLoader(showToast) {
                     tempState[key] = parsed[key] || initialGameState[key];
                 }
             }
-            // Копируем новые поля, связанные с престижем, вечными навыками и аватарами
-            else if (['eternalSkills', 'prestigePoints', 'regionsVisited', 'isFirstPlaythrough', 'initialGravingLevel', 'regionUnlockCostReduction', 'questRewardModifier', 'playerAvatarId'].includes(key)) { // <-- ДОБАВЛЕНО 'playerAvatarId'
+            else if (['eternalSkills', 'prestigePoints', 'regionsVisited', 'isFirstPlaythrough', 'initialGravingLevel', 'regionUnlockCostReduction', 'questRewardModifier', 'playerAvatarId', 'totalItemsCrafted'].includes(key)) { // <-- ДОБАВЛЕНО 'totalItemsCrafted'
                 tempState[key] = parsed[key] !== undefined ? parsed[key] : initialGameState[key];
             }
             else if (['lastClickTime', 'clickCount', 'activeReforge', 'activeInlay', 'activeGraving', 'activeInfoModal', 'activeOrder', 'activeFreeCraft', 'currentEpicOrder', 'smeltingProcess', 'activeSale', 'apprenticeOrder'].includes(key)) {
