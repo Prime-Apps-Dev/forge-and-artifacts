@@ -5,7 +5,7 @@ export const {
     reputationLevels,
     greatArtifacts,
     specialItems,
-    personnel,
+    // personnel, // ИЗМЕНЕНО: Удален personnel из деструктуризации
     workstations,
     clients,
     upgrades,
@@ -18,6 +18,7 @@ export const {
     resources
 } = {
     factions: {
+        name: 'Фракции', // Добавлено name для фракций для консистентности, если потребуется
         merchants: { name: 'Гильдия Торговцев', color: 'yellow-500', icon: 'storefront' },
         adventurers: { name: 'Лига Авантюристов', color: 'green-500', icon: 'explore' },
         court: { name: 'Королевский Двор', color: 'purple-500', icon: 'account_balance' }
@@ -34,7 +35,7 @@ export const {
     greatArtifacts: {
         aegis: {
             name: "Эгида Бессмертного Короля",
-            icon: "/img/artifacts/aegis_shield.webp", // ИЗМЕНЕНО: Путь к изображению
+            icon: "/img/artifacts/aegis_shield.webp",
             description: "Дает 10% шанс не потратить ресурсы при создании любого компонента.",
             components: {
                 blueprint: { name: "Королевский чертеж: Эгида", obtained: false, itemId: 'blueprint_aegis' },
@@ -50,7 +51,7 @@ export const {
         },
         hammer: {
             name: "Молот Горного Сердца",
-            icon: "/img/artifacts/mountain_heart_hammer.webp", // ИЗМЕНЕНО: Путь к изображению
+            icon: "/img/artifacts/mountain_heart_hammer.webp",
             description: "Каждый удар по наковальне имеет 1% шанс дополнительно создать редкий самоцвет.",
             components: {
                 blueprint: { name: "Королевский чертеж: Молот", obtained: false, itemId: 'blueprint_hammer' },
@@ -66,7 +67,7 @@ export const {
         },
         crown: {
             name: "Корона Солнца",
-            icon: "/img/artifacts/sun_crown.webp", // ИЗМЕНЕНО: Путь к изображению
+            icon: "/img/artifacts/sun_crown.webp",
             description: "Значительно увеличивает доход Искр и Материи от всех заказов (+25%).",
             components: {
                 blueprint: { name: "Королевский чертеж: Корона", obtained: false, itemId: 'blueprint_crown' },
@@ -82,7 +83,7 @@ export const {
         },
         bastion: {
             name: "Бастион Несокрушимости",
-            icon: "/img/artifacts/bastion_of_invincibility.webp", // ИЗМЕНЕНО: Путь к изображению
+            icon: "/img/artifacts/bastion_of_invincibility.webp",
             description: "Снижает требуемый прогресс для всех компонентов на 15%.",
             components: {
                 blueprint: { name: "Древний чертеж: Бастион", obtained: false, itemId: 'blueprint_bastion'},
@@ -98,7 +99,7 @@ export const {
         },
         quill: {
             name: "Перо Архивариуса",
-            icon: "/img/artifacts/archivists_quill.webp", // ИЗМЕНЕНО: Путь к изображению
+            icon: "/img/artifacts/archivists_quill.webp",
             description: "Вы получаете 1 ед. Материи за каждые 100 Искр, заработанных с заказов.",
             components: {
                 blueprint: { name: "Древний чертеж: Перо", obtained: false, itemId: 'blueprint_quill'},
@@ -134,12 +135,6 @@ export const {
         component_focusingLens: { name: "Фокусирующая Линза", description: "Линза, преобразующая Искры в Материю." },
     },
 
-    personnel: {
-        mineApprentice: { name: "Подмастерье-рудокоп", description: "Автоматически добывает руду. (+0.1/сек за уровень)", isMultiLevel: true, maxLevel: 10, baseCost: { matter: 100, sparks: 500 }, costIncrease: 1.8, apply: (state) => { state.passiveGeneration.ironOre += 0.1; state.passiveGeneration.copperOre += 0.1; } },
-        smelterApprentice: { name: "Подмастерье-плавильщик", description: "Автоматически плавит железные слитки. (+0.2/сек за уровень)", isMultiLevel: true, maxLevel: 10, baseCost: { matter: 150, ironIngots: 20 }, costIncrease: 1.9, apply: (state) => { state.passiveGeneration.ironIngots += 0.2; } },
-        forgeApprentice: { name: "Подмастерье-кузнец", description: "Автоматически работает над активным компонентом. (+0.07 прогресса/сек за уровень)", isMultiLevel: true, maxLevel: 10, baseCost: { matter: 200, sparks: 1000 }, costIncrease: 2.0, apply: (state) => { state.passiveGeneration.forgeProgress += 0.07; } },
-    },
-
     workstations: {
         anvil: { name: "Наковальня", icon: "hardware" },
         workbench: { name: "Верстак", icon: "handyman" },
@@ -153,7 +148,6 @@ export const {
         { id: 'shadowyFigure', name: 'Тайный Заказчик', faceImg: '/img/clients/shadowy_figure.webp', demands: { quality: 1.8, speed: 0.5, reward: 2.5 }, isRisky: true, unlockLevel: 0, unlockSkill: null },
         { id: 'collector', name: 'Коллекционер', faceImg: '/img/clients/collector.webp', demands: { quality: 2.5, speed: 1.0, reward: 3.0, saleSpeedModifier: 0.7, tipChance: 0.3 }, isCollector: true, unlockLevel: 0, unlockSkill: null },
 
-        // Новые клиенты, которые мы добавили ранее (их unlockSkill/unlockLevel остаются как были или обновятся, если вы их переопределили)
         { id: 'alchemist', name: 'Алхимик', faceImg: '/img/clients/alchemist.webp', demands: { quality: 1.8, speed: 0.7, reward: 2.0, saleSpeedModifier: 0.6, tipChance: 0.15 }, unlockLevel: 5, unlockSkill: 'advancedClients' },
         { id: 'scholar', name: 'Ученый-Археолог', faceImg: '/img/clients/scholar.webp', demands: { quality: 1.2, speed: 1.0, reward: 1.3, saleSpeedModifier: 0.8, tipChance: 0.08 }, unlockLevel: 3, unlockSkill: null },
         { id: 'barbarian', name: 'Варвар-Воин', faceImg: '/img/clients/barbarian.webp', demands: { quality: 0.7, speed: 1.5, reward: 0.8, saleSpeedModifier: 1.3, tipChance: 0.03 }, unlockLevel: 2, unlockSkill: null },

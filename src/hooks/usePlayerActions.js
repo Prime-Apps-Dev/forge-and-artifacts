@@ -23,7 +23,7 @@ export function usePlayerActions(
     setIsWorldMapModalOpen,
     setIsAchievementRewardModalOpen,
     setAchievementToDisplay,
-    setIsAvatarSelectionModalOpen, // ИЗМЕНЕНО: Исправлена опечатка в имени параметра
+    setIsAvatarSelectionModalOpen,
     setIsCreditsModalOpen
 ) {
     const clickData = useRef({ count: 0, lastTime: 0 });
@@ -132,7 +132,7 @@ export function usePlayerActions(
             return state;
         });
         setIsAvatarSelectionModalOpen(false);
-    }, [updateState, showToast, setIsAvatarSelectionModalOpen, definitions]); // ИЗМЕНЕНО: Исправлена опечатка в зависимости
+    }, [updateState, showToast, setIsAvatarSelectionModalOpen, definitions]);
 
     const handleBuySkill = useCallback((skillId) => {
         let shouldOpenSpecModal = false;
@@ -171,9 +171,9 @@ export function usePlayerActions(
         if (shouldOpenSpecModal) { setTimeout(() => setIsSpecializationModalOpen(true), 100); }
         else if (shouldOpenInfoModal) {
             if (gameStateRef.current.activeInfoModal) { updateState(state => { state.activeInfoModal = null; return state; }); }
-            setTimeout(() => { updateState(state => { state.activeInfoModal = shouldInfoModal; return state; }); }, 100);
+            setTimeout(() => { updateState(state => { state.activeInfoModal = shouldOpenInfoModal; return state; }); }, 100);
         }
-    }, [updateState, showToast, canAffordAndPay, recalculateAllModifiers, setIsSpecializationModalOpen, gameStateRef, definitions]);
+    }, [updateState, showToast, canAffordAndPay, recalculateAllModifiers, setIsSpecializationModalOpen, gameStateRef, definitions, setIsAvatarSelectionModalOpen]); // ИЗМЕНЕНО: Добавлена setIsAvatarSelectionModalOpen в зависимости, если она там используется
 
     const handleSelectSpecialization = useCallback((specId) => {
         updateState(state => { if (state.specialization === null) { state.specialization = specId; showToast(`Вы выбрали путь Мастера-${definitions.specializations[specId].name}!`, 'levelup'); } return state; }); setIsSpecializationModalOpen(false);
@@ -184,7 +184,9 @@ export function usePlayerActions(
             const upgrade = definitions.factionUpgrades[upgradeId];
             if (!upgrade || state.purchasedFactionUpgrades[upgradeId]) return state;
             if (!hasReputation(state.reputation, upgrade.factionId, upgrade.requiredRep)) { showToast("Недостаточно репутации!", 'error'); return state; }
-            if (!canAffordAndPay(state, upgrade.cost, showToast)) { return state; }
+            if (!canAffordAndPay(state, upgrade.cost, showToast)) {
+                return state;
+            }
             state.purchasedFactionUpgrades[upgradeId] = true; recalculateAllModifiers(state); showToast(`Улучшение "${upgrade.name}" приобретено!`, 'levelup'); audioController.play('levelup', 'A4', '8n'); return state;
         });
     }, [updateState, showToast, canAffordAndPay, recalculateAllModifiers, definitions]);
@@ -210,7 +212,6 @@ export function usePlayerActions(
         updateState(state => {
             if (state.orderQueue.length >= 10) return state;
 
-            // Шанс появления коллекционера (если есть гравированные предметы)
             const hasEngravedItems = state.inventory.some(item => (item.gravingLevel || 0) > 0);
             const collectorChance = hasEngravedItems ? 0.1 : 0;
 
@@ -230,7 +231,7 @@ export function usePlayerActions(
                         id: `order_${Date.now()}_${Math.random()}`,
                         client: collectorClient,
                         itemKey,
-                        rewards: { sparks: Math.max(1, Math.round(totalProgress * collectorClient.demands.reward * 3.0)),
+                        rewards: { sparks: Math.max(1, Math.round(totalProgress * client.demands.reward * 3.0)),
                                    matter: Math.max(1, Math.round((totalProgress * client.demands.reward * 3.0) / 5)) },
                         componentProgress: {},
                         activeComponentId: item.components.find(c => !c.requires)?.id || item.components[0].id,
@@ -809,7 +810,7 @@ export function usePlayerActions(
         updateState, showToast,
         setIsWorking, setCompletedOrderInfo, setIsSpecializationModalOpen,
         setIsWorldMapModalOpen, setIsAchievementRewardModalOpen, setAchievementToDisplay,
-        setIsAvatarSelectionModalOpen, setIsCreditsModalOpen, // ИЗМЕНЕНО: Имя параметра setIsAvatarSelectionModalOpen
+        setIsAvatarSelectionModalOpen, setIsCreditsModalOpen,
 
         gameStateRef, workTimeoutRef,
 

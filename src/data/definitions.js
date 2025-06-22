@@ -8,12 +8,13 @@ import { factionUpgrades } from './definitions/factionUpgrades.js';
 import { regions } from './definitions/regions.js';
 import { eternalSkills } from './definitions/eternalSkills.js';
 import { avatars } from './definitions/avatars.js';
+import { personnel } from './definitions/personnel.js'; // ИЗМЕНЕНО: Правильный импорт personnel
 import {
     factions,
     reputationLevels,
     greatArtifacts,
     specialItems,
-    personnel,
+    // personnel, // ИЗМЕНЕНО: Удалено personnel из деструктуризации main.js
     workstations,
     clients,
     upgrades,
@@ -22,7 +23,8 @@ import {
     worldEvents,
     gameConfig,
     missions,
-    resourceIcons // <-- НОВЫЙ ИМПОРТ И ЭКСПОРТ
+    resourceIcons,
+    resources // Добавлено, если resources экспортируется из main.js
 } from './definitions/main.js';
 
 export const definitions = {
@@ -35,12 +37,11 @@ export const definitions = {
     regions,
     eternalSkills,
     avatars,
-    missions,
+    personnel, // Теперь personnel будет взят из правильного импорта
     factions,
     reputationLevels,
     greatArtifacts,
     specialItems,
-    personnel,
     workstations,
     clients,
     upgrades,
@@ -48,5 +49,7 @@ export const definitions = {
     recipes,
     worldEvents,
     gameConfig,
-    resourceIcons // <-- НОВЫЙ ЭКСПОРТ
+    missions,
+    resourceIcons,
+    resources // Включено, если resources экспортируется из main.js
 };
