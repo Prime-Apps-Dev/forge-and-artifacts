@@ -34,7 +34,7 @@ export const initialGameState = {
     upgradeLevels: {},
     purchasedSkills: {},
     reputation: { merchants: 0, adventurers: 0, court: 0 },
-    market: { prices: { ironOre: { buy: 5, sell: 2 }, copperOre: { buy: 12, sell: 6 }, mithrilOre: { buy: 40, sell: 25 }, adamantiteOre: { buy: 100, sell: 60}, ironIngots: { buy: 25, sell: 15 }, copperIngots: { buy: 50, sell: 30 }, bronzeIngots: { buy: 100, sell: 70 }, mithrilIngots: { buy: 200, sell: 150 }, adamantiteIngots: { buy: 500, sell: 350 }, arcaniteIngots: { buy: 2500, sell: 1800 } }, worldEvent: { message: "Рынок стабилен, priceModifiers: {}" }, nextEventIn: 300 },
+    market: { prices: { ironOre: { buy: 5, sell: 2 }, copperOre: { buy: 12, sell: 6 }, mithrilOre: { buy: 40, sell: 25 }, adamantiteOre: { buy: 100, sell: 60}, ironIngots: { buy: 25, sell: 15 }, copperIngots: { buy: 50, sell: 30 }, bronzeIngots: { buy: 100, sell: 70 }, sparksteelIngots: { buy: 200, sell: 150 }, mithrilIngots: { buy: 500, sell: 350 }, adamantiteIngots: { buy: 1000, sell: 600 }, arcaniteIngots: { buy: 2500, sell: 1800 } }, worldEvent: { message: "Рынок стабилен, priceModifiers: {}" }, nextEventIn: 300 },
     investments: { merchants: false },
     artifacts: JSON.parse(JSON.stringify(definitions.greatArtifacts)),
     journal: { availableQuests: [], activeQuests: [], completedQuests: [], unlockedRecipes: [], questProgress: {} },
@@ -62,7 +62,8 @@ export const initialGameState = {
     currentRegion: 'iron_hills',
     activeMissions: [],
     activeSale: null,
-    apprenticeOrder: null,
+    apprenticeOrder: null, // ИЗМЕНЕНО: Активный заказ подмастерья
+    apprenticeOrderQueue: [], // ИЗМЕНЕНО: Очередь заказов подмастерья
     prestigePoints: 0,
     regionsVisited: [],
     isFirstPlaythrough: true,
@@ -71,7 +72,7 @@ export const initialGameState = {
     regionUnlockCostReduction: 0,
     questRewardModifier: 1.0,
     completedAchievements: [],
-    appliedAchievementRewards: [], // НОВОЕ: Массив для отслеживания примененных наград достижений
+    appliedAchievementRewards: [],
     totalItemsCrafted: 0,
     totalIngotsSmelted: 0,
     totalClicks: 0,
@@ -142,17 +143,17 @@ export function useGameStateLoader(showToast) {
                         saleProgress: 0,
                         saleTimer: 0
                     }));
-                } else if (key === 'completedAchievements' || key === 'appliedAchievementRewards') { // ИЗМЕНЕНО: Обработка appliedAchievementRewards
+                } else if (key === 'completedAchievements' || key === 'appliedAchievementRewards') {
                     tempState[key] = parsed[key] || [];
                 }
                 else {
                     tempState[key] = parsed[key] !== undefined ? parsed[key] : initialGameState[key];
                 }
             }
-            else if (['eternalSkills', 'prestigePoints', 'regionsVisited', 'isFirstPlaythrough', 'initialGravingLevel', 'regionUnlockCostReduction', 'questRewardModifier', 'playerAvatarId', 'totalItemsCrafted', 'totalIngotsSmelted', 'totalClicks', 'totalSparksEarned', 'totalMatterSpent', 'totalExpeditionMapsBought', 'totalCourtOrdersCompleted', 'totalRiskyOrdersCompleted'].includes(key)) {
+            else if (['eternalSkills', 'prestigePoints', 'regionsVisited', 'isFirstPlaythrough', 'initialGravingLevel', 'regionUnlockCostReduction', 'questRewardModifier', 'playerAvatarId', 'totalItemsCrafted', 'totalIngotsSmelted', 'totalClicks', 'totalSparksEarned', 'totalMatterSpent', 'totalExpeditionMapsBought', 'totalCourtOrdersCompleted', 'totalRiskyOrdersCompleted', 'apprenticeOrder', 'apprenticeOrderQueue'].includes(key)) { // ИЗМЕНЕНО: Добавлены apprenticeOrder и apprenticeOrderQueue
                 tempState[key] = parsed[key] !== undefined ? parsed[key] : initialGameState[key];
             }
-            else if (['lastClickTime', 'clickCount', 'activeReforge', 'activeInlay', 'activeGraving', 'activeInfoModal', 'activeOrder', 'activeFreeCraft', 'currentEpicOrder', 'smeltingProcess', 'activeSale', 'apprenticeOrder'].includes(key)) {
+            else if (['lastClickTime', 'clickCount', 'activeReforge', 'activeInlay', 'activeGraving', 'activeInfoModal', 'activeOrder', 'activeFreeCraft', 'currentEpicOrder', 'smeltingProcess', 'activeSale'].includes(key)) { // ИЗМЕНЕНО: apprenticeOrder удален отсюда
                  tempState[key] = initialGameState[key];
             } else {
                 tempState[key] = parsed[key] !== undefined ? parsed[key] : initialGameState[key];
@@ -160,7 +161,7 @@ export function useGameStateLoader(showToast) {
         });
 
         while (tempState.shopShelves.length < initialGameState.shopShelves.length) {
-            tempState.shopShelves.push({ id: `shelf_${tempState.shopShelves.length}`, itemId: null, customer: null, saleProgress: 0, saleTimer: 0 });
+            tempState.shopShelves.push({ id: `shelf_${tempState.shopShelhes.length}`, itemId: null, customer: null, saleProgress: 0, saleTimer: 0 });
         }
 
         if (parsed.masterFame !== undefined && tempState.masteryXP === undefined) {

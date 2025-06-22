@@ -371,9 +371,12 @@ export function handleOrderCompletion(state, order, showToast, setCompletedOrder
     rewardMultiplier *= qualityMultiplier;
     let finalSparks = Math.floor(order.rewards.sparks * rewardMultiplier * state.sparksModifier);
     let finalMatter = Math.floor(order.rewards.matter * rewardMultiplier * state.matterModifier);
+    
+    // Quill effect (action-based) remains here
     if (state.artifacts.quill?.status === 'completed') {
         finalMatter += Math.floor(finalSparks / 100);
     }
+    
     state.sparks += finalSparks;
     state.totalSparksEarned += finalSparks;
     state.matter += finalMatter;

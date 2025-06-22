@@ -42,12 +42,12 @@ const QualityMinigameBar = ({ minigameState, componentDef }) => {
     );
 };
 
-const ActiveProjectDisplay = ({ gameState, handlers }) => {
-    const activeProject = gameState.activeOrder || gameState.activeFreeCraft;
-    const isEpicCraft = !!gameState.currentEpicOrder;
-    const isReforging = !!gameState.activeReforge;
-    const isInlaying = !!gameState.activeInlay;
-    const isGraving = !!gameState.activeGraving;
+const ActiveProjectDisplay = ({ gameState, handlers, projectType }) => {
+    const activeProject = projectType === 'player' ? (gameState.activeOrder || gameState.activeFreeCraft) : gameState.apprenticeOrder;
+    const isEpicCraft = !!gameState.currentEpicOrder && projectType === 'player';
+    const isReforging = !!gameState.activeReforge && projectType === 'player';
+    const isInlaying = !!gameState.activeInlay && projectType === 'player';
+    const isGraving = !!gameState.activeGraving && projectType === 'player';
 
     if (isEpicCraft) {
         const artifactDef = definitions.greatArtifacts[gameState.currentEpicOrder.artifactId];
@@ -173,7 +173,7 @@ const ActiveProjectDisplay = ({ gameState, handlers }) => {
         const itemDef = definitions.items[activeProject.itemKey];
         return (
              <>
-                {gameState.activeOrder && (
+                {projectType === 'player' && gameState.activeOrder && (
                      <div className="flex items-start gap-4 mb-2">
                         <img src={gameState.activeOrder.client.faceImg} alt="Лицо клиента" className="w-16 h-16 rounded-full border-2 border-gray-600" />
                         <div className="grow">
@@ -187,12 +187,26 @@ const ActiveProjectDisplay = ({ gameState, handlers }) => {
                         </div>
                     </div>
                 )}
-                {gameState.activeFreeCraft && (
+                {projectType === 'player' && gameState.activeFreeCraft && (
                     <h3 className="font-cinzel text-lg text-center">Свободное создание: {itemDef?.name}</h3>
                 )}
-                {gameState.activeOrder && <OrderTimer key={gameState.activeOrder.id} order={gameState.activeOrder} />}
+                {projectType === 'apprentice' && (
+                     <div className="flex items-start gap-4 mb-2">
+                        <img src="/img/avatars/default_male.webp" alt="Аватар Подмастерья" className="w-16 h-16 rounded-full border-2 border-gray-600" />
+                        <div className="grow">
+                            <h3 className="font-cinzel text-lg text-green-300">{itemDef?.name || 'Загрузка...'}</h3>
+                            <p className="text-sm text-gray-400">Подмастерье-кузнец</p>
+                            <div className="text-xs text-gray-500 flex items-center gap-4 mt-1">
+                                <span>Награда:</span>
+                                <div className="flex items-center gap-1"><span className="material-icons-outlined text-yellow-400 text-sm">bolt</span><span className="font-bold text-gray-300">{formatNumber(activeProject.rewards.sparks)}</span></div>
+                                <div className="flex items-center gap-1"><span className="material-icons-outlined text-purple-400 text-sm">bubble_chart</span><span className="font-bold text-gray-300">{formatNumber(activeProject.rewards.matter)}</span></div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                {projectType === 'player' && gameState.activeOrder && <OrderTimer key={gameState.activeOrder.id} order={gameState.activeOrder} />}
                 <div className="flex flex-col gap-2 mt-2">
-                     {itemDef?.components.map(comp => <ComponentItem key={comp.id} component={comp} orderState={activeProject} gameState={gameState} onSelectComponent={handlers.handleSelectComponent} />)}
+                     {itemDef?.components.map(comp => <ComponentItem key={comp.id} component={comp} orderState={activeProject} gameState={gameState} onSelectComponent={projectType === 'player' ? handlers.handleSelectComponent : null} />)}
                 </div>
             </>
         )
@@ -247,14 +261,14 @@ const WorkstationSelector = memo(({ activeWorkstationId, handlers, purchasedSkil
 const ForgeView = ({ gameState, isWorking, handlers }) => {
     const [mode, setMode] = useState('orders');
 
-    const activeProject = gameState.activeOrder || gameState.activeFreeCraft;
+    const activePlayerProject = gameState.activeOrder || gameState.activeFreeCraft;
     const isEpicCraft = !!gameState.currentEpicOrder;
     const isReforging = !!gameState.activeReforge;
     const isInlaying = !!gameState.activeInlay;
     const isGraving = !!gameState.activeGraving;
 
-    const itemDef = activeProject ? definitions.items[activeProject.itemKey] : null;
-    const activeComponent = activeProject && itemDef ? itemDef.components.find(c => c.id === activeProject.activeComponentId) : null;
+    const playerItemDef = activePlayerProject ? definitions.items[activePlayerProject.itemKey] : null;
+    const activePlayerComponent = activePlayerProject && playerItemDef ? playerItemDef.components.find(c => c.id === activePlayerProject.activeComponentId) : null;
 
     const epicStageDef = isEpicCraft ? definitions.greatArtifacts[gameState.currentEpicOrder.artifactId].epicOrder.find(s => s.stage === gameState.currentEpicOrder.currentStage) : null;
 
@@ -329,30 +343,29 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
                                 </button>
                             </Tooltip>
                         )}
-                        {canGrave && (
+                        canGrave && (
                             <Tooltip text="Доступно после первого Переселения.">
                                 <button disabled className="flex-1 p-2 rounded-md font-bold text-sm opacity-50 cursor-not-allowed bg-gray-700/50">
                                     Гравировка
                                 </button>
                             </Tooltip>
-                        )}
-                        {/* Если ни один из этих навыков не изучен, но мы в первом прохождении, то можно ничего не показывать или общее сообщение */}
+                        )
                     </>
                 )}
             </div>
 
-            <div id="project-display-area" className="p-4 bg-black/20 rounded-lg border border-gray-700 mb-6 min-h-[250px]">
-                {(activeProject || isEpicCraft || isReforging || isInlaying || isGraving) &&
-                    <ActiveProjectDisplay gameState={gameState} handlers={handlers} />
+            <div id="player-project-area" className="p-4 bg-black/20 rounded-lg border border-gray-700 mb-6 min-h-[250px]">
+                {(activePlayerProject || isEpicCraft || isReforging || isInlaying || isGraving) &&
+                    <ActiveProjectDisplay gameState={gameState} handlers={handlers} projectType="player" />
                 }
 
-                {!activeProject && !isEpicCraft && !isReforging && !isInlaying && !isGraving && (
+                {!activePlayerProject && !isEpicCraft && !isReforging && !isInlaying && !isGraving && (
                     mode === 'orders' ? (
                         <div>
                             <h3 className="font-cinzel text-lg text-center mb-3">Доступные заказы</h3>
                             {gameState.orderQueue.length > 0 ? (
                                 <div className="space-y-3">
-                                    {gameState.orderQueue.map(order => <OrderQueueCard key={order.id} order={order} onAccept={handlers.handleAcceptOrder} isDisabled={isWorkButtonDisabled} />)}
+                                    {gameState.orderQueue.map(order => <OrderQueueCard key={order.id} order={order} onAccept={handlers.handleAcceptOrder} isDisabled={!!activePlayerProject || isEpicCraft || isReforging || isInlaying || isGraving} />)} {/* ИЗМЕНЕНО: isDisabled проверяет только активные проекты игрока */}
                                 </div>
                             ) : (
                                 <p className="text-center text-gray-500 italic py-8">Новых заказов пока нет. Они появятся со временем.</p>
@@ -367,7 +380,7 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
                                     (!item.requiredSkill || gameState.purchasedSkills[item.requiredSkill]) &&
                                     (!item.firstPlaythroughLocked || !gameState.isFirstPlaythrough)
                                 ).map(([key, item]) => (
-                                    <FreeCraftRecipeCard key={key} itemKey={key} itemDef={item} onCraft={handlers.handleStartFreeCraft} isDisabled={isWorkButtonDisabled} />
+                                    <FreeCraftRecipeCard key={key} itemKey={key} itemDef={item} onCraft={handlers.handleStartFreeCraft} isDisabled={!!activePlayerProject || isEpicCraft || isReforging || isInlaying || isGraving} />
                                 ))}
                             </div>
                         </div>
@@ -391,7 +404,7 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
                                                 item={item}
                                                 onAction={() => handlers.handleStartReforge(item.uniqueId)}
                                                 actionLabel="Перековать"
-                                                isAnyActiveProject={isWorkButtonDisabled}
+                                                isAnyActiveProject={!!activePlayerProject || isEpicCraft || isReforging || isInlaying || isGraving}
                                             />
                                         ))}
                                     </div>
@@ -438,7 +451,7 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
                                                 item={item}
                                                 onAction={() => handlers.handleStartInlay(item.uniqueId, 'gem')}
                                                 actionLabel="Инкрустировать"
-                                                isAnyActiveProject={isWorkButtonDisabled}
+                                                isAnyActiveProject={!!activePlayerProject || isEpicCraft || isReforging || isInlaying || isGraving}
                                             />
                                         ))}
                                     </div>
@@ -471,7 +484,7 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
                                                 item={item}
                                                 onAction={() => handlers.handleStartGraving(item.uniqueId)}
                                                 actionLabel="Гравировать"
-                                                isAnyActiveProject={isWorkButtonDisabled}
+                                                isAnyActiveProject={!!activePlayerProject || isEpicCraft || isReforging || isInlaying || isGraving}
                                             />
                                         ))}
                                     </div>
@@ -490,17 +503,41 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
                 )}
             </div>
 
+            {/* --- БЛОК АКТИВНОГО ЗАКАЗА ПОДМАСТЕРЬЯ --- */}
+            {gameState.passiveGeneration.forgeProgress > 0 && (
+                <div id="apprentice-project-area" className="p-4 bg-black/20 rounded-lg border border-green-700 mb-6 min-h-[150px]">
+                    <h3 className="font-cinzel text-lg text-center text-green-400 mb-3">
+                        Активный заказ Подмастерья
+                    </h3>
+                    {gameState.apprenticeOrder ? (
+                        <ActiveProjectDisplay gameState={gameState} projectType="apprentice" />
+                    ) : (
+                        <p className="text-center text-gray-500 italic py-4">Подмастерье ожидает нового заказа.</p>
+                    )}
+                    {gameState.apprenticeOrderQueue.length > 0 && (
+                        <div className="mt-4">
+                            <h4 className="font-cinzel text-md text-gray-400">Очередь Подмастерья:</h4>
+                            <ul className="text-sm text-gray-500">
+                                {gameState.apprenticeOrderQueue.map(order => (
+                                    <li key={order.id}>- {definitions.items[order.itemKey]?.name}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+                </div>
+            )}
+
             <WorkstationSelector
                 activeWorkstationId={gameState.activeWorkstationId}
                 handlers={handlers}
                 purchasedSkills={gameState.purchasedSkills}
-                activeProject={activeProject}
+                activeProject={activePlayerProject} // Только проект игрока влияет на выбор станка
                 isEpicCraft={isEpicCraft}
                 isReforging={isReforging}
                 isInlaying={isInlaying}
                 isGraving={isGraving}
             />
-            {gameState.activeOrder && <QualityMinigameBar minigameState={gameState.activeOrder.minigameState} componentDef={activeComponent} />}
+            {gameState.activeOrder && <QualityMinigameBar minigameState={gameState.activeOrder.minigameState} componentDef={activePlayerComponent} />}
 
 
             <div id="forge-area" className="flex items-center justify-center">

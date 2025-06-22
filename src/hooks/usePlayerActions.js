@@ -359,6 +359,7 @@ export function usePlayerActions(
 
 
     const handleAcceptOrder = useCallback((orderId) => {
+        // ИЗМЕНЕНО: Проверка только активных проектов игрока
         updateState(state => {
             if (state.activeOrder || state.activeFreeCraft || state.currentEpicOrder || state.activeReforge || state.activeInlay || state.activeGraving) { showToast("Вы уже заняты другим проектом!", 'error'); return state; }
             const orderIndex = state.orderQueue.findIndex(o => o.id === orderId);
@@ -393,6 +394,7 @@ export function usePlayerActions(
     }, [updateState, showToast, definitions]);
 
     const handleStartFreeCraft = useCallback((itemKey) => {
+        // ИЗМЕНЕНО: Проверка только активных проектов игрока
         updateState(state => {
             if (state.activeOrder || state.activeFreeCraft || state.currentEpicOrder || state.activeReforge || state.activeInlay || state.activeGraving) { showToast("Вы уже заняты другим проектом!", 'error'); return state; }
             const item = definitions.items[itemKey];
@@ -601,6 +603,7 @@ export function usePlayerActions(
     }, [updateState, showToast, recalculateAllModifiers, canAffordAndPay, definitions]);
 
     const handleCraftArtifact = useCallback((artifactId) => {
+        // ИЗМЕНЕНО: Проверка только активных проектов игрока
         updateState(state => {
             if (state.activeOrder || state.activeFreeCraft || state.currentEpicOrder || state.activeReforge || state.activeInlay || state.activeGraving) { showToast("Вы уже заняты другим проектом!", 'error'); return state; }
             const artifact = state.artifacts[artifactId];
@@ -732,14 +735,15 @@ export function usePlayerActions(
     const handleStrikeAnvil = useCallback(() => {
         const currentState = gameStateRef.current; 
 
-        const activeProject = currentState.activeOrder || currentState.activeFreeCraft || currentState.currentEpicOrder || currentState.activeReforge || currentState.activeInlay || currentState.activeGraving || currentState.activeSale;
+        // ИЗМЕНЕНО: Наковальня теперь всегда активна, но удар влияет только на активный проект игрока
+        const activePlayerProject = currentState.activeOrder || currentState.activeFreeCraft || currentState.currentEpicOrder || currentState.activeReforge || currentState.activeInlay || currentState.activeGraving || currentState.activeSale;
 
-        if (!activeProject) {
+        if (!activePlayerProject) {
             showToast("Выберите проект для работы!", "error");
             return;
         }
 
-        if ((currentState.activeOrder || currentState.activeFreeCraft) && !currentState.activeReforge && !currentState.activeInlay && !currentState.activeGraving && !currentState.activeSale && !activeProject.activeComponentId) {
+        if ((currentState.activeOrder || currentState.activeFreeCraft) && !currentState.activeReforge && !currentState.activeInlay && !currentState.activeGraving && !currentState.activeSale && !activePlayerProject.activeComponentId) { // ИЗМЕНЕНО: Проверка только для проектов игрока
              showToast("Выберите компонент для работы, кликнув на него!", "error");
              return;
         }

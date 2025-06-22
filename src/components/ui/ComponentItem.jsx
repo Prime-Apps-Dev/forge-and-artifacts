@@ -6,7 +6,7 @@ import { formatNumber } from '../../utils/helpers'; // Импортируем fo
 // ComponentItem отображает информацию об отдельном компоненте предмета,
 // над которым в данный момент работает игрок.
 // Он мемоизирован с помощью React.memo для оптимизации производительности.
-const ComponentItem = memo(({ component, orderState, gameState, onSelectComponent }) => {
+const ComponentItem = memo(({ component, orderState, gameState, onSelectComponent }) => { // ИЗМЕНЕНО: Добавлен onSelectComponent
     // Прогресс выполнения текущего компонента. Если его нет, то 0.
     const progress = orderState.componentProgress[component.id] || 0;
     // Флаг, указывающий, завершен ли компонент.
@@ -23,23 +23,8 @@ const ComponentItem = memo(({ component, orderState, gameState, onSelectComponen
     });
 
     // Определяет, можно ли сейчас выбрать этот компонент.
-    const canSelect = !isComplete && dependenciesMet;
-
-    // DEBUG LOGS
-    // console.log(`Component: ${component.name}`);
-    // console.log(`  - progress: ${progress}/${component.progress} (isComplete: ${isComplete})`);
-    // console.log(`  - isActive: ${isActive}`);
-    // console.log(`  - dependenciesMet: ${dependenciesMet}`);
-    // if (component.requires) {
-    //     component.requires.forEach(reqId => {
-    //         const requiredComponentDef = definitions.items[orderState.itemKey].components.find(c => c.id === reqId);
-    //         const reqProgress = orderState.componentProgress[reqId] || 0;
-    //         const reqTarget = requiredComponentDef?.progress || 0;
-    //         console.log(`    - Dep ${reqId}: ${reqProgress}/${reqTarget} (Met: ${reqProgress >= reqTarget})`);
-    //     });
-    // }
-    // console.log(`  - canSelect: ${canSelect}`);
-    // console.log("---");
+    // ИЗМЕНЕНО: Только если onSelectComponent передан (т.е. это проект игрока)
+    const canSelect = onSelectComponent && !isComplete && dependenciesMet;
 
 
     // Классы CSS для стилизации компонента в зависимости от его состояния.

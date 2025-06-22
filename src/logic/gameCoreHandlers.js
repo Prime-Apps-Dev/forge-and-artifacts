@@ -36,9 +36,10 @@ export function createCoreHandlers({
         const workstationMod = state.workstationBonus[state.activeWorkstationId] || 1;
         progressAmount *= workstationMod;
 
-        if (state.artifacts.bastion?.status === 'completed') {
-            progressAmount *= 1.15;
-        }
+        // REMOVED: Bastion effect moved to recalculateAllModifiers
+        // if (state.artifacts.bastion?.status === 'completed') {
+        //     progressAmount *= 1.15;
+        // }
 
         if (state.activeSale) {
             const saleProject = state.activeSale;
@@ -122,10 +123,11 @@ export function createCoreHandlers({
                 if (isLastStage) {
                     audioController.play('levelup', 'C6', '1n');
                     state.artifacts[epicOrder.artifactId].status = 'completed';
-                    if (epicOrder.artifactId === 'crown') {
-                        state.sparksModifier += 0.25;
-                        state.matterModifier += 0.25;
-                    }
+                    // REMOVED: Crown effect moved to recalculateAllModifiers
+                    // if (epicOrder.artifactId === 'crown') {
+                    //     state.sparksModifier += 0.25;
+                    //     state.matterModifier += 0.25;
+                    // }
                     setCompletedOrderInfo({ isArtifact: true, artifactId: epicOrder.artifactId });
                     state.currentEpicOrder = null;
                     showToast(`Шедевр создан: ${artifactDef.name}!`, 'levelup');
@@ -139,6 +141,7 @@ export function createCoreHandlers({
             return state;
         }
 
+        // Проверяем, что активный проект принадлежит игроку, а не подмастерью
         const activeProject = state.activeOrder || state.activeFreeCraft;
 
         if (activeProject) {
@@ -161,17 +164,18 @@ export function createCoreHandlers({
             }
 
             if ((activeProject.componentProgress[componentDef.id] || 0) === 0 && componentDef.cost) {
-                let canAfford = true;
+                // Aegis effect (action-based) remains here
                 if (state.artifacts.aegis.status === 'completed' && Math.random() < 0.10) {
                     showToast("Эгида защитила вас от трат!", 'levelup');
                 } else {
+                    let canAfford = true;
                     for (const resource in componentDef.cost) {
                         const actualCost = Math.max(1, componentDef.cost[resource] - (state.componentCostReduction || 0));
                         const resourceStorage = resource in state.specialItems ? 'specialItems' : 'main';
                         const currentAmount = resourceStorage === 'main' ? state[resource] : state.specialItems[resource];
                         if (currentAmount < actualCost) {
                             let resourceName = definitions.specialItems[resource]?.name || resource.replace('Ingots', ' слитков').replace('sparks',' искр').replace('matter',' материи');
-                            showToast(`Недостаточно: ${resourceName} (${actualCost} требуется) для компонента "${componentDef.name}"!`, 'error');
+                            showToast(`Недостаточно: ${resourceName} (${actualCost} требуется)!`, 'error');
                             canAfford = false;
                             break;
                         }
@@ -226,6 +230,13 @@ export function createCoreHandlers({
         const isSale = !!state.activeSale;
         const minigameState = state.activeOrder?.minigameState;
 
+        // Hammer effect (action-based) remains here
+        if (state.artifacts.hammer.status === 'completed' && Math.random() < 0.01) {
+            state.specialItems.gem = (state.specialItems.gem || 0) + 1;
+            showToast("Молот Горного Сердца: Вы нашли самоцвет!", 'crit');
+            audioController.play('levelup', 'E6', '8n');
+        }
+
         if (!isSale && minigameState?.active && state.activeOrder) {
             const component = definitions.items[state.activeOrder.itemKey].components.find(c => c.id === state.activeOrder.activeComponentId);
             if (component?.minigame) {
@@ -278,6 +289,7 @@ export function createCoreHandlers({
     }
 
     const handleSelectComponent = (state, componentId) => {
+        // Игрок может выбирать компоненты только для своих активных проектов
         if (state.activeOrder) {
             state.activeOrder.activeComponentId = componentId;
         }

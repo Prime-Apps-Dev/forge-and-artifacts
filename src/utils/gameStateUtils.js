@@ -34,20 +34,21 @@ export function recalculateAllModifiers(state) {
 
     // 1. Эффекты от купленных навыков (purchasedSkills)
     Object.entries(state.purchasedSkills).forEach(([skillId, isPurchased]) => {
-        if (isPurchased && definitions.skills[skillId]?.apply) {
-            definitions.skills[skillId].apply(state);
+        const skillDef = definitions.skills[skillId];
+        if (isPurchased && skillDef && typeof skillDef.apply === 'function') {
+            skillDef.apply(state);
         }
     });
 
     // 2. Эффекты от улучшений мастерской (definitions.upgrades)
     Object.entries(state.upgradeLevels).forEach(([id, lvl]) => {
         const def = definitions.upgrades[id];
-        if (def) {
+        if (def && typeof def.apply === 'function') {
             if (def.isMultiLevel) {
                 for (let i = 0; i < lvl; i++) {
-                    if (def.apply) { def.apply(state); }
+                    def.apply(state);
                 }
-            } else if (lvl > 0 && def.apply) {
+            } else if (lvl > 0) {
                 def.apply(state);
             }
         }
@@ -56,12 +57,12 @@ export function recalculateAllModifiers(state) {
     // 3. Эффекты от улучшений магазина (definitions.shopUpgrades)
     Object.entries(state.upgradeLevels).forEach(([id, lvl]) => {
         const def = definitions.shopUpgrades[id];
-        if (def) {
+        if (def && typeof def.apply === 'function') {
             if (def.isMultiLevel) {
                 for (let i = 0; i < lvl; i++) {
-                    if (def.apply) { def.apply(state); }
+                    def.apply(state);
                 }
-            } else if (lvl > 0 && def.apply) {
+            } else if (lvl > 0) {
                 def.apply(state);
             }
         }
@@ -70,17 +71,18 @@ export function recalculateAllModifiers(state) {
     // 4. Эффекты от персонала (definitions.personnel)
     Object.entries(state.upgradeLevels).forEach(([id, lvl]) => {
         const def = definitions.personnel[id];
-        if (def && def.isMultiLevel) {
+        if (def && def.isMultiLevel && typeof def.apply === 'function') {
             for (let i = 0; i < lvl; i++) {
-                if (def.apply) { def.apply(state); }
+                def.apply(state);
             }
         }
     });
 
     // 5. Эффекты от фракционных улучшений (definitions.factionUpgrades)
     Object.entries(state.purchasedFactionUpgrades).forEach(([upgradeId, isPurchased]) => {
-        if (isPurchased && definitions.factionUpgrades[upgradeId]?.apply) {
-            definitions.factionUpgrades[upgradeId].apply(state);
+        const upgradeDef = definitions.factionUpgrades[upgradeId];
+        if (isPurchased && upgradeDef && typeof upgradeDef.apply === 'function') {
+            upgradeDef.apply(state);
         }
     });
 
@@ -88,33 +90,22 @@ export function recalculateAllModifiers(state) {
     Object.keys(state.artifacts).forEach(artId => {
         if (state.artifacts[artId].status === 'completed') {
             const artifactDef = definitions.greatArtifacts[artId];
-            if (artifactDef.apply) {
+            if (artifactDef && typeof artifactDef.apply === 'function') { // Only call apply if it exists and is a function
                 artifactDef.apply(state);
-            } else {
-                if (artId === 'crown') {
-                    state.sparksModifier += 0.25;
-                    state.matterModifier += 0.25;
-                }
-                if (artId === 'bastion') {
-                    state.progressPerClick *= 1.15;
-                }
             }
+            // Removed hardcoded effects for Crown and Bastion, as they now have apply methods.
         }
     });
 
     // 7. Эффекты от Вечных Навыков (eternalSkills)
     Object.entries(state.eternalSkills).forEach(([skillId, isPurchased]) => {
-        if (isPurchased && definitions.eternalSkills[skillId]?.apply) {
-            definitions.eternalSkills[skillId].apply(state);
+        const eternalSkillDef = definitions.eternalSkills[skillId];
+        if (isPurchased && eternalSkillDef && typeof eternalSkillDef.apply === 'function') {
+            eternalSkillDef.apply(state);
         }
     });
 
     // 8. ЭФФЕКТЫ ОТ ЗАВЕРШЕННЫХ ДОСТИЖЕНИЙ (achievements) - УДАЛЕНЫ ОТСЮДА!
     // Теперь они применяются ТОЛЬКО ОДИН РАЗ в gameLogic.js при первом выполнении.
-    // state.completedAchievements.forEach(achId => {
-    //     const achievementDef = definitions.achievements[achId];
-    //     if (achievementDef?.apply) {
-    //         achievementDef.apply(state);
-    //     }
-    // });
+    // (This comment refers to the original intention, and this section remains as a comment/placeholder for achievements)
 }

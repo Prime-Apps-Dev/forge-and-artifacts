@@ -1,5 +1,4 @@
 // src/data/definitions/main.js
-
 export const {
     factions,
     reputationLevels,
@@ -79,7 +78,11 @@ export const {
                 { stage: 1, name: "Огранка Слезы солнца", progress: 15000, workstation: 'grindstone', cost: { gem: 10, sparks: 70000, copperIngots: 200 } },
                 { stage: 2, name: "Создание золотого каркаса", progress: 10000, workstation: 'anvil', cost: { sparks: 100000, bronzeIngots: 30, ironIngots: 500 } },
                 { stage: 3, name: "Инкрустация и благословение", progress: 20000, workstation: 'workbench', cost: { matter: 15000, sparksteelIngots: 20 } }
-            ]
+            ],
+            apply: (state) => {
+                state.sparksModifier += 0.25;
+                state.matterModifier += 0.25;
+            }
         },
         bastion: {
             name: "Бастион Несокрушимости",
@@ -95,7 +98,12 @@ export const {
                 { stage: 1, name: "Сборка ядра", progress: 25000, workstation: 'anvil', cost: { bronzeIngots: 100, sparks: 150000 } },
                 { stage: 2, name: "Монтаж гироскопа", progress: 20000, workstation: 'workbench', cost: { sparksteelIngots: 30, matter: 10000 } },
                 { stage: 3, name: "Насыщение энергией", progress: 30000, workstation: 'workbench', cost: { matter: 25000, gem: 30, sparks: 200000 } }
-            ]
+            ],
+            apply: (state) => {
+                state.progressPerClick = state.progressPerClick * (1 + 0.15); // Adjusting base progress (if existing logic increases it)
+                // If the intention is to reduce *required* progress, a new state variable like `componentProgressRequiredModifier` should be introduced.
+                // For consistency with original applyProgress, keeping it as progressPerClick multiplier.
+            }
         },
         quill: {
             name: "Перо Архивариуса",
