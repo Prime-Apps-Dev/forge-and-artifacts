@@ -34,7 +34,7 @@ export const {
     greatArtifacts: {
         aegis: {
             name: "Эгида Бессмертного Короля",
-            icon: "/img/artifacts/aegis_shield.png", // ИЗМЕНЕНО: Путь к изображению
+            icon: "/img/artifacts/aegis_shield.webp", // ИЗМЕНЕНО: Путь к изображению
             description: "Дает 10% шанс не потратить ресурсы при создании любого компонента.",
             components: {
                 blueprint: { name: "Королевский чертеж: Эгида", obtained: false, itemId: 'blueprint_aegis' },
@@ -50,7 +50,7 @@ export const {
         },
         hammer: {
             name: "Молот Горного Сердца",
-            icon: "/img/artifacts/mountain_heart_hammer.png", // ИЗМЕНЕНО: Путь к изображению
+            icon: "/img/artifacts/mountain_heart_hammer.webp", // ИЗМЕНЕНО: Путь к изображению
             description: "Каждый удар по наковальне имеет 1% шанс дополнительно создать редкий самоцвет.",
             components: {
                 blueprint: { name: "Королевский чертеж: Молот", obtained: false, itemId: 'blueprint_hammer' },
@@ -66,7 +66,7 @@ export const {
         },
         crown: {
             name: "Корона Солнца",
-            icon: "/img/artifacts/sun_crown.png", // ИЗМЕНЕНО: Путь к изображению
+            icon: "/img/artifacts/sun_crown.webp", // ИЗМЕНЕНО: Путь к изображению
             description: "Значительно увеличивает доход Искр и Материи от всех заказов (+25%).",
             components: {
                 blueprint: { name: "Королевский чертеж: Корона", obtained: false, itemId: 'blueprint_crown' },
@@ -82,7 +82,7 @@ export const {
         },
         bastion: {
             name: "Бастион Несокрушимости",
-            icon: "/img/artifacts/bastion_of_invincibility.png", // ИЗМЕНЕНО: Путь к изображению
+            icon: "/img/artifacts/bastion_of_invincibility.webp", // ИЗМЕНЕНО: Путь к изображению
             description: "Снижает требуемый прогресс для всех компонентов на 15%.",
             components: {
                 blueprint: { name: "Древний чертеж: Бастион", obtained: false, itemId: 'blueprint_bastion'},
@@ -98,7 +98,7 @@ export const {
         },
         quill: {
             name: "Перо Архивариуса",
-            icon: "/img/artifacts/archivists_quill.png", // ИЗМЕНЕНО: Путь к изображению
+            icon: "/img/artifacts/archivists_quill.webp", // ИЗМЕНЕНО: Путь к изображению
             description: "Вы получаете 1 ед. Материи за каждые 100 Искр, заработанных с заказов.",
             components: {
                 blueprint: { name: "Древний чертеж: Перо", obtained: false, itemId: 'blueprint_quill'},
@@ -147,23 +147,23 @@ export const {
     },
 
     clients: [
-        { id: 'farmer', name: 'Фермер', faceImg: '/img/clients/farmer.png', demands: { quality: 0.8, speed: 1.2, reward: 0.9, saleSpeedModifier: 1.2, tipChance: 0.05 }, unlockLevel: 0, unlockSkill: null },
-        { id: 'adventurer', name: 'Авантюрист', faceImg: '/img/clients/adventurer.png', demands: { quality: 1.0, speed: 0.8, reward: 1.1, saleSpeedModifier: 1.0, tipChance: 0.1 }, unlockLevel: 0, unlockSkill: 'advancedClients' },
-        { id: 'noble', name: 'Дворянин', faceImg: '/img/clients/noble.png', demands: { quality: 1.5, speed: 1.0, reward: 1.5, saleSpeedModifier: 0.8, tipChance: 0.2 }, unlockLevel: 0, unlockSkill: null },
-        { id: 'shadowyFigure', name: 'Тайный Заказчик', faceImg: '/img/clients/shadowy_figure.png', demands: { quality: 1.8, speed: 0.5, reward: 2.5 }, isRisky: true, unlockLevel: 0, unlockSkill: null },
-        { id: 'collector', name: 'Коллекционер', faceImg: '/img/clients/collector.png', demands: { quality: 2.5, speed: 1.0, reward: 3.0, saleSpeedModifier: 0.7, tipChance: 0.3 }, isCollector: true, unlockLevel: 0, unlockSkill: null },
+        { id: 'farmer', name: 'Фермер', faceImg: '/img/clients/farmer.webp', demands: { quality: 0.8, speed: 1.2, reward: 0.9, saleSpeedModifier: 1.2, tipChance: 0.05 }, unlockLevel: 0, unlockSkill: null },
+        { id: 'adventurer', name: 'Авантюрист', faceImg: '/img/clients/adventurer.webp', demands: { quality: 1.0, speed: 0.8, reward: 1.1, saleSpeedModifier: 1.0, tipChance: 0.1 }, unlockLevel: 0, unlockSkill: 'advancedClients' },
+        { id: 'noble', name: 'Дворянин', faceImg: '/img/clients/noble.webp', demands: { quality: 1.5, speed: 1.0, reward: 1.5, saleSpeedModifier: 0.8, tipChance: 0.2 }, unlockLevel: 0, unlockSkill: null },
+        { id: 'shadowyFigure', name: 'Тайный Заказчик', faceImg: '/img/clients/shadowy_figure.webp', demands: { quality: 1.8, speed: 0.5, reward: 2.5 }, isRisky: true, unlockLevel: 0, unlockSkill: null },
+        { id: 'collector', name: 'Коллекционер', faceImg: '/img/clients/collector.webp', demands: { quality: 2.5, speed: 1.0, reward: 3.0, saleSpeedModifier: 0.7, tipChance: 0.3 }, isCollector: true, unlockLevel: 0, unlockSkill: null },
 
         // Новые клиенты, которые мы добавили ранее (их unlockSkill/unlockLevel остаются как были или обновятся, если вы их переопределили)
-        { id: 'alchemist', name: 'Алхимик', faceImg: '/img/clients/alchemist.png', demands: { quality: 1.8, speed: 0.7, reward: 2.0, saleSpeedModifier: 0.6, tipChance: 0.15 }, unlockLevel: 5, unlockSkill: 'advancedClients' },
-        { id: 'scholar', name: 'Ученый-Археолог', faceImg: '/img/clients/scholar.png', demands: { quality: 1.2, speed: 1.0, reward: 1.3, saleSpeedModifier: 0.8, tipChance: 0.08 }, unlockLevel: 3, unlockSkill: null },
-        { id: 'barbarian', name: 'Варвар-Воин', faceImg: '/img/clients/barbarian.png', demands: { quality: 0.7, speed: 1.5, reward: 0.8, saleSpeedModifier: 1.3, tipChance: 0.03 }, unlockLevel: 2, unlockSkill: null },
-        { id: 'bard', name: 'Бард-Путешественник', faceImg: '/img/clients/bard.png', demands: { quality: 1.0, speed: 1.1, reward: 1.0, saleSpeedModifier: 1.0, tipChance: 0.12 }, unlockLevel: 4, unlockSkill: 'advancedClients' },
-        { id: 'artisan', name: 'Придворный Ремесленник', faceImg: '/img/clients/artisan.png', demands: { quality: 2.0, speed: 0.5, reward: 2.8, saleSpeedModifier: 0.4, tipChance: 0.25 }, isCollector: true, unlockLevel: 7, unlockSkill: 'legendaryClients' },
-        { id: 'miner', name: 'Старатель', faceImg: '/img/clients/miner.png', demands: { quality: 0.9, speed: 1.3, reward: 0.95, saleSpeedModifier: 1.1, tipChance: 0.06 }, unlockLevel: 1, unlockSkill: null },
-        { id: 'hunter', name: 'Охотник', faceImg: '/img/clients/hunter.png', demands: { quality: 1.1, speed: 1.2, reward: 1.0, saleSpeedModifier: 1.0, tipChance: 0.07 }, unlockLevel: 2, unlockSkill: null },
-        { id: 'priestess', name: 'Жрица Света', faceImg: '/img/clients/priestess.png', demands: { quality: 2.2, speed: 0.8, reward: 3.0, saleSpeedModifier: 0.5, tipChance: 0.30 }, unlockLevel: 8, unlockSkill: 'legendaryClients' },
-        { id: 'engineer_client', name: 'Имперский Инженер', faceImg: '/img/clients/engineer_client.png', demands: { quality: 1.5, speed: 0.9, reward: 1.7, saleSpeedModifier: 0.7, tipChance: 0.18 }, unlockLevel: 6, unlockSkill: 'advancedClients' },
-        { id: 'spy', name: 'Тайный Агент', faceImg: '/img/clients/spy.png', demands: { quality: 1.0, speed: 0.4, reward: 2.5, saleSpeedModifier: 0.1, tipChance: 0.20 }, isRisky: true, unlockLevel: 5, unlockSkill: null },
+        { id: 'alchemist', name: 'Алхимик', faceImg: '/img/clients/alchemist.webp', demands: { quality: 1.8, speed: 0.7, reward: 2.0, saleSpeedModifier: 0.6, tipChance: 0.15 }, unlockLevel: 5, unlockSkill: 'advancedClients' },
+        { id: 'scholar', name: 'Ученый-Археолог', faceImg: '/img/clients/scholar.webp', demands: { quality: 1.2, speed: 1.0, reward: 1.3, saleSpeedModifier: 0.8, tipChance: 0.08 }, unlockLevel: 3, unlockSkill: null },
+        { id: 'barbarian', name: 'Варвар-Воин', faceImg: '/img/clients/barbarian.webp', demands: { quality: 0.7, speed: 1.5, reward: 0.8, saleSpeedModifier: 1.3, tipChance: 0.03 }, unlockLevel: 2, unlockSkill: null },
+        { id: 'bard', name: 'Бард-Путешественник', faceImg: '/img/clients/bard.webp', demands: { quality: 1.0, speed: 1.1, reward: 1.0, saleSpeedModifier: 1.0, tipChance: 0.12 }, unlockLevel: 4, unlockSkill: 'advancedClients' },
+        { id: 'artisan', name: 'Придворный Ремесленник', faceImg: '/img/clients/artisan.webp', demands: { quality: 2.0, speed: 0.5, reward: 2.8, saleSpeedModifier: 0.4, tipChance: 0.25 }, isCollector: true, unlockLevel: 7, unlockSkill: 'legendaryClients' },
+        { id: 'miner', name: 'Старатель', faceImg: '/img/clients/miner.webp', demands: { quality: 0.9, speed: 1.3, reward: 0.95, saleSpeedModifier: 1.1, tipChance: 0.06 }, unlockLevel: 1, unlockSkill: null },
+        { id: 'hunter', name: 'Охотник', faceImg: '/img/clients/hunter.webp', demands: { quality: 1.1, speed: 1.2, reward: 1.0, saleSpeedModifier: 1.0, tipChance: 0.07 }, unlockLevel: 2, unlockSkill: null },
+        { id: 'priestess', name: 'Жрица Света', faceImg: '/img/clients/priestess.webp', demands: { quality: 2.2, speed: 0.8, reward: 3.0, saleSpeedModifier: 0.5, tipChance: 0.30 }, unlockLevel: 8, unlockSkill: 'legendaryClients' },
+        { id: 'engineer_client', name: 'Имперский Инженер', faceImg: '/img/clients/engineer_client.webp', demands: { quality: 1.5, speed: 0.9, reward: 1.7, saleSpeedModifier: 0.7, tipChance: 0.18 }, unlockLevel: 6, unlockSkill: 'advancedClients' },
+        { id: 'spy', name: 'Тайный Агент', faceImg: '/img/clients/spy.webp', demands: { quality: 1.0, speed: 0.4, reward: 2.5, saleSpeedModifier: 0.1, tipChance: 0.20 }, isRisky: true, unlockLevel: 5, unlockSkill: null },
     ],
 
     upgrades: {
@@ -249,13 +249,13 @@ export const {
     },
 
     recipes: {
-        iron: { name: "Железный слиток", input: { ironOre: 10 }, output: { ironIngots: 1 }, requiredProgress: 20, icon: '/img/ingots/iron_ingot.png' },
-        copper: { name: "Медный слиток", input: { copperOre: 10 }, output: { copperIngots: 1 }, requiredProgress: 20, requiredSkill: 'findCopper', icon: '/img/ingots/copper_ingot.png' },
-        mithril: { name: "Мифриловый слиток", input: { mithrilOre: 15 }, output: { mithrilIngots: 1 }, requiredProgress: 30, requiredSkill: 'mithrilProspecting', icon: '/img/ingots/mithril_ingot.png' },
-        adamantite: { name: "Адамантитовый слиток", input: { adamantiteOre: 20 }, output: { adamantiteIngots: 1 }, requiredProgress: 50, requiredSkill: 'adamantiteMining', icon: '/img/ingots/adamantite_ingot.png' },
-        bronze: { name: "Бронзовый слиток", input: { ironIngots: 1, copperIngots: 1 }, output: { bronzeIngots: 1 }, requiredSkill: 'artOfAlloys', icon: '/img/ingots/bronze_ingot.png' },
-        sparksteel: { name: "Слиток Искростали", input: { bronzeIngots: 2, sparks: 1000 }, output: { sparksteelIngots: 1 }, requiredSkill: 'artOfAlloys', icon: '/img/ingots/sparksteel_ingot.png' },
-        arcanite: { name: "Арканитовый слиток", input: { adamantiteIngots: 1, matter: 500 }, output: { arcaniteIngots: 1 }, requiredSkill: 'arcaneMetallurgy', icon: '/img/ingots/arcanite_ingot.png' },
+        iron: { name: "Железный слиток", input: { ironOre: 10 }, output: { ironIngots: 1 }, requiredProgress: 20, icon: '/img/ingots/iron_ingot.webp' },
+        copper: { name: "Медный слиток", input: { copperOre: 10 }, output: { copperIngots: 1 }, requiredProgress: 20, requiredSkill: 'findCopper', icon: '/img/ingots/copper_ingot.webp' },
+        mithril: { name: "Мифриловый слиток", input: { mithrilOre: 15 }, output: { mithrilIngots: 1 }, requiredProgress: 30, requiredSkill: 'mithrilProspecting', icon: '/img/ingots/mithril_ingot.webp' },
+        adamantite: { name: "Адамантитовый слиток", input: { adamantiteOre: 20 }, output: { adamantiteIngots: 1 }, requiredProgress: 50, requiredSkill: 'adamantiteMining', icon: '/img/ingots/adamantite_ingot.webp' },
+        bronze: { name: "Бронзовый слиток", input: { ironIngots: 1, copperIngots: 1 }, output: { bronzeIngots: 1 }, requiredSkill: 'artOfAlloys', icon: '/img/ingots/bronze_ingot.webp' },
+        sparksteel: { name: "Слиток Искростали", input: { bronzeIngots: 2, sparks: 1000 }, output: { sparksteelIngots: 1 }, requiredSkill: 'artOfAlloys', icon: '/img/ingots/sparksteel_ingot.webp' },
+        arcanite: { name: "Арканитовый слиток", input: { adamantiteIngots: 1, matter: 500 }, output: { arcaniteIngots: 1 }, requiredSkill: 'arcaneMetallurgy', icon: '/img/ingots/arcanite_ingot.webp' },
     },
 
     worldEvents: [
@@ -299,10 +299,10 @@ export const {
     },
 
     resourceIcons: {
-        ironOre: '/img/ores/iron_ore.png',
-        copperOre: '/img/ores/copper_ore.png',
-        mithrilOre: '/img/ores/mithril_ore.png',
-        adamantiteOre: '/img/ores/adamantite_ore.png',
+        ironOre: '/img/ores/iron_ore.webp',
+        copperOre: '/img/ores/copper_ore.webp',
+        mithrilOre: '/img/ores/mithril_ore.webp',
+        adamantiteOre: '/img/ores/adamantite_ore.webp',
     },
     resources: {
         ironOre: { name: 'Железная руда' },

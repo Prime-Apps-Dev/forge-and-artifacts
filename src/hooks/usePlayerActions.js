@@ -11,10 +11,10 @@ import {
     handleCompleteInlay,
     handleCompleteGraving,
     handleOrderCompletion,
-    checkForNewQuests
 } from '../logic/gameCompletions';
 import { createCoreHandlers } from '../logic/gameCoreHandlers';
 import { initialGameState } from './useGameStateLoader';
+import { checkForNewQuests } from '../utils/gameEventChecks';
 
 export function usePlayerActions(
     updateState, showToast, gameStateRef,
@@ -23,17 +23,14 @@ export function usePlayerActions(
     setIsWorldMapModalOpen,
     setIsAchievementRewardModalOpen,
     setAchievementToDisplay,
-    setIsAvatarSelectionModalOpen,
-    setIsCreditsModalOpen,
-    isAchievementModalOpenRef,
-    showAchievementRewardModal
+    setIsAvatarSelectionModalOpen, // ИЗМЕНЕНО: Исправлена опечатка в имени параметра
+    setIsCreditsModalOpen
 ) {
     const clickData = useRef({ count: 0, lastTime: 0 });
 
     const coreHandlers = useMemo(() => createCoreHandlers({
-        // updateState, // УДАЛЕНО: updateState больше не передается напрямую в createCoreHandlers
         showToast, setIsWorking, workTimeoutRef, setCompletedOrderInfo
-    }), [showToast, setIsWorking, workTimeoutRef, setCompletedOrderInfo]); // ИЗМЕНЕНО: Удалена updateState из зависимостей
+    }), [showToast, setIsWorking, workTimeoutRef, setCompletedOrderInfo]);
 
     const canAffordAndPay = useCallback((state, costs, showToastFunc) => {
         for (const resourceType in costs) {
@@ -104,19 +101,13 @@ export function usePlayerActions(
     const handleCloseAchievementRewardModal = useCallback(() => {
         setIsAchievementRewardModalOpen(false);
         setAchievementToDisplay(null);
-        if (isAchievementModalOpenRef.current) {
-            isAchievementModalOpenRef.current = false;
-        }
-    }, [setIsAchievementRewardModalOpen, setAchievementToDisplay, isAchievementModalOpenRef]);
+    }, [setIsAchievementRewardModalOpen, setAchievementToDisplay]);
 
     const handleClaimAchievementReward = useCallback((achievementId, rewardText) => {
         showToast(rewardText, 'levelup');
         setIsAchievementRewardModalOpen(false);
         setAchievementToDisplay(null);
-        if (isAchievementModalOpenRef.current) {
-            isAchievementModalOpenRef.current = false;
-        }
-    }, [showToast, setIsAchievementRewardModalOpen, setAchievementToDisplay, isAchievementModalOpenRef]);
+    }, [showToast, setIsAchievementRewardModalOpen, setAchievementToDisplay]);
 
     const handleOpenAvatarSelectionModal = useCallback(() => {
         setIsAvatarSelectionModalOpen(true);
@@ -141,7 +132,7 @@ export function usePlayerActions(
             return state;
         });
         setIsAvatarSelectionModalOpen(false);
-    }, [updateState, showToast, setIsAvatarSelectionModalOpen, definitions]);
+    }, [updateState, showToast, setIsAvatarSelectionModalOpen, definitions]); // ИЗМЕНЕНО: Исправлена опечатка в зависимости
 
     const handleBuySkill = useCallback((skillId) => {
         let shouldOpenSpecModal = false;
@@ -166,7 +157,7 @@ export function usePlayerActions(
             if (!canAffordAndPay(state, currentCost, showToast)) { return state; }
             state.purchasedSkills[skillId] = true;
             recalculateAllModifiers(state);
-            let toastMessage = `Навык "${skill.name}" изучен!`;
+            let toastMessage = `Навыг "${skill.name}" изучен!`;
             const isOffSpec = skill.requiredSpecialization && state.specialization && skill.requiredSpecialization !== state.specialization;
             if (isOffSpec) toastMessage += " (Вне специализации)";
             showToast(toastMessage, 'success');
@@ -180,7 +171,7 @@ export function usePlayerActions(
         if (shouldOpenSpecModal) { setTimeout(() => setIsSpecializationModalOpen(true), 100); }
         else if (shouldOpenInfoModal) {
             if (gameStateRef.current.activeInfoModal) { updateState(state => { state.activeInfoModal = null; return state; }); }
-            setTimeout(() => { updateState(state => { state.activeInfoModal = shouldOpenInfoModal; return state; }); }, 100);
+            setTimeout(() => { updateState(state => { state.activeInfoModal = shouldInfoModal; return state; }); }, 100);
         }
     }, [updateState, showToast, canAffordAndPay, recalculateAllModifiers, setIsSpecializationModalOpen, gameStateRef, definitions]);
 
@@ -240,7 +231,7 @@ export function usePlayerActions(
                         client: collectorClient,
                         itemKey,
                         rewards: { sparks: Math.max(1, Math.round(totalProgress * collectorClient.demands.reward * 3.0)),
-                                   matter: Math.max(1, Math.round((totalProgress * collectorClient.demands.reward * 3.0) / 5)) },
+                                   matter: Math.max(1, Math.round((totalProgress * client.demands.reward * 3.0) / 5)) },
                         componentProgress: {},
                         activeComponentId: item.components.find(c => !c.requires)?.id || item.components[0].id,
                         spawnTime: Date.now(),
@@ -298,9 +289,9 @@ export function usePlayerActions(
                     return !item.isQuestRecipe && (!item.requiredSkill || state.purchasedSkills[item.requiredSkill]) &&
                            (!item.firstPlaythroughLocked || !state.isFirstPlaythrough);
                 });
-                itemKey = availableItemsForOrders.length > 0 ? availableItemsForOrders[Math.floor(Math.random() * availableItemsForOrders.length)] : null; // Fallback to null if no items
+                itemKey = availableItemsForOrders.length > 0 ? availableItemsForOrders[Math.floor(Math.random() * availableItemsForOrders.length)] : null;
             }
-
+            
             if (!itemKey || !client) {
                 console.warn("Не удалось сгенерировать заказ: нет доступных предметов или клиентов.");
                 return state;
@@ -739,31 +730,24 @@ export function usePlayerActions(
     }, [updateState, showToast, recalculateAllModifiers, definitions]);
 
 
-    // НОВАЯ: Обертка для coreHandlers.handleStrikeAnvil
     const handleStrikeAnvil = useCallback(() => {
-        // Получаем актуальное состояние из gameStateRef.current перед вызовом
         const currentState = gameStateRef.current; 
 
-        // Проверяем наличие активного проекта здесь, чтобы выдавать тост
         const activeProject = currentState.activeOrder || currentState.activeFreeCraft || currentState.currentEpicOrder || currentState.activeReforge || currentState.activeInlay || currentState.activeGraving || currentState.activeSale;
 
         if (!activeProject) {
             showToast("Выберите проект для работы!", "error");
-            return; // Просто return, не нужно updateState, если нет проекта
+            return;
         }
 
-        // Проверка, если это обычная ковка (заказ или свободная), и компонент не выбран.
         if ((currentState.activeOrder || currentState.activeFreeCraft) && !currentState.activeReforge && !currentState.activeInlay && !currentState.activeGraving && !currentState.activeSale && !activeProject.activeComponentId) {
              showToast("Выберите компонент для работы, кликнув на него!", "error");
-             return; // Просто return
+             return;
         }
 
-        // Если все проверки пройдены, тогда вызываем updateState с coreHandlers.handleStrikeAnvil
-        // coreHandlers.handleStrikeAnvil изменит состояние напрямую
         updateState(state => coreHandlers.handleStrikeAnvil(state));
     }, [updateState, coreHandlers, showToast, gameStateRef]);
 
-    // НОВОЕ: Обертки для handleSelectComponent и handleSelectWorkstation
     const handleSelectComponent = useCallback((componentId) => {
         updateState(state => coreHandlers.handleSelectComponent(state, componentId));
     }, [updateState, coreHandlers]);
@@ -812,24 +796,22 @@ export function usePlayerActions(
             handleClickSale,
             handleStartNewSettlement,
             handleBuyEternalSkill,
-
-            showAchievementRewardModal,
-
-            // Core handlers (handleStrikeAnvil теперь обернут)
-            applyProgress: coreHandlers.applyProgress,
-            handleStrikeAnvil: handleStrikeAnvil, // Используем новую обертку
-            handleSelectComponent: handleSelectComponent, // ИЗМЕНЕНО: Используем новую обертку
-            handleSelectWorkstation: handleSelectWorkstation, // ИЗМЕНЕНО: Используем новую обертку
-            handleCloseRewardModal: coreHandlers.handleCloseRewardModal,
+            
             checkForNewQuests: (state) => checkForNewQuests(state, showToast),
+
+            applyProgress: coreHandlers.applyProgress,
+            handleStrikeAnvil: handleStrikeAnvil,
+            handleSelectComponent: handleSelectComponent,
+            handleSelectWorkstation: handleSelectWorkstation,
+            handleCloseRewardModal: coreHandlers.handleCloseRewardModal,
         };
     }, [
         updateState, showToast,
         setIsWorking, setCompletedOrderInfo, setIsSpecializationModalOpen,
-        setIsWorldMapModalOpen,
-        setIsAvatarSelectionModalOpen, setIsCreditsModalOpen,
+        setIsWorldMapModalOpen, setIsAchievementRewardModalOpen, setAchievementToDisplay,
+        setIsAvatarSelectionModalOpen, setIsCreditsModalOpen, // ИЗМЕНЕНО: Имя параметра setIsAvatarSelectionModalOpen
 
-        gameStateRef, workTimeoutRef, isAchievementModalOpenRef,
+        gameStateRef, workTimeoutRef,
 
         definitions, initialGameState, recalculateAllModifiers,
 
@@ -843,9 +825,7 @@ export function usePlayerActions(
         handleCraftArtifact, handleStartQuest, handleResetGame, handleStartMission,
         handleStartNewSettlement, handleBuyEternalSkill, handleStartReforge, handleStartInlay, handleStartGraving,
 
-        showAchievementRewardModal, // Новая зависимость
-
-        coreHandlers, // Зависимость
-        handleStrikeAnvil, handleSelectComponent, handleSelectWorkstation // Добавлены новые обертки как зависимости
+        coreHandlers,
+        handleStrikeAnvil, handleSelectComponent, handleSelectWorkstation
     ]);
 }

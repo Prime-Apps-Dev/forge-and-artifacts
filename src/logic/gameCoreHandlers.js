@@ -7,7 +7,7 @@ import {
     handleCompleteInlay,
     handleCompleteGraving,
     handleOrderCompletion,
-    checkForNewQuests,
+    // checkForNewQuests, // ИЗМЕНЕНО: Удален импорт checkForNewQuests
     handleSaleCompletion
 } from './gameCompletions';
 
@@ -29,11 +29,9 @@ export function createCoreHandlers({
 
     /**
      * Применяет прогресс к текущему активному проекту.
-     * Эту функцию теперь НЕ нужно вызывать через updateState внутри handleStrikeAnvil.
-     * Она принимает модифицируемое состояние напрямую.
      */
     const applyProgress = (state, progressAmount) => {
-        state.totalClicks = (state.totalClicks || 0) + 1; // НОВОЕ: Инкремент счетчика кликов
+        state.totalClicks = (state.totalClicks || 0) + 1;
 
         const workstationMod = state.workstationBonus[state.activeWorkstationId] || 1;
         progressAmount *= workstationMod;
@@ -42,7 +40,6 @@ export function createCoreHandlers({
             progressAmount *= 1.15;
         }
 
-        // Отдельные ветви для специальных проектов, которые имеют приоритет
         if (state.activeSale) {
             const saleProject = state.activeSale;
             saleProject.progress += progressAmount / workstationMod;
@@ -190,23 +187,20 @@ export function createCoreHandlers({
                 }
             }
 
-            // --- НОВОЕ: Логика бонуса критического удара от навыков ---
             let criticalProgressBonus = 0;
             if (state.purchasedSkills.mithrilCritStrike) {
-                // Пример: 10% шанс на +50% прогресса при крите
                 if (Math.random() < 0.1) {
                     criticalProgressBonus += (progressAmount * 0.5);
                     showToast("Критический удар Мифрила: Дополнительный прогресс!", "crit");
                 }
             }
             if (state.purchasedSkills.legendaryCritStrike) {
-                // Пример: 5% шанс на +100% прогресса при крите
                 if (Math.random() < 0.05) {
                     criticalProgressBonus += (progressAmount * 1.0);
                     showToast("Критический удар Легенды: Огромный бонус!", "crit");
                 }
             }
-            progressAmount += criticalProgressBonus; // Добавляем бонус к общему прогрессу
+            progressAmount += criticalProgressBonus;
 
             if (!activeProject.componentProgress[componentDef.id]) activeProject.componentProgress[componentDef.id] = 0;
             activeProject.componentProgress[componentDef.id] = Math.min(componentDef.progress, activeProject.componentProgress[componentDef.id] + progressAmount);
@@ -242,7 +236,7 @@ export function createCoreHandlers({
                 let qualityBonus = 0;
                 if (component.minigame.zones) {
                     for (const zone of component.minigame.zones) {
-                        if (pos >= zone.from && pos <= zone.to) { // ИСПРАВЛЕНО: Убедиться, что условие корректно
+                        if (pos >= zone.from && pos <= zone.to) {
                             hitQuality = zone.quality;
                             progressBonus = zone.progressBonus * state.progressPerClick;
                             qualityBonus = zone.qualityBonus;

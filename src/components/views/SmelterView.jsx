@@ -48,8 +48,8 @@ const SmelterView = ({ gameState, handlers }) => {
             recipeId,
             name: recipe.name,
             iconSrc: getResourceImageSrc(Object.keys(recipe.output)[0]),
-            isLocked: isTotallyLocked, // Этот флаг теперь используется для полного скрытия
-            isDisabled, // Для состояния кнопки (серый, но видим, если не скрыт)
+            isLocked: isTotallyLocked,
+            isDisabled,
             lockText,
             skillLearnedButLocked: isUnlocked && isPlaythroughLocked,
             hasEnough,
@@ -89,8 +89,8 @@ const SmelterView = ({ gameState, handlers }) => {
             recipeId,
             name: recipe.name,
             iconSrc: getResourceImageSrc(Object.keys(recipe.output)[0]),
-            isLocked: isTotallyLocked, // Этот флаг теперь используется для полного скрытия
-            isDisabled, // Для состояния кнопки
+            isLocked: isTotallyLocked,
+            isDisabled,
             lockText,
             skillLearnedButLocked: isUnlocked && isPlaythroughLocked,
             hasEnough
@@ -121,14 +121,10 @@ const SmelterView = ({ gameState, handlers }) => {
                     <p className="text-gray-400 text-sm mb-4">Переплавьте руду в прочные металлические слитки. Подмастерье плавит только железо.</p>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                         {smeltRecipes.map(recipe => (
-                            // ИЗМЕНЕНО: Полностью скрываем, если заблокирован навыком/прохождением
                             recipe && !recipe.isLocked ? (
                                 <div key={recipe.recipeId} className="flex flex-col items-center">
                                     <Tooltip text={recipe.lockText}>
-                                        <SmeltButton recipeId={recipe.recipeId} onClick={handlers.handleSmelt} disabled={recipe.isDisabled} gameState={gameState}>
-                                            <img src={recipe.iconSrc} alt={recipe.name} className="h-24 mb-2 object-contain" />
-                                            <span>{recipe.name}</span>
-                                        </SmeltButton>
+                                        <SmeltButton recipeId={recipe.recipeId} onClick={handlers.handleSmelt} disabled={recipe.isDisabled} gameState={gameState} /> {/* ИЗМЕНЕНО: Удалено children */}
                                     </Tooltip>
                                 </div>
                             ) : null
@@ -151,14 +147,10 @@ const SmelterView = ({ gameState, handlers }) => {
                     <p className="text-gray-400 text-sm mb-4">Комбинируйте металлы для получения превосходных материалов.</p>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                         {alloyRecipes.map(recipe => (
-                            // ИЗМЕНЕНО: Полностью скрываем, если заблокирован навыком/прохождением
                             recipe && !recipe.isLocked ? (
                                 <div key={recipe.recipeId} className="flex flex-col items-center">
                                     <Tooltip text={recipe.lockText}>
-                                        <SmeltButton recipeId={recipe.recipeId} onClick={handlers.handleForgeAlloy} disabled={recipe.isDisabled} gameState={gameState}>
-                                            <img src={recipe.iconSrc} alt={recipe.name} className="h-24 mb-2 object-contain" />
-                                            <span>{recipe.name}</span>
-                                        </SmeltButton>
+                                        <SmeltButton recipeId={recipe.recipeId} onClick={handlers.handleForgeAlloy} disabled={recipe.isDisabled} gameState={gameState} /> {/* ИЗМЕНЕНО: Удалено children */}
                                     </Tooltip>
                                 </div>
                             ) : null
