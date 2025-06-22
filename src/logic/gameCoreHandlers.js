@@ -15,7 +15,6 @@ import {
  * Фабрика для создания основных низкоуровневых обработчиков игры.
  */
 export function createCoreHandlers({
-    updateState,
     showToast,
     setIsWorking,
     workTimeoutRef,
@@ -30,8 +29,12 @@ export function createCoreHandlers({
 
     /**
      * Применяет прогресс к текущему активному проекту.
+     * Эту функцию теперь НЕ нужно вызывать через updateState внутри handleStrikeAnvil.
+     * Она принимает модифицируемое состояние напрямую.
      */
     const applyProgress = (state, progressAmount) => {
+        state.totalClicks = (state.totalClicks || 0) + 1; // НОВОЕ: Инкремент счетчика кликов
+
         const workstationMod = state.workstationBonus[state.activeWorkstationId] || 1;
         progressAmount *= workstationMod;
 
@@ -39,6 +42,7 @@ export function createCoreHandlers({
             progressAmount *= 1.15;
         }
 
+        // Отдельные ветви для специальных проектов, которые имеют приоритет
         if (state.activeSale) {
             const saleProject = state.activeSale;
             saleProject.progress += progressAmount / workstationMod;
@@ -87,15 +91,10 @@ export function createCoreHandlers({
             return state;
         }
 
-        const activeProject = state.activeOrder || state.activeFreeCraft;
-
         if (state.currentEpicOrder) {
             const epicOrder = state.currentEpicOrder;
             const artifactDef = definitions.greatArtifacts[epicOrder.artifactId];
             const stageDef = artifactDef.epicOrder.find(s => s.stage === epicOrder.currentStage);
-
-            // ИЗМЕНЕНИЕ: УДАЛЕНО: Блокировка крафта артефактов в первом прохождении из gameCoreHandlers
-            // Это будет обрабатываться в usePlayerActions.handleCraftArtifact.
 
             if (state.purchasedSkills.divisionOfLabor && stageDef.workstation !== state.activeWorkstationId) {
                 showToast(`Не тот станок! Требуется: ${definitions.workstations[stageDef.workstation].name}`, "error");
@@ -117,6 +116,7 @@ export function createCoreHandlers({
                     const resourceStorage = resource in state.specialItems ? 'specialItems' : 'main';
                     if(resourceStorage === 'main') { state[resource] -= cost; }
                     else { state.specialItems[resource] -= cost; }
+                    if (resource === 'matter') state.totalMatterSpent += cost;
                 }
             }
             epicOrder.progress += progressAmount;
@@ -142,20 +142,27 @@ export function createCoreHandlers({
             return state;
         }
 
+        const activeProject = state.activeOrder || state.activeFreeCraft;
+
         if (activeProject) {
             const itemDef = definitions.items[activeProject.itemKey];
-
-            // ИЗМЕНЕНИЕ: УДАЛЕНО: Блокировка крафта предметов в первом прохождении из gameCoreHandlers
-            // Это будет обрабатываться в usePlayerActions.handleStartFreeCraft.
-
             const componentDef = itemDef.components.find(c => c.id === activeProject.activeComponentId);
-            if (!componentDef || (activeProject.componentProgress[componentDef.id] || 0) >= componentDef.progress) {
+
+            if (!componentDef) {
+                showToast("Ошибка: Выбранный компонент для работы не найден! Выберите компонент.", "error");
                 return state;
             }
+
+            if ((activeProject.componentProgress[componentDef.id] || 0) >= componentDef.progress) {
+                showToast(`Компонент "${componentDef.name}" уже завершен. Выберите следующий!`, "info");
+                return state;
+            }
+
             if (state.purchasedSkills.divisionOfLabor && componentDef.workstation !== state.activeWorkstationId) {
-                showToast(`Не тот станок! Требуется: ${definitions.workstations[componentDef.workstation].name}`, "error");
+                showToast(`Не тот станок! Для компонента "${componentDef.name}" требуется: ${definitions.workstations[componentDef.workstation].name}`, "error");
                 return state;
             }
+
             if ((activeProject.componentProgress[componentDef.id] || 0) === 0 && componentDef.cost) {
                 let canAfford = true;
                 if (state.artifacts.aegis.status === 'completed' && Math.random() < 0.10) {
@@ -167,7 +174,7 @@ export function createCoreHandlers({
                         const currentAmount = resourceStorage === 'main' ? state[resource] : state.specialItems[resource];
                         if (currentAmount < actualCost) {
                             let resourceName = definitions.specialItems[resource]?.name || resource.replace('Ingots', ' слитков').replace('sparks',' искр').replace('matter',' материи');
-                            showToast(`Недостаточно: ${resourceName} (${actualCost} требуется)!`, 'error');
+                            showToast(`Недостаточно: ${resourceName} (${actualCost} требуется) для компонента "${componentDef.name}"!`, 'error');
                             canAfford = false;
                             break;
                         }
@@ -178,9 +185,29 @@ export function createCoreHandlers({
                         const resourceStorage = resource in state.specialItems ? 'specialItems' : 'main';
                         if (resourceStorage === 'main') { state[resource] -= actualCost; }
                         else { state.specialItems[resource] -= actualCost; }
+                        if (resource === 'matter') state.totalMatterSpent += actualCost;
                     }
                 }
             }
+
+            // --- НОВОЕ: Логика бонуса критического удара от навыков ---
+            let criticalProgressBonus = 0;
+            if (state.purchasedSkills.mithrilCritStrike) {
+                // Пример: 10% шанс на +50% прогресса при крите
+                if (Math.random() < 0.1) {
+                    criticalProgressBonus += (progressAmount * 0.5);
+                    showToast("Критический удар Мифрила: Дополнительный прогресс!", "crit");
+                }
+            }
+            if (state.purchasedSkills.legendaryCritStrike) {
+                // Пример: 5% шанс на +100% прогресса при крите
+                if (Math.random() < 0.05) {
+                    criticalProgressBonus += (progressAmount * 1.0);
+                    showToast("Критический удар Легенды: Огромный бонус!", "crit");
+                }
+            }
+            progressAmount += criticalProgressBonus; // Добавляем бонус к общему прогрессу
+
             if (!activeProject.componentProgress[componentDef.id]) activeProject.componentProgress[componentDef.id] = 0;
             activeProject.componentProgress[componentDef.id] = Math.min(componentDef.progress, activeProject.componentProgress[componentDef.id] + progressAmount);
 
@@ -195,23 +222,12 @@ export function createCoreHandlers({
             }
             return state;
         }
+        
         return state;
     };
 
     const handleStrikeAnvil = (state) => {
         triggerWorkAnimation();
-
-        const activeProject = state.activeOrder || state.activeFreeCraft || state.currentEpicOrder || state.activeReforge || state.activeInlay || state.activeGraving || state.activeSale;
-
-        if (!activeProject) {
-            showToast("Выберите проект для работы!", "error");
-            return state;
-        }
-
-        if ((state.activeOrder || state.activeFreeCraft) && !state.activeReforge && !state.activeInlay && !state.activeGraving && !state.activeSale && !activeProject.activeComponentId) {
-             showToast("Выберите компонент для работы!", "error");
-            return state;
-        }
 
         const isSale = !!state.activeSale;
         const minigameState = state.activeOrder?.minigameState;
@@ -226,7 +242,7 @@ export function createCoreHandlers({
                 let qualityBonus = 0;
                 if (component.minigame.zones) {
                     for (const zone of component.minigame.zones) {
-                        if (pos >= zone.from && pos <= zone.to) {
+                        if (pos >= zone.from && pos <= zone.to) { // ИСПРАВЛЕНО: Убедиться, что условие корректно
                             hitQuality = zone.quality;
                             progressBonus = zone.progressBonus * state.progressPerClick;
                             qualityBonus = zone.qualityBonus;
@@ -251,9 +267,6 @@ export function createCoreHandlers({
             
             if (state.activeOrder && !isSale) {
                 const itemDef = definitions.items[state.activeOrder.itemKey];
-                // ИЗМЕНЕНИЕ: УДАЛЕНО: Блокировка крафта предметов в первом прохождении здесь
-                // if (state.isFirstPlaythrough && itemDef.firstPlaythroughLocked) { ... }
-
                 const component = itemDef.components.find(c => c.id === state.activeOrder.activeComponentId);
                 if(component?.minigame && Math.random() < component.minigame.triggerChance) {
                        state.activeOrder.minigameState = { active: true, position: 0, direction: 1 };
@@ -271,8 +284,12 @@ export function createCoreHandlers({
     }
 
     const handleSelectComponent = (state, componentId) => {
-        if (state.activeOrder) state.activeOrder.activeComponentId = componentId;
-        if (state.activeFreeCraft) state.activeFreeCraft.activeComponentId = componentId;
+        if (state.activeOrder) {
+            state.activeOrder.activeComponentId = componentId;
+        }
+        if (state.activeFreeCraft) {
+            state.activeFreeCraft.activeComponentId = componentId;
+        }
         return state;
     }
 

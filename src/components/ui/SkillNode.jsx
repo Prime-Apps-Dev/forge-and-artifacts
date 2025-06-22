@@ -2,7 +2,7 @@
 import React, { memo } from 'react';
 import { definitions } from '../../data/definitions';
 import { formatCosts } from '../../utils/helpers';
-import Tooltip from './Tooltip'; // Убедитесь, что Tooltip импортирован
+import Tooltip from './Tooltip'; // ИЗМЕНЕНО: Исправлен путь к Tooltip
 
 const SkillNode = memo(({ skillId, gameState, onBuySkill }) => {
     const skill = definitions.skills[skillId];
@@ -58,7 +58,7 @@ const SkillNode = memo(({ skillId, gameState, onBuySkill }) => {
         nodeClass += "border-orange-500 bg-orange-500/20 text-orange-300";
     } else if(isLockedByFirstPlaythrough) {
         nodeClass += "opacity-30 filter grayscale cursor-not-allowed border-red-800";
-    } else if(!requirementsMet) { // Если заблокировано требованиями (не изучены предыдущие)
+    } else if(!requirementsMet) {
         nodeClass += "opacity-50 filter grayscale cursor-not-allowed";
     } else if(isOffSpec) {
         nodeClass += "border-indigo-500/50 hover:bg-indigo-500/10 cursor-pointer";
@@ -72,14 +72,13 @@ const SkillNode = memo(({ skillId, gameState, onBuySkill }) => {
     }
     
     return (
-        <Tooltip text={skill.description}> {/* Тултип теперь берет описание напрямую */}
+        <Tooltip text={skill.description}>
             <div
                 className={`interactive-element w-48 h-56 p-3 border-2 rounded-lg text-center flex flex-col transition-all duration-200 ${nodeClass}`}
                 onClick={() => {
                     if (!isPurchased && !isLocked) {
                         onBuySkill(skillId);
                     } else if (isLockedByFirstPlaythrough) {
-                        // showToast("Этот навык будет доступен после первого Переселения!", "info");
                     }
                 }}
             >
@@ -87,17 +86,9 @@ const SkillNode = memo(({ skillId, gameState, onBuySkill }) => {
                     <span className={`material-icons-outlined text-4xl`}>{skill.icon}</span>
                 </div>
                 <h4 className="font-cinzel text-sm font-bold">{skill.name}</h4>
-                {/* ИЗМЕНЕНО: Удалены классы fade-scroll-wrapper и fade-scroll-content, тени */}
                 <p className="text-xs text-gray-400 my-1 overflow-y-auto flex-grow">
-                    {/* УДАЛЕНА АНИМАЦИЯ И ЗАГЛУШКА ПРОКРУТКИ */}
                     {skill.description}
                 </p>
-                {/* УДАЛЕНА ТЕНЬ СВЕРХУ/СНИЗУ */}
-                {/* <div className="fade-scroll-wrapper my-1">
-                    <p className="text-xs text-gray-400 fade-scroll-content">
-                        {skill.description}
-                    </p>
-                </div> */}
                 {
                     isPurchased ? (
                         <span className="font-bold mt-1 text-sm">Изучено</span>

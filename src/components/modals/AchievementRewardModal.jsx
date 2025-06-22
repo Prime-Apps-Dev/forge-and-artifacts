@@ -1,5 +1,6 @@
 // src/components/modals/AchievementRewardModal.jsx
 import React from 'react';
+import Tooltip from '../ui/Tooltip'; // ИЗМЕНЕНО: Исправлен путь к Tooltip
 // import { getItemImageSrc } from '../../utils/helpers'; // Больше не нужен, т.к. icon - прямой путь
 // import AchievementCard from '../ui/AchievementCard'; // Не нужен здесь, т.к. стили скопированы
 
@@ -38,7 +39,7 @@ const AchievementRewardModal = ({ isOpen, onClose, achievement, onClaimReward })
                             <img
                                 src={achievementImgSrc} // ИСПОЛЬЗУЕМ achievementImgSrc
                                 alt={achievement.title}
-                                className={`object-cover w-full h-full grayscale-0`}
+                                className={`object-cover w-full h-full img-rounded-corners grayscale-0`}
                             />
                             <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center">
                                 <span className="material-icons-outlined text-green-400 text-5xl">check_circle</span>

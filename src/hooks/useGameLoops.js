@@ -1,7 +1,8 @@
 // src/hooks/useGameLoops.js
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 // Импортируем чистые JS-функции циклов из gameLogic.js
 import { startGameLoop, startMarketLoop, startOrderGenerationLoop } from '../logic/gameLogic';
+import { definitions } from '../data/definitions';
 
 /**
  * Хук, отвечающий за запуск и остановку всех игровых циклов (setIntervals).
@@ -11,7 +12,9 @@ import { startGameLoop, startMarketLoop, startOrderGenerationLoop } from '../log
  * @param {function} showToast - Функция для отображения уведомлений (из useNotifications).
  * @param {object} displayedGameState - Текущее отображаемое состояние игры.
  */
-export function useGameLoops(updateState, handlers, showToast, displayedGameState) { //
+export function useGameLoops(updateState, handlers, showToast, displayedGameState) {
+    // УДАЛЕН useRef achievementsShownInSession, так как теперь этим управляет gameLogic + showAchievementRewardModal
+
     useEffect(() => {
         // Логика разблокировки магазина по истечении времени
         const shopLockInterval = setInterval(() => {
@@ -32,13 +35,12 @@ export function useGameLoops(updateState, handlers, showToast, displayedGameStat
         }, 1000);
 
         // Запускаем основные игровые циклы, передавая им необходимые зависимости
-        // Теперь handlers содержит handleGenerateNewOrderInQueue и checkForNewQuests
-        const gameLoopInterval = startGameLoop(updateState, handlers, showToast, handlers.setAchievementToDisplay, handlers.setIsAchievementRewardModalOpen); //
+        // НОВОЕ: Передаем handlers.showAchievementRewardModal в startGameLoop
+        const gameLoopInterval = startGameLoop(updateState, handlers, showToast, handlers.showAchievementRewardModal); // ИЗМЕНЕНО
         const marketLoopInterval = startMarketLoop(updateState, showToast);
         const orderGenLoopInterval = startOrderGenerationLoop(handlers.handleGenerateNewOrderInQueue);
 
         // При монтировании компонента, сразу проверяем наличие новых квестов
-        // handlers.checkForNewQuests теперь вызывает gameCompletions.checkForNewQuests
         updateState(state => { handlers.checkForNewQuests(state); return state; });
 
         // Функция очистки: останавливаем все интервалы при размонтировании компонента
@@ -48,18 +50,8 @@ export function useGameLoops(updateState, handlers, showToast, displayedGameStat
             clearInterval(marketLoopInterval);
             clearInterval(orderGenLoopInterval);
         };
-    }, [updateState, handlers, showToast]); //
+    }, [updateState, handlers, showToast]);
 
-    // НОВЫЙ useEffect для реакции на изменения в completedAchievements
-    useEffect(() => {
-        // Эта логика перенесена из gameLogic.js, чтобы избежать бесконечного цикла обновлений UI.
-        // Мы используем displayedGameState, который является стабильной ссылкой на текущее состояние UI.
-        Object.values(displayedGameState.completedAchievements).forEach(achievementId => { //
-            const achievementDef = definitions.achievements[achievementId]; //
-            if (achievementDef && !displayedGameState.completedAchievements.includes(achievementDef.id)) { // Проверяем, что достижение еще не было обработано
-                 // Это условие здесь не должно сработать, т.к. мы уже фильтруем по state.completedAchievements в gameLogic
-                 // и просто реагируем на уже добавленные достижения.
-            }
-        });
-    }, [displayedGameState.completedAchievements, handlers, showToast]); // Зависимости этого useEffect
+    // УДАЛЕН ВЕСЬ useEffect, который ранее реагировал на displayedGameState.completedAchievements
+    // Логика показа модалки теперь будет инициироваться непосредственно из gameLogic.js
 }

@@ -4,24 +4,21 @@ import { formatNumber } from '../../utils/helpers';
 import { definitions } from '../../data/definitions';
 import AchievementsPanel from '../panels/AchievementsPanel';
 import StatsPanel from '../panels/StatsPanel';
-import Tooltip from '../ui/Tooltip';
+import Tooltip from '../ui/Tooltip'; // ИЗМЕНЕНО: Исправлен путь к Tooltip
 
 const ProfileModal = ({ isOpen, onClose, gameState, handlers }) => {
     if (!isOpen) return null;
 
-    const [activeTab, setActiveTab] = useState('profile'); // Состояние для активной вкладки: 'profile' или 'achievements'
+    const [activeTab, setActiveTab] = useState('profile');
 
     const experienceProgress = (gameState.masteryXP / gameState.masteryXPToNextLevel) * 100;
-    const masterName = "Мастер-кузнец"; // Пока плейсхолдер для имени мастера
+    const masterName = "Мастер-кузнец";
 
-    // Проверка, все ли артефакты созданы
     const allArtifactsCompleted = Object.values(gameState.artifacts).every(artifact => artifact.status === 'completed');
 
-    // Получаем путь к текущему аватару
     const currentAvatarSrc = definitions.avatars[gameState.playerAvatarId]?.src || '/img/default_avatar.png';
 
-    // Определяем иконку и текст тултипа для кнопки переключения
-    const toggleButtonIcon = activeTab === 'profile' ? 'emoji_events' : 'person'; // Если на профиле, показываем кубок; если на достижениях, показываем профиль
+    const toggleButtonIcon = activeTab === 'profile' ? 'emoji_events' : 'person';
     const toggleButtonTooltip = activeTab === 'profile' ? 'Показать достижения' : 'Показать профиль';
 
     const handleToggleView = () => {
@@ -36,10 +33,9 @@ const ProfileModal = ({ isOpen, onClose, gameState, handlers }) => {
             >
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="font-cinzel text-2xl text-orange-400">
-                        {activeTab === 'profile' ? 'Профиль Мастера' : 'Достижения'} {/* Заголовок меняется в зависимости от вкладки */}
+                        {activeTab === 'profile' ? 'Профиль Мастера' : 'Достижения'}
                     </h2>
-                    <div className="flex items-center gap-2"> {/* Обертка для кнопок */}
-                        {/* Кнопка переключения вида: иконка меняется */}
+                    <div className="flex items-center gap-2">
                         <Tooltip text={toggleButtonTooltip}>
                             <button
                                 onClick={handleToggleView}
@@ -48,36 +44,14 @@ const ProfileModal = ({ isOpen, onClose, gameState, handlers }) => {
                                 {toggleButtonIcon}
                             </button>
                         </Tooltip>
-                        {/* Кнопка закрытия модалки */}
                         <button onClick={onClose} className="text-gray-400 hover:text-white material-icons-outlined">close</button>
                     </div>
                 </div>
 
-                {/* УДАЛЕНО: Вкладки навигации */}
-                {/*
-                <div className="flex border-b border-gray-700 mb-4">
-                    <button
-                        onClick={() => setActiveTab('profile')}
-                        className={`flex-1 py-2 text-center font-cinzel text-lg ${activeTab === 'profile' ? 'text-orange-400 border-b-2 border-orange-400' : 'text-gray-500 hover:text-white'}`}
-                    >
-                        Обзор
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('achievements')}
-                        className={`flex-1 py-2 text-center font-cinzel text-lg ${activeTab === 'achievements' ? 'text-orange-400 border-b-2 border-orange-400' : 'text-gray-500 hover:text-white'}`}
-                    >
-                        Достижения
-                    </button>
-                </div>
-                */}
-
-
                 <div className="grow overflow-y-auto overflow-x-visible pr-2">
                     {activeTab === 'profile' && (
                         <>
-                            {/* Общая информация о мастере */}
                             <div className="bg-black/30 p-4 rounded-md mb-6 border border-gray-700 flex items-start gap-6">
-                                {/* Аватарка */}
                                 <div className="flex flex-col items-center flex-shrink-0">
                                     <div className="relative w-24 h-24 rounded-full overflow-hidden bg-gray-800 border-2 border-yellow-500 shadow-lg">
                                         <img src={currentAvatarSrc} alt="Аватар Мастера" className="object-cover w-full h-full" />
@@ -90,7 +64,6 @@ const ProfileModal = ({ isOpen, onClose, gameState, handlers }) => {
                                     </button>
                                 </div>
 
-                                {/* Информация о мастерстве и прогрессе XP */}
                                 <div className="flex-1 flex flex-col items-start pt-2">
                                     <p className="font-cinzel text-2xl font-bold text-white mb-2">{masterName}</p>
 
@@ -142,7 +115,6 @@ const ProfileModal = ({ isOpen, onClose, gameState, handlers }) => {
                                 </div>
                             </div>
 
-                            {/* --- КНОПКА ПЕРЕСЕЛЕНИЯ --- */}
                             <div className="bg-black/30 p-4 rounded-md mb-6 border border-gray-700 text-center">
                                 <h3 className="font-cinzel text-xl text-yellow-400 mb-3">Наследие Мастера</h3>
                                 {allArtifactsCompleted ? (
@@ -165,7 +137,6 @@ const ProfileModal = ({ isOpen, onClose, gameState, handlers }) => {
                                 <p className="text-gray-500 text-sm mt-2">После переселения вы получите Осколки Памяти и откроете новые возможности.</p>
                             </div>
 
-                            {/* Раздел Статистики */}
                             <StatsPanel gameState={gameState} />
                         </>
                     )}
@@ -177,7 +148,6 @@ const ProfileModal = ({ isOpen, onClose, gameState, handlers }) => {
                     )}
                 </div>
 
-                {/* Кнопка закрытия модального окна */}
                 <button onClick={onClose} className="interactive-element mt-6 w-full bg-orange-600 text-black font-bold py-2 px-4 rounded-lg hover:bg-orange-500">
                     Закрыть
                 </button>

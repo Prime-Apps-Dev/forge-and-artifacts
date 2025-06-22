@@ -1,3 +1,4 @@
+// src/components/ui/ComponentItem.jsx
 import React, { memo } from 'react'; // Импортируем memo из React
 import { definitions } from '../../data/definitions'; // Импортируем definitions для доступа к игровым данным
 import { formatNumber } from '../../utils/helpers'; // Импортируем formatNumber для форматирования чисел
@@ -15,12 +16,31 @@ const ComponentItem = memo(({ component, orderState, gameState, onSelectComponen
 
     // Проверяем, выполнены ли все зависимости для данного компонента.
     // Компонент может быть выбран только после завершения всех его требуемых компонентов.
-    const dependenciesMet = !component.requires || component.requires.every(reqId =>
-        (orderState.componentProgress[reqId] || 0) >= definitions.items[orderState.itemKey].components.find(c => c.id === reqId).progress
-    );
+    const dependenciesMet = !component.requires || component.requires.every(reqId => {
+        const requiredComponentDef = definitions.items[orderState.itemKey].components.find(c => c.id === reqId);
+        // Проверяем, что requiredComponentDef найден, прежде чем получить его progress
+        return (orderState.componentProgress[reqId] || 0) >= (requiredComponentDef?.progress || 0);
+    });
 
     // Определяет, можно ли сейчас выбрать этот компонент.
     const canSelect = !isComplete && dependenciesMet;
+
+    // DEBUG LOGS
+    // console.log(`Component: ${component.name}`);
+    // console.log(`  - progress: ${progress}/${component.progress} (isComplete: ${isComplete})`);
+    // console.log(`  - isActive: ${isActive}`);
+    // console.log(`  - dependenciesMet: ${dependenciesMet}`);
+    // if (component.requires) {
+    //     component.requires.forEach(reqId => {
+    //         const requiredComponentDef = definitions.items[orderState.itemKey].components.find(c => c.id === reqId);
+    //         const reqProgress = orderState.componentProgress[reqId] || 0;
+    //         const reqTarget = requiredComponentDef?.progress || 0;
+    //         console.log(`    - Dep ${reqId}: ${reqProgress}/${reqTarget} (Met: ${reqProgress >= reqTarget})`);
+    //     });
+    // }
+    // console.log(`  - canSelect: ${canSelect}`);
+    // console.log("---");
+
 
     // Классы CSS для стилизации компонента в зависимости от его состояния.
     let classes = "p-2 border-l-4 transition-colors duration-200 ";

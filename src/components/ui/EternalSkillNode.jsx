@@ -2,8 +2,8 @@
 
 import React, { memo } from 'react';
 import { definitions } from '../../data/definitions';
-import { formatNumber } from '../../utils/helpers'; // Для форматирования стоимости
-import Tooltip from './Tooltip'; // Убедитесь, что Tooltip импортирован
+import { formatNumber } from '../../utils/helpers';
+import Tooltip from '../ui/Tooltip'; // ИЗМЕНЕНО: Исправлен путь к Tooltip
 
 const EternalSkillNode = memo(({ skillId, gameState, onBuyEternalSkill }) => {
     const skill = definitions.eternalSkills[skillId];
@@ -11,7 +11,6 @@ const EternalSkillNode = memo(({ skillId, gameState, onBuyEternalSkill }) => {
 
     const isPurchased = gameState.eternalSkills && gameState.eternalSkills[skillId];
 
-    // Проверяем, выполнены ли требования (родительские навыки)
     const requirementsMet = skill.requires.every(reqId =>
         gameState.eternalSkills && gameState.eternalSkills[reqId]
     );
@@ -19,7 +18,6 @@ const EternalSkillNode = memo(({ skillId, gameState, onBuyEternalSkill }) => {
     const cost = skill.cost.prestigePoints || 0;
     const canAfford = gameState.prestigePoints >= cost;
 
-    // НОВОЕ: Флаг для блокировки покупки в первом прохождении
     const isPurchaseLockedInFirstPlaythrough = gameState.isFirstPlaythrough;
 
     const isLockedByRequirements = !requirementsMet;
@@ -32,15 +30,14 @@ const EternalSkillNode = memo(({ skillId, gameState, onBuyEternalSkill }) => {
         nodeClass += "border-purple-500 bg-purple-500/20 text-purple-300";
     } else if (isPurchaseLockedInFirstPlaythrough) {
         nodeClass += "opacity-30 filter grayscale cursor-not-allowed border-red-800";
-    } else if (isLockedByRequirements) { // Если заблокировано требованиями (не изучены предыдущие)
+    } else if (isLockedByRequirements) {
         nodeClass += "opacity-50 filter grayscale cursor-not-allowed";
     } else if (isPurchasable) {
         nodeClass += "border-purple-500 cursor-pointer hover:bg-purple-500/10";
-    } else { // Доступно, но не хватает очков престижа
+    } else {
         nodeClass += "border-red-500/50 opacity-60";
     }
 
-    // Текст подсказки
     let tooltipText = skill.description;
     if (!isPurchased) {
         if (isPurchaseLockedInFirstPlaythrough) {
@@ -60,7 +57,6 @@ const EternalSkillNode = memo(({ skillId, gameState, onBuyEternalSkill }) => {
             <div
                 className={`interactive-element w-48 h-56 p-3 border-2 rounded-lg text-center flex flex-col transition-all duration-200 ${nodeClass}`}
                 onClick={() => {
-                    // Разрешаем клик только если навык можно купить
                     if (isPurchasable) {
                         onBuyEternalSkill(skillId);
                     }

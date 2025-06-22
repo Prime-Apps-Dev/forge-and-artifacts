@@ -1,7 +1,9 @@
+// src/components/ui/FactionUpgradeButton.jsx
 import React from 'react';
 import { definitions } from '../../data/definitions';
-import { formatCosts, formatNumber } from '../../utils/helpers'; // Импортируем formatCosts
+import { formatCosts, formatNumber } from '../../utils/helpers';
 import { hasReputation } from '../../utils/helpers';
+import Tooltip from './Tooltip'; // ИЗМЕНЕНО: Исправлен путь к Tooltip
 
 const FactionUpgradeButton = React.memo(({ upgradeId, gameState, onBuyFactionUpgrade }) => {
     const upgrade = definitions.factionUpgrades[upgradeId];
@@ -20,7 +22,7 @@ const FactionUpgradeButton = React.memo(({ upgradeId, gameState, onBuyFactionUpg
         );
     }
     
-    const displayCosts = { ...upgrade.cost }; // Копируем стоимость
+    const displayCosts = { ...upgrade.cost };
     let isDisabled = false;
     let buttonText = '';
 
@@ -31,7 +33,6 @@ const FactionUpgradeButton = React.memo(({ upgradeId, gameState, onBuyFactionUpg
         isDisabled = true;
         buttonText = `Нужно: ${repName}`;
     } else {
-        // Проверка доступности ресурсов
         for (const resourceType in displayCosts) {
             const costAmount = displayCosts[resourceType];
             const resourceStorage = resourceType.includes('Ingots') || resourceType.includes('Ore') || resourceType === 'sparks' || resourceType === 'matter' ? 'main' : 'specialItems';
@@ -41,11 +42,9 @@ const FactionUpgradeButton = React.memo(({ upgradeId, gameState, onBuyFactionUpg
                 break;
             }
         }
-        // Если не отключено из-за репутации и есть ресурсы, формируем текст стоимости
         if (!isDisabled) {
             buttonText = `<div class="flex items-center justify-center gap-1">${formatCosts(displayCosts, gameState)}</div>`;
         } else {
-            // Если не хватает ресурсов
             buttonText = `<div class="flex items-center justify-center gap-1 opacity-50">${formatCosts(displayCosts, gameState)}</div>`;
         }
     }

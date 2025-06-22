@@ -1,22 +1,22 @@
+// src/components/ui/ArtifactCard.jsx
 import React from 'react';
 import SvgIcon from './SvgIcon';
 import { definitions } from '../../data/definitions';
 import Tooltip from './Tooltip';
+import { getArtifactImageSrc } from '../../utils/helpers';
 
-const ArtifactCard = React.memo(({ artifact, id, onCraftArtifact, isFirstPlaythrough }) => { // isFirstPlaythrough больше не используется для блокировки
+const ArtifactCard = React.memo(({ artifact, id, onCraftArtifact, isFirstPlaythrough }) => {
     const checkCanCraft = (currentArtifact) => {
         return Object.values(currentArtifact.components).every(c => c.obtained);
     };
 
     const canCraft = checkCanCraft(artifact) && artifact.status === 'available';
 
-    // ИЗМЕНЕНИЕ: isLockedByFirstPlaythrough больше не используется для блокировки кнопки
-    // const isLockedByFirstPlaythrough = isFirstPlaythrough && artifact.firstPlaythroughLocked;
+    const artifactImgSrc = getArtifactImageSrc(id, 64);
 
     return (
-        // ИЗМЕНЕНИЕ: Удалены классы, связанные с firstPlaythroughLocked
         <div key={id} className={`bg-black/20 p-4 rounded-lg border-2 flex flex-col text-center transition-all ${artifact.status === 'completed' ? 'border-orange-500' : 'border-gray-700'}`}>
-            <SvgIcon iconId={artifact.icon} className={`icon-sprite-lg mx-auto mb-2 ${artifact.status === 'completed' ? 'text-orange-400' : 'text-gray-500'}`}/>
+            <img src={artifactImgSrc} alt={artifact.name} className={`mx-auto mb-2 w-16 h-16 object-contain img-rounded-corners ${artifact.status === 'completed' ? 'grayscale-0' : 'grayscale'}`} /> {/* ИЗМЕНЕНО: Добавлен img-rounded-corners */}
             <h3 className="font-cinzel text-lg font-bold">{artifact.name}</h3>
             <p className="text-sm text-gray-400 grow my-2">{artifact.description}</p>
             <div className="mt-4 pt-4 border-t border-gray-700 text-left space-y-2">
@@ -30,7 +30,6 @@ const ArtifactCard = React.memo(({ artifact, id, onCraftArtifact, isFirstPlaythr
                     </div>
                 ))}
             </div>
-            {/* ИЗМЕНЕНИЕ: Кнопка всегда отображается и блокируется только по canCraft/status */}
             <button 
                 onClick={() => onCraftArtifact(id)}
                 disabled={!canCraft || artifact.status !== 'available'}

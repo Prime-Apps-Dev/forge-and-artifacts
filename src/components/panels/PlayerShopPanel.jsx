@@ -1,3 +1,4 @@
+// src/components/panels/PlayerShopPanel.jsx
 import React from 'react';
 import { definitions } from '../../data/definitions';
 import { formatNumber } from '../../utils/helpers';

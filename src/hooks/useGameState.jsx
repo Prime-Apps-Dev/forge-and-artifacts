@@ -34,6 +34,21 @@ export function useGameState() {
     const [isCreditsModalOpen, setIsCreditsModalOpen] = useState(false);
     const workTimeoutRef = useRef(null); // Ref для таймаута анимации работы
 
+    // НОВЫЙ реф для отслеживания открыта ли модалка достижений, чтобы избежать повторных открытий
+    const isAchievementModalOpenRef = useRef(false);
+    useEffect(() => {
+        isAchievementModalOpenRef.current = isAchievementRewardModalOpen;
+    }, [isAchievementRewardModalOpen]);
+
+    // НОВАЯ стабильная функция для показа модалки достижения
+    const showAchievementRewardModal = useCallback((achievementDef) => {
+        // Проверяем, что модалка не открыта и достижение существует
+        if (!isAchievementModalOpenRef.current && achievementDef) {
+            setAchievementToDisplay(achievementDef);
+            setIsAchievementRewardModalOpen(true);
+        }
+    }, [setAchievementToDisplay, setIsAchievementRewardModalOpen]); // Зависимости: setState-функции
+
     // 5. Единая функция для обновления состояния игры
     const updateState = useCallback((updater) => {
         const newState = updater(JSON.parse(JSON.stringify(gameStateRef.current)));
@@ -50,13 +65,20 @@ export function useGameState() {
         setIsAchievementRewardModalOpen,
         setAchievementToDisplay,
         setIsAvatarSelectionModalOpen,
-        setIsCreditsModalOpen
+        setIsCreditsModalOpen,
+        isAchievementModalOpenRef, // Передаем ref
+        showAchievementRewardModal // НОВОЕ: Передаем новую функцию
     );
 
     // 7. Игровые циклы (useGameLoops)
     // Передаем setAchievementToDisplay и setIsAchievementRewardModalOpen напрямую в startGameLoop
     // через handlers, так как startGameLoop вызывается там.
-    useGameLoops(updateState, { ...handlers, setAchievementToDisplay, setIsAchievementRewardModalOpen }, showToast);
+    useGameLoops(
+        updateState,
+        handlers, // Передаем весь объект handlers
+        showToast,
+        displayedGameState // Передаем displayedGameState
+    );
 
     // Эффект для сохранения состояния в localStorage
     useEffect(() => {

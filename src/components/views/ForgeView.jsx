@@ -1,3 +1,4 @@
+// src/components/views/ForgeView.jsx
 import React, { useState, memo } from 'react';
 import { definitions } from '../../data/definitions';
 import { formatNumber } from '../../utils/helpers';
@@ -257,11 +258,13 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
 
     const epicStageDef = isEpicCraft ? definitions.greatArtifacts[gameState.currentEpicOrder.artifactId].epicOrder.find(s => s.stage === gameState.currentEpicOrder.currentStage) : null;
 
-    const isWorkButtonDisabled = !!activeProject || !!isEpicCraft || !!isReforging || !!isInlaying || !!isGraving;
+    // isWorkButtonDisabled теперь будет зависеть от активного проекта, а не от того, кликабельна ли наковальня.
+    // Наковальня будет кликабельна всегда, но с проверками внутри handleStrikeAnvil.
+    const isWorkButtonDisabled = false; // Теперь наковальня всегда "включена", но с внутренними проверками
 
-    const canReforge = gameState.purchasedSkills.masterReforging; // ИЗМЕНЕНИЕ: Убрана зависимость от isFirstPlaythrough, т.к. это будет фильтроваться ниже
-    const canInlay = gameState.specialItems.gem > 0; // ИЗМЕНЕНИЕ: Убрана зависимость от isFirstPlaythrough
-    const canGrave = gameState.purchasedSkills.masterGraving; // ИЗМЕНЕНИЕ: Убрана зависимость от isFirstPlaythrough
+    const canReforge = gameState.purchasedSkills.masterReforging;
+    const canInlay = gameState.specialItems.gem > 0;
+    const canGrave = gameState.purchasedSkills.masterGraving;
 
 
     return (
@@ -359,11 +362,10 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
                         <div>
                             <h3 className="font-cinzel text-lg text-center mb-3">Свободное ремесло</h3>
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                                {/* ИЗМЕНЕНИЕ: Фильтрация по firstPlaythroughLocked */}
                                 {Object.entries(definitions.items).filter(([key, item]) => 
                                     !item.isQuestRecipe && 
                                     (!item.requiredSkill || gameState.purchasedSkills[item.requiredSkill]) &&
-                                    (!item.firstPlaythroughLocked || !gameState.isFirstPlaythrough) // Новое условие
+                                    (!item.firstPlaythroughLocked || !gameState.isFirstPlaythrough)
                                 ).map(([key, item]) => (
                                     <FreeCraftRecipeCard key={key} itemKey={key} itemDef={item} onCraft={handlers.handleStartFreeCraft} isDisabled={isWorkButtonDisabled} />
                                 ))}
@@ -372,7 +374,7 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
                     ) : mode === 'reforge' ? (
                         <div>
                             <h3 className="font-cinzel text-lg text-center mb-3">Выберите предмет для перековки</h3>
-                            {canReforge && !gameState.isFirstPlaythrough ? ( // ИЗМЕНЕНИЕ: Добавлено !gameState.isFirstPlaythrough
+                            {canReforge && !gameState.isFirstPlaythrough ? (
                                 gameState.inventory.filter(item =>
                                     item.location === 'inventory' &&
                                     definitions.items[item.itemKey].hasInlaySlots &&
@@ -407,7 +409,7 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
                     ) : mode === 'inlay' ? (
                         <div>
                             <h3 className="font-cinzel text-lg text-center mb-3">Выберите предмет для инкрустации</h3>
-                            {canInlay && !gameState.isFirstPlaythrough ? ( // ИЗМЕНЕНИЕ: Добавлено !gameState.isFirstPlaythrough
+                            {canInlay && !gameState.isFirstPlaythrough ? (
                                 gameState.inventory.filter(item => {
                                     const itemDef = definitions.items[item.itemKey];
                                     if (!itemDef.hasInlaySlots) return false;
@@ -454,7 +456,7 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
                     ) : mode === 'graving' ? (
                         <div>
                             <h3 className="font-cinzel text-lg text-center mb-3">Выберите предмет для гравировки</h3>
-                            {canGrave && !gameState.isFirstPlaythrough ? ( // ИЗМЕНЕНИЕ: Добавлено !gameState.isFirstPlaythrough
+                            {canGrave && !gameState.isFirstPlaythrough ? (
                                 gameState.inventory.filter(item =>
                                     item.location === 'inventory' &&
                                     (definitions.items[item.itemKey].hasInlaySlots || definitions.items[item.itemKey].gravingAvailable)
@@ -493,7 +495,7 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
                 handlers={handlers}
                 purchasedSkills={gameState.purchasedSkills}
                 activeProject={activeProject}
-                isEpicCraft={isEpicCraft} // ИЗМЕНЕНИЕ: Исправлена передача isEpicCraft
+                isEpicCraft={isEpicCraft}
                 isReforging={isReforging}
                 isInlaying={isInlaying}
                 isGraving={isGraving}
@@ -502,7 +504,7 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
 
 
             <div id="forge-area" className="flex items-center justify-center">
-                <div onClick={handlers.handleStrikeAnvil} className={`interactive-element cursor-pointer rounded-full p-4 transition-transform ${isWorkButtonDisabled ? 'filter grayscale opacity-50' : ''} ${isWorking ? 'anvil-working' : ''}`}>
+                <div onClick={handlers.handleStrikeAnvil} className={`interactive-element cursor-pointer rounded-full p-4 transition-transform ${isWorking ? 'anvil-working' : ''}`}> {/* Убрали isWorkButtonDisabled, анимация остается */}
                     <img src="/img/ui/anvil.png" alt="Наковальня" className="w-48 h-48 drop-shadow-lg" />
                 </div>
             </div>

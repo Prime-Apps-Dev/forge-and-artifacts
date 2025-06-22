@@ -71,8 +71,14 @@ export const initialGameState = {
     regionUnlockCostReduction: 0,
     questRewardModifier: 1.0,
     completedAchievements: [],
-    totalItemsCrafted: 0, // <-- НОВОЕ ПОЛЕ: Общее количество созданных предметов
-    totalIngotsSmelted: 0, // <-- НОВОЕ ПОЛЕ: Общее количество переплавленных слитков
+    totalItemsCrafted: 0,
+    totalIngotsSmelted: 0,
+    totalClicks: 0, // НОВОЕ ПОЛЕ: Общее количество кликов по наковальне
+    totalSparksEarned: 0, // НОВОЕ ПОЛЕ: Общее количество заработанных искр
+    totalMatterSpent: 0, // НОВОЕ ПОЛЕ: Общее количество потраченной материи
+    totalExpeditionMapsBought: 0, // НОВОЕ ПОЛЕ: Общее количество купленных карт вылазок
+    totalCourtOrdersCompleted: 0, // НОВОЕ ПОЛЕ: Общее количество выполненных заказов для Королевского Двора
+    totalRiskyOrdersCompleted: 0, // НОВОЕ ПОЛЕ: Общее количество выполненных рискованных заказов
 };
 
 
@@ -142,7 +148,7 @@ export function useGameStateLoader(showToast) {
                     tempState[key] = parsed[key] !== undefined ? parsed[key] : initialGameState[key];
                 }
             }
-            else if (['eternalSkills', 'prestigePoints', 'regionsVisited', 'isFirstPlaythrough', 'initialGravingLevel', 'regionUnlockCostReduction', 'questRewardModifier', 'playerAvatarId', 'totalItemsCrafted', 'totalIngotsSmelted'].includes(key)) { // <-- ДОБАВЛЕНО 'totalIngotsSmelted'
+            else if (['eternalSkills', 'prestigePoints', 'regionsVisited', 'isFirstPlaythrough', 'initialGravingLevel', 'regionUnlockCostReduction', 'questRewardModifier', 'playerAvatarId', 'totalItemsCrafted', 'totalIngotsSmelted', 'totalClicks', 'totalSparksEarned', 'totalMatterSpent', 'totalExpeditionMapsBought', 'totalCourtOrdersCompleted', 'totalRiskyOrdersCompleted'].includes(key)) { // НОВОЕ: добавлены новые поля
                 tempState[key] = parsed[key] !== undefined ? parsed[key] : initialGameState[key];
             }
             else if (['lastClickTime', 'clickCount', 'activeReforge', 'activeInlay', 'activeGraving', 'activeInfoModal', 'activeOrder', 'activeFreeCraft', 'currentEpicOrder', 'smeltingProcess', 'activeSale', 'apprenticeOrder'].includes(key)) {

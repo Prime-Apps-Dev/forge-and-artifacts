@@ -107,14 +107,22 @@ body {
 
 /* Обновленные стили для контейнера тостов */
 .toast-container {
-    position: fixed !important; /* Гарантируем фиксированное позиционирование */
-    bottom: calc(16px + 64px + 8px) !important; /* Убедимся, что отступ от BottomBar сохраняется */
-    right: 16px !important; /* Отступ от правого края */
-    z-index: 10000 !important; /* Очень высокий z-index, чтобы быть поверх всего */
-    display: flex !important; /* Гарантируем flexbox */
+    position: fixed !important;
+    bottom: calc(16px + 64px + 8px) !important;
+    right: 16px !important;
+    z-index: 10000 !important;
+    display: flex !important;
     flex-direction: column !important;
     align-items: flex-end !important;
     gap: 8px !important;
     max-width: 320px !important;
-    pointer-events: none !important; /* Важно, чтобы не перехватывал клики */
+    pointer-events: none !important;
 }
+
+/* НОВОЕ: Класс для скругления углов у изображений */
+.img-rounded-corners {
+    border-radius: 0.5rem; /* Соответствует rounded-md в Tailwind CSS */
+}
+
+/* УДАЛЕНО: Возможно, здесь была ссылка на vite.svg */
+/* Например: background-image: url('/vite.svg'); */

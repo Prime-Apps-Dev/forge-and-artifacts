@@ -7,7 +7,8 @@ import { recalculateAllModifiers } from '../utils/gameStateUtils';
 
 let achievementCheckTimer = 0;
 
-export function startGameLoop(updateState, handlers, showToast, setAchievementToDisplay, setIsAchievementRewardModalOpen) { //
+// НОВОЕ: Принимаем showAchievementRewardModal как аргумент
+export function startGameLoop(updateState, handlers, showToast, showAchievementRewardModal) { // ИЗМЕНЕНО
     return setInterval(() => {
         updateState(state => {
             const deltaTime = 0.1;
@@ -43,7 +44,7 @@ export function startGameLoop(updateState, handlers, showToast, setAchievementTo
                     state[outputResource] += outputAmount;
                     state.smeltingProcess = null;
                     // Увеличиваем totalIngotsSmelted после завершения плавки
-                    state.totalIngotsSmelted = (state.totalIngotsSmelted || 0) + outputAmount; //
+                    state.totalIngotsSmelted = (state.totalIngotsSmelted || 0) + outputAmount;
                     showToast(`Готово: +${outputAmount} ${recipe.name}`, 'success');
                 }
             }
@@ -183,23 +184,23 @@ export function startGameLoop(updateState, handlers, showToast, setAchievementTo
             });
 
             // === ЛОГИКА ПРОВЕРКИ ДОСТИЖЕНИЙ ===
+            // Теперь gameLogic.js ТОЛЬКО обновляет state.completedAchievements
+            // и вызывает showAchievementRewardModal.
             achievementCheckTimer += deltaTime;
             if (achievementCheckTimer >= 1) { // Проверяем достижения каждую секунду
-                achievementCheckTimer = 0; //
-                Object.values(definitions.achievements).forEach(achievementDef => { //
+                achievementCheckTimer = 0;
+                Object.values(definitions.achievements).forEach(achievementDef => {
                     // Проверяем, что достижение еще не выполнено
-                    if (!state.completedAchievements.includes(achievementDef.id)) { //
-                        const achievementStatus = achievementDef.check(state, definitions); //
-                        if (achievementStatus.isComplete) { //
+                    if (!state.completedAchievements.includes(achievementDef.id)) {
+                        const achievementStatus = achievementDef.check(state, definitions);
+                        if (achievementStatus.isComplete) {
                             state.completedAchievements.push(achievementDef.id); // Добавляем ID завершенного достижения
-                            showToast(`Достижение выполнено: "${achievementDef.title}"!`, 'levelup'); //
-                            audioController.play('levelup', 'G6', '2n'); //
-                            
-                            // Вызываем setAchievementToDisplay и setIsAchievementRewardModalOpen здесь
-                            // Эти функции передаются из useGameLoops, которая, в свою очередь, получает их из useGameState.
-                            setAchievementToDisplay(achievementDef); //
-                            setIsAchievementRewardModalOpen(true); //
-                            recalculateAllModifiers(state); // Применяем эффекты сразу
+                            recalculateAllModifiers(state); // Применяем эффекты сразу после выполнения
+
+                            // НОВОЕ: Прямой вызов showAchievementRewardModal
+                            showAchievementRewardModal(achievementDef); // Вызываем модалку
+                            audioController.play('levelup', 'G6', '2n'); // Звук
+                            showToast(`Достижение выполнено: "${achievementDef.title}"!`, 'levelup'); // Тост
                         }
                     }
                 });

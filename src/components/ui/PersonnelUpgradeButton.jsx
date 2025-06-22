@@ -1,7 +1,8 @@
+// src/components/ui/PersonnelUpgradeButton.jsx
 import React from 'react';
 import { definitions } from '../../data/definitions';
 import { formatCosts, formatNumber } from '../../utils/helpers';
-import Tooltip from './Tooltip';
+import Tooltip from './Tooltip'; // ИЗМЕНЕНО: Исправлен путь к Tooltip
 
 const PersonnelUpgradeButton = React.memo(({ upgradeId, gameState, onBuyUpgrade }) => {
     const upgrade = definitions.personnel[upgradeId];
@@ -10,9 +11,8 @@ const PersonnelUpgradeButton = React.memo(({ upgradeId, gameState, onBuyUpgrade 
     const level = gameState.upgradeLevels[upgradeId] || 0;
     let isDisabled = false;
     let displayCosts1 = {};
-    let displayCosts10 = {}; // Будет использоваться для тултипа
+    let displayCosts10 = {};
 
-    // Логика определения стоимости для 1 уровня
     if (level >= upgrade.maxLevel) {
         isDisabled = true;
     } else {
@@ -20,7 +20,6 @@ const PersonnelUpgradeButton = React.memo(({ upgradeId, gameState, onBuyUpgrade 
             displayCosts1[resourceType] = Math.floor(upgrade.baseCost[resourceType] * Math.pow(upgrade.costIncrease, level));
         }
 
-        // Проверка доступности для 1 уровня
         for (const resourceType in displayCosts1) {
             const costAmount = displayCosts1[resourceType];
             const resourceStorage = resourceType.includes('Ingots') || resourceType.includes('Ore') || resourceType === 'sparks' || resourceType === 'matter' ? 'main' : 'specialItems';
@@ -31,7 +30,6 @@ const PersonnelUpgradeButton = React.memo(({ upgradeId, gameState, onBuyUpgrade 
             }
         }
 
-        // Логика определения стоимости для 10 уровней (для тултипа)
         let tempIsDisabled10 = false;
         for (let i = 0; i < 10; i++) {
             if (level + i < upgrade.maxLevel) {
@@ -39,11 +37,11 @@ const PersonnelUpgradeButton = React.memo(({ upgradeId, gameState, onBuyUpgrade 
                     displayCosts10[resourceType] = (displayCosts10[resourceType] || 0) + Math.floor(upgrade.baseCost[resourceType] * Math.pow(upgrade.costIncrease, level + i));
                 }
             } else {
-                tempIsDisabled10 = true; // Невозможно купить все 10 уровней
+                tempIsDisabled10 = true;
                 break;
             }
         }
-        if (!tempIsDisabled10) { // Проверяем, если покупка 10 уровней не выходит за maxLevel
+        if (!tempIsDisabled10) {
             for (const resourceType in displayCosts10) {
                 const costAmount = displayCosts10[resourceType];
                 const resourceStorage = resourceType.includes('Ingots') || resourceType.includes('Ore') || resourceType === 'sparks' || resourceType === 'matter' ? 'main' : 'specialItems';
@@ -56,13 +54,12 @@ const PersonnelUpgradeButton = React.memo(({ upgradeId, gameState, onBuyUpgrade 
         }
     }
     
-    // Текст для тултипа
     let tooltipContent = '';
     if (level >= upgrade.maxLevel) {
         tooltipContent = `Максимальный уровень: ${level}`;
     } else {
-        tooltipContent = `Нажмите для улучшения. Стоимость x1: ${formatCosts(displayCosts1, gameState).replace(/<[^>]*>/g, '')}`; // Убираем HTML-теги для тултипа
-        if (!Object.keys(displayCosts10).every(key => displayCosts10[key] === 0) && level + 10 <= upgrade.maxLevel) { // Проверяем, что displayCosts10 не пустой
+        tooltipContent = `Нажмите для улучшения. Стоимость x1: ${formatCosts(displayCosts1, gameState).replace(/<[^>]*>/g, '')}`;
+        if (!Object.keys(displayCosts10).every(key => displayCosts10[key] === 0) && level + 10 <= upgrade.maxLevel) {
             tooltipContent += `\nСтоимость x10: ${formatCosts(displayCosts10, gameState).replace(/<[^>]*>/g, '')}`;
         }
         if (isDisabled) {
@@ -73,7 +70,7 @@ const PersonnelUpgradeButton = React.memo(({ upgradeId, gameState, onBuyUpgrade 
     return (
         <Tooltip text={tooltipContent}>
             <button 
-                onClick={() => { if (!isDisabled) onBuyUpgrade(upgradeId, 'personnel', 1); }} // Клик по карточке покупает x1
+                onClick={() => { if (!isDisabled) onBuyUpgrade(upgradeId, 'personnel', 1); }}
                 disabled={isDisabled}
                 className="interactive-element bg-transparent border border-gray-700 p-4 rounded-lg w-full flex flex-col items-start hover:enabled:border-orange-500 hover:enabled:shadow-lg hover:enabled:shadow-orange-500/10 disabled:opacity-40 disabled:cursor-not-allowed"
             >

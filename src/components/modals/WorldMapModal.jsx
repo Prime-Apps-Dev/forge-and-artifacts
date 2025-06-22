@@ -2,8 +2,8 @@
 
 import React from 'react';
 import { definitions } from '../../data/definitions';
-import Tooltip from '../ui/Tooltip'; // Убедитесь, что Tooltip импортирован
-import { formatNumber } from '../../utils/helpers'; // Убедитесь, что formatNumber импортирован
+import Tooltip from '../ui/Tooltip'; // ИЗМЕНЕНО: Исправлен путь к Tooltip
+import { formatNumber } from '../../utils/helpers';
 
 const WorldMapModal = ({ isOpen, onClose, gameState, onSelectRegion }) => {
     if (!isOpen) return null;
@@ -28,7 +28,6 @@ const WorldMapModal = ({ isOpen, onClose, gameState, onSelectRegion }) => {
                     tooltipMessages.push(`Требуется посетить регион "${definitions.regions[condition.regionId]?.name || condition.regionId}"`);
                 }
             }
-            // Можно добавить другие типы условий здесь
         });
 
         return { unlocked: conditionsMet, tooltip: tooltipMessages.join("\n") };

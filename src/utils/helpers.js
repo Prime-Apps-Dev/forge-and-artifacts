@@ -1,11 +1,10 @@
 // src/utils/helpers.js
 
-import { definitions } from '../data/definitions';
+import { definitions } from '../data/definitions.js'; // ИЗМЕНЕНО: Добавлен .js к пути импорта
 
-// ИЗМЕНЕНИЕ: Новая функция formatNumber, которая сокращает большие числа
 export function formatNumber(num, isFullNumber = false) {
     if (typeof num !== 'number' || isNaN(num)) return '0';
-    if (isFullNumber) return Math.floor(num).toLocaleString('ru-RU'); // В профиле полное число
+    if (isFullNumber) return Math.floor(num).toLocaleString('ru-RU');
 
     if (num >= 1_000_000_000_000) {
         return (num / 1_000_000_000_000).toFixed(1).replace(/\.0$/, '') + 'T';
@@ -44,18 +43,35 @@ export const getItemImageSrc = (itemKey, size = 64) => {
     if (!itemDef || !itemDef.icon) {
         return `https://placehold.co/${size}x${size}/333/FFF?text=ITEM`;
     }
-
-    // ИЗМЕНЕНО: Удалена логика img_placeholder:
-    // if (itemDef.icon.startsWith('img_placeholder:')) {
-    //     const text = itemDef.icon.split(':')[1].split('_').map(n => n.slice(0, 1)).join('').toUpperCase();
-    //     return `https://placehold.co/${size}x${size}/333/FFF?text=${text}`;
-    // }
-    
-    // Если icon теперь является прямым путем, просто возвращаем его
-    return itemDef.icon; // Теперь icon - это прямой путь к файлу
+    return itemDef.icon;
 };
 
-// ИЗМЕНЕНИЕ: Форматирование множественной стоимости - убран плюсик, добавлены пробелы
+export const getResourceImageSrc = (resourceId, size = 32) => {
+    const iconPath = definitions.resourceIcons[resourceId];
+    if (iconPath) {
+        return iconPath;
+    }
+    const recipeKey = Object.keys(definitions.recipes).find(key => definitions.recipes[key].output?.[resourceId]);
+    if (recipeKey && definitions.recipes[recipeKey].icon) {
+        return definitions.recipes[recipeKey].icon;
+    }
+    const specialItem = definitions.specialItems[resourceId];
+    if (specialItem && specialItem.icon && specialItem.icon.startsWith('/img/')) {
+        return specialItem.icon;
+    }
+    const textFallback = resourceId.slice(0, 3).toUpperCase();
+    return `https://placehold.co/${size}x${size}/333/FFF?text=${textFallback}`;
+};
+
+export const getArtifactImageSrc = (artifactId, size = 64) => {
+    const artifactDef = definitions.greatArtifacts?.[artifactId];
+    if (!artifactDef || !artifactDef.icon) {
+        const textFallback = artifactId.slice(0, 3).toUpperCase();
+        return `https://placehold.co/${size}x${size}/333/FFF?text=ART`;
+    }
+    return artifactDef.icon;
+};
+
 export const formatCosts = (costs, state) => {
     if (!costs || Object.keys(costs).length === 0) return 'Бесплатно';
     return Object.entries(costs).map(([resourceType, costAmount]) => {
@@ -63,30 +79,93 @@ export const formatCosts = (costs, state) => {
         let icon = '';
         let colorClass = '';
 
-        if (resourceType === 'sparks') {
-            resourceName = 'искр';
-            icon = 'bolt';
-            colorClass = 'text-yellow-400';
-        } else if (resourceType === 'matter') {
-            resourceName = 'материи';
-            icon = 'bubble_chart';
-            colorClass = 'text-purple-400';
-        } else if (resourceType.includes('Ingots')) {
-            resourceName = resourceType.replace('Ingots', ' сл.');
-            icon = 'view_in_ar';
-            colorClass = 'text-gray-300';
-        } else if (resourceType.includes('Ore')) {
-            resourceName = resourceType.replace('Ore', ' руды');
-            icon = 'lens';
-            colorClass = 'text-gray-400';
-        } else if (definitions.specialItems[resourceType]) {
-            resourceName = definitions.specialItems[resourceType].name.toLowerCase();
-            icon = definitions.specialItems[resourceType].icon || 'diamond';
-            colorClass = 'text-pink-400';
-        } else {
-            resourceName = resourceType;
-            icon = 'help_outline';
-            colorClass = 'text-white';
+        switch (resourceType) {
+            case 'sparks':
+                resourceName = 'искр';
+                icon = 'bolt';
+                colorClass = 'text-yellow-400';
+                break;
+            case 'matter':
+                resourceName = 'материи';
+                icon = 'bubble_chart';
+                colorClass = 'text-purple-400';
+                break;
+            case 'ironOre':
+                resourceName = 'жел. руды';
+                icon = 'lens';
+                colorClass = 'text-gray-400';
+                break;
+            case 'copperOre':
+                resourceName = 'медн. руды';
+                icon = 'filter_alt';
+                colorClass = 'text-orange-400';
+                break;
+            case 'mithrilOre':
+                resourceName = 'мифр. руды';
+                icon = 'ac_unit';
+                colorClass = 'text-cyan-400';
+                break;
+            case 'adamantiteOre':
+                resourceName = 'адам. руды';
+                icon = 'diamond';
+                colorClass = 'text-indigo-400';
+                break;
+            case 'ironIngots':
+                resourceName = 'жел. сл.';
+                icon = 'view_in_ar';
+                colorClass = 'text-gray-300';
+                break;
+            case 'copperIngots':
+                resourceName = 'медн. сл.';
+                icon = 'view_in_ar';
+                colorClass = 'text-orange-400';
+                break;
+            case 'bronzeIngots':
+                resourceName = 'бронз. сл.';
+                icon = 'shield';
+                colorClass = 'text-orange-600';
+                break;
+            case 'sparksteelIngots':
+                resourceName = 'искр. сл.';
+                icon = 'local_gas_station';
+                colorClass = 'text-red-400';
+                break;
+            case 'mithrilIngots':
+                resourceName = 'мифр. сл.';
+                icon = 'shield_moon';
+                colorClass = 'text-cyan-300';
+                break;
+            case 'adamantiteIngots':
+                resourceName = 'адам. сл.';
+                icon = 'security';
+                colorClass = 'text-indigo-300';
+                break;
+            case 'arcaniteIngots':
+                resourceName = 'аркан. сл.';
+                icon = 'auto_fix_high';
+                colorClass = 'text-fuchsia-500';
+                break;
+            case 'gem':
+                resourceName = 'самоцветы';
+                icon = 'diamond';
+                colorClass = 'text-pink-400';
+                break;
+            case 'expeditionMap':
+                resourceName = 'карт вылазок';
+                icon = 'map';
+                colorClass = 'text-yellow-600';
+                break;
+            default:
+                const specialItemDef = definitions.specialItems[resourceType];
+                if (specialItemDef) {
+                    resourceName = specialItemDef.name.toLowerCase();
+                    icon = specialItemDef.icon || 'help_outline';
+                    colorClass = 'text-white';
+                } else {
+                    resourceName = resourceType;
+                    icon = 'help_outline';
+                    colorClass = 'text-white';
+                }
         }
 
         const resourceStorage = resourceType.includes('Ingots') || resourceType.includes('Ore') || resourceType === 'sparks' || resourceType === 'matter' ? 'main' : 'specialItems';
@@ -94,9 +173,19 @@ export const formatCosts = (costs, state) => {
 
         const textColor = currentAmount >= costAmount ? 'text-white' : 'text-red-400';
 
+        const imageSrcForResource = getResourceImageSrc(resourceType, 16);
+        const useImgTag = imageSrcForResource && imageSrcForResource.startsWith('/img/');
+        
+        let iconHtml;
+        if (useImgTag) {
+            iconHtml = `<img src="${imageSrcForResource}" alt="${resourceName}" class="w-4 h-4 object-contain flex-shrink-0" />`;
+        } else {
+            iconHtml = `<span class="material-icons-outlined text-sm ${colorClass}">${icon}</span>`;
+        }
+
         return (
             `<span class="flex items-center gap-1 ${textColor} whitespace-nowrap">` +
-            `<span class="material-icons-outlined text-sm ${colorClass}">${icon}</span>` +
+            iconHtml +
             `${formatNumber(costAmount)} <span class="text-xs">${resourceName}</span>` +
             `</span>`
         );

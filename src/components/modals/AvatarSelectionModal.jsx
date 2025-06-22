@@ -1,4 +1,5 @@
 // src/components/modals/AvatarSelectionModal.jsx
+// src/components/modals/AvatarSelectionModal.jsx
 import React from 'react';
 import { definitions } from '../../data/definitions';
 import Tooltip from '../ui/Tooltip';

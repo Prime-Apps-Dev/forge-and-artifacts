@@ -2,35 +2,113 @@
 import React from 'react';
 import { definitions } from '../../data/definitions';
 import SmeltButton from '../ui/SmeltButton';
+import Tooltip from '../ui/Tooltip';
+import { getResourceImageSrc } from '../../utils/helpers';
 
 const SmelterView = ({ gameState, handlers }) => {
-    // ИЗМЕНЕНО: Добавлен bronzeIngots в деструктуризацию gameState
-    const { purchasedSkills, smeltingProcess, ironOre, copperOre, mithrilOre, adamantiteOre, ironIngots, copperIngots, bronzeIngots, adamantiteIngots, matter, isFirstPlaythrough } = gameState;
-
-    let ironCost = definitions.recipes.iron?.input?.ironOre || 9999;
-    if (purchasedSkills.efficientBellows) {
-        ironCost = Math.max(1, ironCost - 2);
-    }
-
-    let copperCost = definitions.recipes.copper?.input?.copperOre || 9999;
-    if (purchasedSkills.crucibleRefinement) {
-        copperCost = Math.max(1, copperCost - 2);
-    }
-
-    const hasEnoughForIron = ironOre >= ironCost;
-    const hasEnoughForCopper = copperOre >= copperCost;
-    const hasEnoughForMithril = mithrilOre >= (definitions.recipes.mithril?.input?.mithrilOre || 9999);
-    const hasEnoughForAdamantite = adamantiteOre >= (definitions.recipes.adamantite?.input?.adamantiteOre || 9999);
-    const hasEnoughForBronze = ironIngots >= (definitions.recipes.bronze?.input?.ironIngots || 9999) && copperIngots >= (definitions.recipes.bronze?.input?.copperIngots || 9999);
-    const hasEnoughForSparksteel = bronzeIngots >= (definitions.recipes.sparksteel?.input?.bronzeIngots || 9999) && gameState.sparks >= (definitions.recipes.sparksteel?.input?.sparks || 9999); // Проверка для искростали
-    const hasEnoughForArcanite = adamantiteIngots >= (definitions.recipes.arcanite?.input?.adamantiteIngots || 9999) && matter >= (definitions.recipes.arcanite?.input?.matter || 9999);
+    const { purchasedSkills, smeltingProcess, ironOre, copperOre, mithrilOre, adamantiteOre, ironIngots, copperIngots, bronzeIngots, sparksteelIngots, adamantiteIngots, matter, isFirstPlaythrough, sparks } = gameState;
 
     const smeltRecipe = smeltingProcess ? definitions.recipes[smeltingProcess.recipeId] : null;
 
-    const canSmeltMithril = purchasedSkills.mithrilProspecting && !isFirstPlaythrough;
-    const canSmeltAdamantite = purchasedSkills.adamantiteMining && !isFirstPlaythrough;
-    const canSmeltArcanite = purchasedSkills.arcaneMetallurgy && !isFirstPlaythrough;
+    // Функция для получения данных о рецепте слитка (для плавки руды)
+    const getSmeltRecipeData = (recipeId, skillRequired = null, lockedByPlaythrough = false) => {
+        const recipe = definitions.recipes[recipeId];
+        if (!recipe) return null;
 
+        const isUnlocked = skillRequired ? purchasedSkills[skillRequired] : true;
+        const isPlaythroughLocked = lockedByPlaythrough && isFirstPlaythrough;
+        const isTotallyLocked = !isUnlocked || isPlaythroughLocked;
+
+        let costResource = Object.keys(recipe.input)[0];
+        let costAmount = recipe.input[costResource];
+
+        // Применяем скидки на стоимость руды
+        if (recipeId === 'iron' && purchasedSkills.efficientBellows) {
+            costAmount = Math.max(1, costAmount - 2);
+        } else if (recipeId === 'copper' && purchasedSkills.crucibleRefinement) {
+            costAmount = Math.max(1, costAmount - 2);
+        }
+
+        const hasEnough = gameState[costResource] >= costAmount;
+        const isDisabled = !hasEnough || !!smeltingProcess || isTotallyLocked;
+
+        let lockText = '';
+        if (!isUnlocked) {
+            const skillDef = definitions.skills[skillRequired];
+            lockText = `Изучите навык '${skillDef?.name || skillRequired}' для разблокировки.`;
+        } else if (isPlaythroughLocked) {
+            lockText = "Доступно после первого Переселения.";
+        } else if (!hasEnough) {
+            lockText = `Недостаточно ${definitions.resources?.[costResource]?.name || costResource} (${costAmount} требуется)!`;
+        } else if (!!smeltingProcess) {
+            lockText = "Плавильня занята.";
+        }
+
+        return {
+            recipeId,
+            name: recipe.name,
+            iconSrc: getResourceImageSrc(Object.keys(recipe.output)[0]),
+            isLocked: isTotallyLocked, // Этот флаг теперь используется для полного скрытия
+            isDisabled, // Для состояния кнопки (серый, но видим, если не скрыт)
+            lockText,
+            skillLearnedButLocked: isUnlocked && isPlaythroughLocked,
+            hasEnough,
+            smeltingProcessActive: !!smeltingProcess
+        };
+    };
+
+    // Функция для получения данных о рецепте сплава
+    const getAlloyRecipeData = (recipeId, skillRequired, lockedByPlaythrough = false) => {
+        const recipe = definitions.recipes[recipeId];
+        if (!recipe) return null;
+
+        const isUnlocked = skillRequired ? purchasedSkills[skillRequired] : true;
+        const isPlaythroughLocked = lockedByPlaythrough && isFirstPlaythrough;
+        const isTotallyLocked = !isUnlocked || isPlaythroughLocked;
+
+        let hasEnough = true;
+        for (const resource in recipe.input) {
+            if (gameState[resource] < recipe.input[resource]) {
+                hasEnough = false;
+                break;
+            }
+        }
+        const isDisabled = !hasEnough || isTotallyLocked;
+
+        let lockText = '';
+        if (!isUnlocked) {
+            const skillDef = definitions.skills[skillRequired];
+            lockText = `Изучите навык '${skillDef?.name || skillRequired}' для разблокировки.`;
+        } else if (isPlaythroughLocked) {
+            lockText = "Доступно после первого Переселения.";
+        } else if (!hasEnough) {
+            lockText = "Недостаточно ресурсов.";
+        }
+
+        return {
+            recipeId,
+            name: recipe.name,
+            iconSrc: getResourceImageSrc(Object.keys(recipe.output)[0]),
+            isLocked: isTotallyLocked, // Этот флаг теперь используется для полного скрытия
+            isDisabled, // Для состояния кнопки
+            lockText,
+            skillLearnedButLocked: isUnlocked && isPlaythroughLocked,
+            hasEnough
+        };
+    };
+
+    const smeltRecipes = [
+        getSmeltRecipeData('iron'),
+        getSmeltRecipeData('copper', 'findCopper'),
+        getSmeltRecipeData('mithril', 'mithrilProspecting', true),
+        getSmeltRecipeData('adamantite', 'adamantiteMining', true),
+    ];
+
+    const alloyRecipes = [
+        getAlloyRecipeData('bronze', 'artOfAlloys'),
+        getAlloyRecipeData('sparksteel', 'artOfAlloys'),
+        getAlloyRecipeData('arcanite', 'arcaneMetallurgy', true),
+    ];
 
     return (
         <div>
@@ -41,44 +119,20 @@ const SmelterView = ({ gameState, handlers }) => {
                 <div className="p-4 border border-gray-700 bg-black/20 rounded-lg">
                     <h4 className="font-cinzel text-lg mb-2">Плавка Руды</h4>
                     <p className="text-gray-400 text-sm mb-4">Переплавьте руду в прочные металлические слитки. Подмастерье плавит только железо.</p>
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                        <SmeltButton recipeId="iron" onClick={handlers.handleSmelt} disabled={!hasEnoughForIron || !!smeltingProcess} gameState={gameState}>
-                            <img src={definitions.recipes.iron.icon} alt="Железный слиток" className="w-12 h-12 object-contain mb-1" />
-                            <span>Железный слиток</span>
-                        </SmeltButton>
-
-                        {purchasedSkills.findCopper && (
-                            <SmeltButton recipeId="copper" onClick={handlers.handleSmelt} disabled={!hasEnoughForCopper || !!smeltingProcess} gameState={gameState}>
-                                <img src={definitions.recipes.copper.icon} alt="Медный слиток" className="w-12 h-12 object-contain mb-1" />
-                                <span>Медный слиток</span>
-                            </SmeltButton>
-                        )}
-                        {canSmeltMithril && (
-                            <SmeltButton recipeId="mithril" onClick={handlers.handleSmelt} disabled={!hasEnoughForMithril || !!smeltingProcess} gameState={gameState}>
-                                <img src={definitions.recipes.mithril.icon} alt="Мифриловый слиток" className="w-12 h-12 object-contain mb-1" />
-                                <span>Мифриловый слиток</span>
-                            </SmeltButton>
-                        )}
-                        {purchasedSkills.mithrilProspecting && isFirstPlaythrough && (
-                            <SmeltButton recipeId="mithril" onClick={()=>{}} disabled={true} gameState={gameState}>
-                                <img src={definitions.recipes.mithril.icon} alt="Мифриловый слиток" className="w-12 h-12 object-contain mb-1 opacity-50" />
-                                <span className="text-cyan-400 opacity-50">Мифриловый слиток</span>
-                                <div className="text-red-400 text-xs mt-1">После Переселения</div>
-                            </SmeltButton>
-                        )}
-                        {canSmeltAdamantite && (
-                             <SmeltButton recipeId="adamantite" onClick={handlers.handleSmelt} disabled={!hasEnoughForAdamantite || !!smeltingProcess} gameState={gameState}>
-                                <img src={definitions.recipes.adamantite.icon} alt="Адамантитовый слиток" className="w-12 h-12 object-contain mb-1" />
-                                <span>Адамантитовый слиток</span>
-                            </SmeltButton>
-                        )}
-                         {purchasedSkills.adamantiteMining && isFirstPlaythrough && (
-                             <SmeltButton recipeId="adamantite" onClick={()=>{}} disabled={true} gameState={gameState}>
-                                <img src={definitions.recipes.adamantite.icon} alt="Адамантитовый слиток" className="w-12 h-12 object-contain mb-1 opacity-50" />
-                                <span className="text-indigo-400 opacity-50">Адамантитовый слиток</span>
-                                <div className="text-red-400 text-xs mt-1">После Переселения</div>
-                            </SmeltButton>
-                        )}
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {smeltRecipes.map(recipe => (
+                            // ИЗМЕНЕНО: Полностью скрываем, если заблокирован навыком/прохождением
+                            recipe && !recipe.isLocked ? (
+                                <div key={recipe.recipeId} className="flex flex-col items-center">
+                                    <Tooltip text={recipe.lockText}>
+                                        <SmeltButton recipeId={recipe.recipeId} onClick={handlers.handleSmelt} disabled={recipe.isDisabled} gameState={gameState}>
+                                            <img src={recipe.iconSrc} alt={recipe.name} className="h-24 mb-2 object-contain" />
+                                            <span>{recipe.name}</span>
+                                        </SmeltButton>
+                                    </Tooltip>
+                                </div>
+                            ) : null
+                        ))}
                     </div>
                     {smeltingProcess && (
                         <div className="mt-4">
@@ -95,32 +149,20 @@ const SmelterView = ({ gameState, handlers }) => {
                  <div className="p-4 border border-gray-700 bg-black/20 rounded-lg">
                     <h4 className="font-cinzel text-lg mb-2">Создание Сплавов</h4>
                     <p className="text-gray-400 text-sm mb-4">Комбинируйте металлы для получения превосходных материалов.</p>
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                        {purchasedSkills.artOfAlloys && (
-                            <SmeltButton recipeId="bronze" onClick={handlers.handleForgeAlloy} disabled={!hasEnoughForBronze} gameState={gameState}>
-                                <img src={definitions.recipes.bronze.icon} alt="Бронзовый слиток" className="w-12 h-12 object-contain mb-1" />
-                                <span>Бронзовый слиток</span>
-                            </SmeltButton>
-                        )}
-                         {purchasedSkills.artOfAlloys && (
-                            <SmeltButton recipeId="sparksteel" onClick={handlers.handleForgeAlloy} disabled={!hasEnoughForSparksteel} gameState={gameState}>
-                                <img src={definitions.recipes.sparksteel.icon} alt="Слиток Искростали" className="w-12 h-12 object-contain mb-1" />
-                                <span>Слиток Искростали</span>
-                            </SmeltButton>
-                        )}
-                        {canSmeltArcanite && (
-                            <SmeltButton recipeId="arcanite" onClick={handlers.handleForgeAlloy} disabled={!hasEnoughForArcanite} gameState={gameState}>
-                                <img src={definitions.recipes.arcanite.icon} alt="Арканитовый слиток" className="w-12 h-12 object-contain mb-1" />
-                                <span>Арканитовый слиток</span>
-                            </SmeltButton>
-                        )}
-                        {purchasedSkills.arcaneMetallurgy && isFirstPlaythrough && (
-                            <SmeltButton recipeId="arcanite" onClick={()=>{}} disabled={true} gameState={gameState}>
-                                <img src={definitions.recipes.arcanite.icon} alt="Арканитовый слиток" className="w-12 h-12 object-contain mb-1 opacity-50" />
-                                <span className="text-fuchsia-500 opacity-50">Арканитовый слиток</span>
-                                <div className="text-red-400 text-xs mt-1">После Переселения</div>
-                            </SmeltButton>
-                        )}
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {alloyRecipes.map(recipe => (
+                            // ИЗМЕНЕНО: Полностью скрываем, если заблокирован навыком/прохождением
+                            recipe && !recipe.isLocked ? (
+                                <div key={recipe.recipeId} className="flex flex-col items-center">
+                                    <Tooltip text={recipe.lockText}>
+                                        <SmeltButton recipeId={recipe.recipeId} onClick={handlers.handleForgeAlloy} disabled={recipe.isDisabled} gameState={gameState}>
+                                            <img src={recipe.iconSrc} alt={recipe.name} className="h-24 mb-2 object-contain" />
+                                            <span>{recipe.name}</span>
+                                        </SmeltButton>
+                                    </Tooltip>
+                                </div>
+                            ) : null
+                        ))}
                     </div>
                 </div>
             </div>

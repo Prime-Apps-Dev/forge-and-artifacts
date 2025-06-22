@@ -1,8 +1,9 @@
+// src/components/ui/SmeltButton.jsx
 import React, { memo } from 'react';
-import Tooltip from './Tooltip';
+import Tooltip from './Tooltip'; // ИЗМЕНЕНО: Исправлен путь к Tooltip
 import { definitions } from '../../data/definitions';
+import { getResourceImageSrc } from '../../utils/helpers';
 
-// Словарь для правильных названий ресурсов
 const resourceNames = {
     ironOre: 'железной руды',
     copperOre: 'медной руды',
@@ -11,14 +12,14 @@ const resourceNames = {
     ironIngots: 'железных слитков',
     copperIngots: 'медных слитков',
     adamantiteIngots: 'адамантитовых слитков',
-    matter: 'материи'
+    matter: 'материи',
+    sparks: 'искр'
 };
 
 const SmeltButton = memo(({ recipeId, children, onClick, disabled, gameState }) => {
     const recipe = definitions.recipes[recipeId];
     if (!recipe) return null;
 
-    // ИЗМЕНЕНИЕ: Рассчитываем реальную стоимость и генерируем текст подсказки
     const costStrings = Object.entries(recipe.input).map(([resourceKey, baseCost]) => {
         let finalCost = baseCost;
         if (resourceKey === 'ironOre' && gameState.purchasedSkills.efficientBellows) {
@@ -34,19 +35,34 @@ const SmeltButton = memo(({ recipeId, children, onClick, disabled, gameState }) 
     
     const tooltipText = `Требуется: ${costStrings.join(' + ')}`;
 
+    const buttonContent = (
+        <button
+            onClick={() => onClick(recipeId)}
+            disabled={disabled}
+            className={`flex flex-col items-center justify-start text-center
+                bg-gray-700/50 rounded-lg p-4
+                h-48 w-40 flex-shrink-0 flex-grow-0 max-w-[160px] max-h-[192px]
+                border-2 ${disabled ? 'border-gray-800 opacity-50 cursor-not-allowed' : 'border-gray-600 hover:border-orange-500 hover:shadow-lg hover:shadow-orange-500/10'}
+                interactive-element`}
+        >
+           <img
+               src={getResourceImageSrc(Object.keys(recipe.output)[0], 96)}
+               alt={recipe.name}
+               className="h-24 w-auto mb-2 object-contain img-rounded-corners"
+           />
+           <span className="font-bold text-base leading-tight flex-grow overflow-hidden text-ellipsis px-1">
+               {recipe.name}
+           </span>
+           {children}
+        </button>
+    );
+
     return (
-        <Tooltip text={tooltipText}>
-            <button
-                onClick={() => onClick(recipeId)}
-                disabled={disabled}
-                className={`interactive-element flex-1 bg-gray-700/50 border border-gray-600 text-white p-4 rounded-lg cursor-pointer text-base flex flex-col items-center gap-2
-                    hover:enabled:border-orange-500 hover:enabled:text-orange-400
-                    disabled:opacity-50 disabled:cursor-not-allowed
-                    ${!disabled && 'disabled:border-red-800/50'}`}
-            >
-               {children}
-            </button>
-        </Tooltip>
+        <div className="group">
+            <Tooltip text={tooltipText}>
+                {buttonContent}
+            </Tooltip>
+        </div>
     );
 });
 

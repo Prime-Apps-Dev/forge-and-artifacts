@@ -1,3 +1,4 @@
+// src/components/views/SkillsView.jsx
 import React, { useRef } from 'react';
 import { definitions } from '../../data/definitions';
 import SkillNode from '../ui/SkillNode';
@@ -11,7 +12,7 @@ const SkillsView = ({ gameState, handlers }) => {
     );
     const Connector = () => <div className="h-8 w-px bg-gray-600 my-2"></div>;
 
-    // ИЗМЕНЕНИЕ: Определение структуры дерева навыков с рядами для новой логики разблокировки
+    // ИЗМЕНЕНИЕ: Обновленная структура дерева навыков с новыми навыками
     const skillTreeStructure = [
         {
             age: "Железный Век",
@@ -23,14 +24,14 @@ const SkillsView = ({ gameState, handlers }) => {
                 { id: "row5", skills: ["divisionOfLabor"] },
                 { id: "row6", skills: ["hammerStrength", "preciseTools", "perfectGrinding"] },
                 { id: "row7", skills: ["sharpeningStone", "advancedForging"] },
-                { id: "row8", skills: ["geologicalSurvey"] },
+                { id: "row8", skills: ["geologicalSurvey", "sturdyVice"] }, // Добавлен sturdyVice
             ]
         },
         {
             age: "Медный Век",
             rows: [
                 { id: "row9", skills: ["findCopper"] },
-                { id: "row10", skills: ["copperProspecting", "crucibleRefinement", "jewelryCrafting"] },
+                { id: "row10", skills: ["copperProspecting", "crucibleRefinement", "jewelryCrafting", "chainWeaving"] }, // Добавлен chainWeaving
                 { id: "row11", skills: ["apprenticeTraining", "qualityControl"] },
                 { id: "row12", skills: ["advancedSmelting", "tradeRoutes"] },
                 { id: "row13", skills: ["guildContracts", "masterworkHammers"] },
@@ -40,113 +41,65 @@ const SkillsView = ({ gameState, handlers }) => {
             age: "Бронзовый Век",
             rows: [
                 { id: "row14", skills: ["artOfAlloys"] },
-                { id: "row15", skills: ["riskAssessment", "steadyHand", "masterReforging"] }, // steadyHand является MultiLevel, riskAssessment и masterReforging
-                { id: "row16", skills: ["blueprint_eliteArmor", "blueprint_fineWeapons", "reinforcedStructure", "ancientKnowledge"] }, // Добавил reinforcedStructure и ancientKnowledge
-                { id: "row17", skills: ["expeditionPlanning", "gildingTechniques"] },
+                { id: "row15", skills: ["riskAssessment", "steadyHand", "masterReforging"] },
+                { id: "row16", skills: ["blueprint_eliteArmor", "blueprint_fineWeapons", "reinforcedStructure", "ancientKnowledge"] },
+                { id: "row17", skills: ["expeditionPlanning", "gildingTechniques", "weaponryPreparation", "repairWorkshop"] }, // Добавлены weaponryPreparation, repairWorkshop
                 { id: "row18", skills: ["legendaryClients", "optimizedSmelting", "efficientCrafting"] },
-                { id: "row19", skills: ["matterAlchemy", "tradeNegotiation", "artisanMentor"] },
-                { id: "row20", skills: ["timeMastery", "blueprint_masterwork", "truePotential"] },
+                { id: "row19", skills: ["matterAlchemy", "tradeNegotiation", "artisanMentor", "jewelersKit", "universalPincers"] }, // Добавлены jewelersKit, universalPincers
+                { id: "row20", skills: ["timeMastery", "blueprint_masterwork", "truePotential", "crossbowMastery", "armorPlating", "precisionChronometry"] }, // Добавлены crossbowMastery, armorPlating, precisionChronometry
             ]
         },
         {
             age: "Мифриловая Эпоха",
             rows: [
                 { id: "row21", skills: ["mithrilProspecting"] },
-                { id: "row22", skills: ["blueprint_mithrilCrafting"] },
+                { id: "row22", skills: ["blueprint_mithrilCrafting", "archersMastery"] }, // Добавлен archersMastery
+                // НОВЫЕ РЯДЫ ДЛЯ МИФРИЛОВОЙ ЭПОХИ
+                { id: "row23_mithril", skills: ["mithrilStrength"] },
+                { id: "row24_mithril", skills: ["mithrilDefense"] },
+                { id: "row25_mithril", skills: ["mithrilSpeed"] },
+                { id: "row26_mithril", skills: ["mithrilFortune"] },
+                { id: "row27_mithril", skills: ["mithrilMagic"] },
+                { id: "row28_mithril", skills: ["mithrilRegeneration"] },
+                { id: "row29_mithril", skills: ["mithrilCritStrike"] },
+                { id: "row30_mithril", skills: ["mithrilEvasion"] },
+                { id: "row31_mithril", skills: ["mithrilArmor"] },
+                { id: "row32_mithril", skills: ["mithrilAttack"] },
             ]
         },
         {
             age: "Эпоха Легенд",
             rows: [
-                { id: "row23", skills: ["adamantiteMining"] },
-                { id: "row24", skills: ["blueprint_adamantiteForging"] },
-                { id: "row25", skills: ["arcaneMetallurgy"] },
-                { id: "row26", skills: ["blueprint_arcaniteMastery"] },
+                { id: "row33", skills: ["adamantiteMining"] },
+                { id: "row34", skills: ["blueprint_adamantiteForging", "adamantiteArmorCrafting"] }, // Добавлен adamantiteArmorCrafting
+                { id: "row35", skills: ["arcaneMetallurgy"] },
+                { id: "row36", skills: ["blueprint_arcaniteMastery", "arcaniteJewelry"] }, // Добавлен arcaniteJewelry
+                // НОВЫЕ РЯДЫ ДЛЯ ЭПОХИ ЛЕГЕНД
+                { id: "row37_legend", skills: ["legendaryStrength"] },
+                { id: "row38_legend", skills: ["legendaryDefense"] },
+                { id: "row39_legend", skills: ["legendarySpeed"] },
+                { id: "row40_legend", skills: ["legendaryFortune"] },
+                { id: "row41_legend", skills: ["legendaryMagic"] },
+                { id: "row42_legend", skills: ["legendaryRegeneration"] },
+                { id: "row43_legend", skills: ["legendaryCritStrike"] },
+                { id: "row44_legend", skills: ["legendaryEvasion"] },
+                { id: "row45_legend", skills: ["legendaryArmor"] },
+                { id: "row46_legend", skills: ["legendaryAttack"] },
             ]
         }
     ];
-
-    // Функция для определения, разблокирован ли навык по правилам рядов
-    const isSkillUnlockedByRowLogic = (currentSkillId, previousRowSkillsIds, purchasedSkills) => {
-        const currentSkillIndex = skillTreeStructure.flatMap(age => age.rows.flatMap(row => row.skills)).indexOf(currentSkillId);
-        if (currentSkillIndex === -1) return false; // Навык не найден в структуре
-
-        const currentSkillRow = skillTreeStructure.flatMap(age => age.rows).find(row => row.skills.includes(currentSkillId));
-        if (!currentSkillRow) return false;
-
-        const previousRow = skillTreeStructure.flatMap(age => age.rows).find(row => row.skills.includes(previousRowSkillsIds[0])) || null; // Предполагаем, что previousRowSkillsIds - это навыки из предыдущего ряда
-        if (!previousRow) { // Если нет предыдущего ряда (например, basicForging)
-            return true;
-        }
-
-        const parentRowCount = previousRow.skills.length;
-        const childRowCount = currentSkillRow.skills.length;
-        const currentSkillInRowIndex = currentSkillRow.skills.indexOf(currentSkillId);
-
-
-        if (parentRowCount === childRowCount) {
-            // Случай 1: 1 к 1
-            const correspondingParentSkillId = previousRow.skills[currentSkillInRowIndex];
-            return purchasedSkills[correspondingParentSkillId];
-        } else if (parentRowCount > childRowCount) {
-            if (childRowCount === 1) {
-                // Случай 3 к 1: Требуются все родительские
-                return previousRow.skills.every(parentId => purchasedSkills[parentId]);
-            } else if (parentRowCount === 3 && childRowCount === 2) {
-                // Случай 3 к 2: Навык 1 (следующего) = Навык 1 + Навык 2 (текущего)
-                // Навык 2 (следующего) = Навык 2 + Навык 3 (текущего)
-                if (currentSkillInRowIndex === 0) { // Это первый навык в дочернем ряду
-                    return purchasedSkills[previousRow.skills[0]] && purchasedSkills[previousRow.skills[1]];
-                } else if (currentSkillInRowIndex === 1) { // Это второй навык в дочернем ряду
-                    return purchasedSkills[previousRow.skills[1]] && purchasedSkills[previousRow.skills[2]];
-                }
-            }
-        }
-        // Если никакое условие не сработало или случай не описан, возвращаем false
-        return false;
-    };
-
 
     // Функция для рендеринга ряда навыков
     const renderSkillRow = (row, previousRow = null) => {
         return (
             <div key={row.id} className="skills-row flex justify-center gap-12 flex-wrap">
                 {row.skills.map((skillId, index) => {
-                    let requirementsMetForNode = true;
-                    // Если есть предыдущий ряд, применяем сложную логику
-                    if (previousRow) {
-                        requirementsMetForNode = false; // По умолчанию, пока не разблокирован
-                        const parentRowCount = previousRow.skills.length;
-                        const childRowCount = row.skills.length;
-
-                        if (parentRowCount === childRowCount) {
-                            const correspondingParentSkillId = previousRow.skills[index];
-                            requirementsMetForNode = gameState.purchasedSkills[correspondingParentSkillId];
-                        } else if (parentRowCount > childRowCount) {
-                            if (childRowCount === 1) { // Случай N к 1
-                                requirementsMetForNode = previousRow.skills.every(parentId => gameState.purchasedSkills[parentId]);
-                            } else if (parentRowCount === 3 && childRowCount === 2) { // Случай 3 к 2
-                                if (index === 0) { // Первый навык в дочернем ряду
-                                    requirementsMetForNode = gameState.purchasedSkills[previousRow.skills[0]] && gameState.purchasedSkills[previousRow.skills[1]];
-                                } else if (index === 1) { // Второй навык в дочернем ряду
-                                    requirementsMetForNode = gameState.purchasedSkills[previousRow.skills[1]] && gameState.purchasedSkills[previousRow.skills[2]];
-                                }
-                            }
-                        }
-                    }
-                    // Если навык помечен firstPlaythroughLocked и это первое прохождение,
-                    // и он является требованием для текущего навыка, мы должны игнорировать это требование
-                    // Это будет обрабатываться внутри SkillNode.jsx как ранее.
-                    
-                    // Передаем информацию о разблокировке в SkillNode
                     return (
                         <SkillNode
                             key={skillId}
                             skillId={skillId}
                             gameState={gameState}
                             onBuySkill={handlers.handleBuySkill}
-                            // Эти пропсы не нужны для новой логики разблокировки, т.к. она будет в SkillNode
-                            // isUnlockedByParentLogic={requirementsMetForNode}
                         />
                     );
                 })}
@@ -171,15 +124,17 @@ const SkillsView = ({ gameState, handlers }) => {
                         <AgeHeader title={ageGroup.age} />
                         {ageGroup.rows.map((row, rowIndex) => {
                             const renderedRow = renderSkillRow(row, previousRow);
-                            previousRow = row; // Обновляем previousRow для следующей итерации
+                            // Мы не обновляем previousRow здесь, так как логика зависимостей в SkillNode.jsx
+                            // работает на основе skill.requires, а не позиции в этом массиве.
+                            // Однако, для визуальных соединителей, можно было бы передавать previousRow.
+                            // Пока оставляем как есть, так как SkillNode обрабатывает зависимости сам.
                             return (
                                 <React.Fragment key={row.id}>
                                     {renderedRow}
-                                    {rowIndex < ageGroup.rows.length - 1 && <Connector />} {/* Разделитель между рядами в одной эпохе */}
+                                    {rowIndex < ageGroup.rows.length - 1 && <Connector />}
                                 </React.Fragment>
                             );
                         })}
-                        {/* Разделитель между эпохами, если это не последняя эпоха */}
                         {ageGroup.age !== skillTreeStructure[skillTreeStructure.length - 1].age && <Connector />}
                     </React.Fragment>
                 ))}

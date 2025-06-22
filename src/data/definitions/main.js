@@ -1,13 +1,5 @@
 // src/data/definitions/main.js
 
-// Убедитесь, что эти импорты существуют и корректны в вашем файле definitions.js
-// и экспортируются из него.
-// Например, regions из './regions.js', eternalSkills из './eternalSkills.js', avatars из './avatars.js'
-// import { regions as importedRegions } from './regions.js';
-// import { eternalSkills as importedEternalSkills } from './eternalSkills.js';
-// import { avatars as importedAvatars } from './avatars.js';
-
-
 export const {
     factions,
     reputationLevels,
@@ -22,7 +14,8 @@ export const {
     worldEvents,
     gameConfig,
     missions,
-    resourceIcons
+    resourceIcons,
+    resources
 } = {
     factions: {
         merchants: { name: 'Гильдия Торговцев', color: 'yellow-500', icon: 'storefront' },
@@ -41,7 +34,7 @@ export const {
     greatArtifacts: {
         aegis: {
             name: "Эгида Бессмертного Короля",
-            icon: "icon-aegis-shield",
+            icon: "/img/artifacts/aegis_shield.png", // ИЗМЕНЕНО: Путь к изображению
             description: "Дает 10% шанс не потратить ресурсы при создании любого компонента.",
             components: {
                 blueprint: { name: "Королевский чертеж: Эгида", obtained: false, itemId: 'blueprint_aegis' },
@@ -57,7 +50,7 @@ export const {
         },
         hammer: {
             name: "Молот Горного Сердца",
-            icon: "icon-hammer-heart",
+            icon: "/img/artifacts/mountain_heart_hammer.png", // ИЗМЕНЕНО: Путь к изображению
             description: "Каждый удар по наковальне имеет 1% шанс дополнительно создать редкий самоцвет.",
             components: {
                 blueprint: { name: "Королевский чертеж: Молот", obtained: false, itemId: 'blueprint_hammer' },
@@ -73,7 +66,7 @@ export const {
         },
         crown: {
             name: "Корона Солнца",
-            icon: "icon-crown",
+            icon: "/img/artifacts/sun_crown.png", // ИЗМЕНЕНО: Путь к изображению
             description: "Значительно увеличивает доход Искр и Материи от всех заказов (+25%).",
             components: {
                 blueprint: { name: "Королевский чертеж: Корона", obtained: false, itemId: 'blueprint_crown' },
@@ -89,7 +82,7 @@ export const {
         },
         bastion: {
             name: "Бастион Несокрушимости",
-            icon: "castle",
+            icon: "/img/artifacts/bastion_of_invincibility.png", // ИЗМЕНЕНО: Путь к изображению
             description: "Снижает требуемый прогресс для всех компонентов на 15%.",
             components: {
                 blueprint: { name: "Древний чертеж: Бастион", obtained: false, itemId: 'blueprint_bastion'},
@@ -105,7 +98,7 @@ export const {
         },
         quill: {
             name: "Перо Архивариуса",
-            icon: "edit_note",
+            icon: "/img/artifacts/archivists_quill.png", // ИЗМЕНЕНО: Путь к изображению
             description: "Вы получаете 1 ед. Материи за каждые 100 Искр, заработанных с заказов.",
             components: {
                 blueprint: { name: "Древний чертеж: Перо", obtained: false, itemId: 'blueprint_quill'},
@@ -155,7 +148,7 @@ export const {
 
     clients: [
         { id: 'farmer', name: 'Фермер', faceImg: '/img/clients/farmer.png', demands: { quality: 0.8, speed: 1.2, reward: 0.9, saleSpeedModifier: 1.2, tipChance: 0.05 }, unlockLevel: 0, unlockSkill: null },
-        { id: 'adventurer', name: 'Авантюрист', faceImg: '/img/clients/adventurer.png', demands: { quality: 1.0, speed: 0.8, reward: 1.1, saleSpeedModifier: 1.0, tipChance: 0.1 }, unlockLevel: 0, unlockSkill: 'advancedClients' }, // <-- ИЗМЕНЕНО: Добавлен unlockSkill
+        { id: 'adventurer', name: 'Авантюрист', faceImg: '/img/clients/adventurer.png', demands: { quality: 1.0, speed: 0.8, reward: 1.1, saleSpeedModifier: 1.0, tipChance: 0.1 }, unlockLevel: 0, unlockSkill: 'advancedClients' },
         { id: 'noble', name: 'Дворянин', faceImg: '/img/clients/noble.png', demands: { quality: 1.5, speed: 1.0, reward: 1.5, saleSpeedModifier: 0.8, tipChance: 0.2 }, unlockLevel: 0, unlockSkill: null },
         { id: 'shadowyFigure', name: 'Тайный Заказчик', faceImg: '/img/clients/shadowy_figure.png', demands: { quality: 1.8, speed: 0.5, reward: 2.5 }, isRisky: true, unlockLevel: 0, unlockSkill: null },
         { id: 'collector', name: 'Коллекционер', faceImg: '/img/clients/collector.png', demands: { quality: 2.5, speed: 1.0, reward: 3.0, saleSpeedModifier: 0.7, tipChance: 0.3 }, isCollector: true, unlockLevel: 0, unlockSkill: null },
@@ -311,11 +304,19 @@ export const {
         mithrilOre: '/img/ores/mithril_ore.png',
         adamantiteOre: '/img/ores/adamantite_ore.png',
     },
-    // Важно: здесь присваиваем ИМПОРТИРОВАННЫЕ объекты, а не пустые!
-    // Убедитесь, что эти переменные (importedRegions, importedEternalSkills, importedAvatars) импортированы в definitions.js
-    // Если эти переменные не импортированы в ЭТОТ файл, они будут undefined.
-    // Если они импортированы в definitions.js, то здесь они должны ссылаться на эти импорты, а не быть пустыми объектами.
-    // Предполагается, что в definitions.js они собираются корректно.
+    resources: {
+        ironOre: { name: 'Железная руда' },
+        copperOre: { name: 'Медная руда' },
+        mithrilOre: { name: 'Мифриловая руда' },
+        adamantiteOre: { name: 'Адамантитовая руда' },
+        ironIngots: { name: 'Железные слитки' },
+        copperIngots: { name: 'Медные слитки' },
+        bronzeIngots: { name: 'Бронзовые слитки' },
+        sparksteelIngots: { name: 'Слитки Искростали' },
+        mithrilIngots: { name: 'Мифриловые слитки' },
+        adamantiteIngots: { name: 'Адамантитовые слитки' },
+        arcaniteIngots: { name: 'Арканитовые слитки' },
+    },
     regions: {},
     eternalSkills: {},
     avatars: {}

@@ -7,10 +7,7 @@ const AchievementCard = memo(({ achievement, status, index }) => {
     const progressPercentage = status.target > 0 ? (status.current / status.target) * 100 : 0;
     const isComplete = status.isComplete;
 
-    // ИЗМЕНЕНО: Используем achievement.icon напрямую
-    const imgSrc = achievement.icon; // Теперь icon содержит прямой путь
-
-    // Если по какой-то причине icon отсутствует, можно использовать заглушку
+    const imgSrc = achievement.icon;
     const defaultImgSrc = 'https://placehold.co/128x128/333/FFF?text=ACH';
 
     return (
@@ -34,13 +31,12 @@ const AchievementCard = memo(({ achievement, status, index }) => {
                 bg-opacity-80
 
             `}>
-                {/* Квадратное изображение */}
                 <div className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-md flex-shrink-0">
                     <img
-                        src={imgSrc || defaultImgSrc} // Используем imgSrc, с fallback на defaultImgSrc
+                        src={imgSrc || defaultImgSrc}
                         alt={achievement.title}
                         className={`
-                            object-cover w-full h-full
+                            object-cover w-full h-full img-rounded-corners /* ИЗМЕНЕНО: Добавлен img-rounded-corners */
                             ${isComplete ? 'grayscale-0' : 'grayscale'}
                             transition-all duration-300
                         `}
@@ -52,7 +48,6 @@ const AchievementCard = memo(({ achievement, status, index }) => {
                     )}
                 </div>
 
-                {/* Заголовок достижения */}
                 <h4 className={`
                     absolute top-2 w-full text-center font-cinzel text-xs md:text-sm font-bold
                     ${isComplete ? 'text-green-300' : 'text-white'}
@@ -62,14 +57,12 @@ const AchievementCard = memo(({ achievement, status, index }) => {
                     {achievement.title}
                 </h4>
 
-                {/* Название эффекта достижения */}
                 {isComplete && achievement.effectName && (
                     <p className="absolute bottom-6 w-full text-center text-xs text-green-200 bg-black/70 rounded-md py-0.5 px-1">
                         Эффект: {achievement.effectName}
                     </p>
                 )}
 
-                {/* Прогресс-бар */}
                 {!isComplete && status.target > 0 && (
                     <div className="absolute bottom-0 left-0 right-0 h-4 bg-gray-800/80 rounded-b-lg overflow-hidden">
                         <div

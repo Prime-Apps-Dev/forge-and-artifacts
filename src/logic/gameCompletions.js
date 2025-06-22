@@ -15,6 +15,7 @@ export function handleCompleteMission(state, activeMissionId, showToast) {
 
     if (missionDef.baseReward.sparks) {
         state.sparks += missionDef.baseReward.sparks;
+        state.totalSparksEarned += missionDef.baseReward.sparks;
         rewardToast.push(`+${formatNumber(missionDef.baseReward.sparks)} искр`);
     }
     if (missionDef.baseReward.matter) {
@@ -37,6 +38,7 @@ export function handleCompleteMission(state, activeMissionId, showToast) {
         if (missionDef.bonusReward.sparksPerQualityPoint) {
             const bonusSparks = Math.floor(bonus * missionDef.bonusReward.sparksPerQualityPoint);
             state.sparks += bonusSparks;
+            state.totalSparksEarned += bonusSparks;
             rewardToast.push(`Бонус: +${formatNumber(bonusSparks)} искр`);
         }
         if (missionDef.bonusReward.matterPerQualityPoint) {
@@ -46,7 +48,8 @@ export function handleCompleteMission(state, activeMissionId, showToast) {
         }
     }
     
-    const xpEarned = Math.max(1, Math.floor(missionDef.baseReward.sparks / 100));
+    let xpEarned = Math.max(1, Math.floor(missionDef.baseReward.sparks / 100));
+    xpEarned = Math.floor(xpEarned * (state.masteryXpModifier || 1.0)); // НОВОЕ: Применение модификатора XP
     state.masteryXP += xpEarned;
 
     while (state.masteryXP >= state.masteryXPToNextLevel) {
@@ -77,17 +80,20 @@ export function handleSaleCompletion(state, shelfIndex, showToast) {
     const salePrice = Math.floor((baseValue * 1.2) * itemSold.quality);
 
     state.sparks += salePrice;
+    state.totalSparksEarned += salePrice;
 
     const client = shelf.customer;
     const tipChance = client?.demands?.tipChance || 0;
     if (Math.random() < tipChance) {
         const tipAmount = Math.floor(salePrice * 0.1);
         state.sparks += tipAmount;
+        state.totalSparksEarned += tipAmount;
         showToast(`Клиент в восторге! Вы получили ${formatNumber(tipAmount)} искр в качестве чаевых!`, 'crit');
     }
 
     state.shopReputation = (state.shopReputation || 0) + Math.floor(salePrice / 100);
-    const xpEarned = Math.max(1, Math.floor(salePrice / 200));
+    let xpEarned = Math.max(1, Math.floor(salePrice / 200));
+    xpEarned = Math.floor(xpEarned * (state.masteryXpModifier || 1.0)); // НОВОЕ: Применение модификатора XP
     state.masteryXP += xpEarned;
     
     while (state.masteryXP >= state.masteryXPToNextLevel) {
@@ -118,18 +124,19 @@ export function handleFreeCraftCompletion(state, craftProject, showToast) {
         creationTimestamp: Date.now(),
         location: 'inventory',
         inlaySlots: [],
-        gravingLevel: 0,
+        gravingLevel: state.initialGravingLevel || 0,
     };
     if (state.inventory.length < state.inventoryCapacity) {
         state.inventory.push(newItem);
         showToast(`Создан предмет: "${itemDef.name}" (добавлен в инвентарь)!`, 'success');
-        state.totalItemsCrafted = (state.totalItemsCrafted || 0) + 1; // <-- Увеличиваем счетчик
+        state.totalItemsCrafted = (state.totalItemsCrafted || 0) + 1;
     } else {
         showToast(`Инвентарь полон! Предмет "${itemDef.name}" утерян.`, 'error');
     }
     state.activeFreeCraft = null;
     
-    const xpEarned = Math.max(1, Math.floor(itemDef.components.reduce((sum, c) => sum + c.progress, 0) / 50));
+    let xpEarned = Math.max(1, Math.floor(itemDef.components.reduce((sum, c) => sum + c.progress, 0) / 50));
+    xpEarned = Math.floor(xpEarned * (state.masteryXpModifier || 1.0)); // НОВОЕ: Применение модификатора XP
     state.masteryXP += xpEarned;
 
     while (state.masteryXP >= state.masteryXPToNextLevel) {
@@ -162,7 +169,8 @@ export function handleCompleteReforge(state, reforgeProject, showToast) {
             item.location = 'inventory';
             showToast(`Перековка "${definitions.items[item.itemKey].name}" завершена! Качество: ${item.quality.toFixed(2)}`, "success");
             
-            const xpEarned = Math.max(1, Math.floor(item.quality * 20));
+            let xpEarned = Math.max(1, Math.floor(item.quality * 20));
+            xpEarned = Math.floor(xpEarned * (state.masteryXpModifier || 1.0)); // НОВОЕ: Применение модификатора XP
             state.masteryXP += xpEarned;
 
             while (state.masteryXP >= state.masteryXPToNextLevel) {
@@ -198,8 +206,10 @@ export function handleCompleteInlay(state, inlayProject, showToast) {
             item.quality = Math.min(10.0, item.quality + qualityIncrease);
             item.location = 'inventory';
             showToast(`Инкрустация "${definitions.items[item.itemKey].name}" завершена! Качество: ${item.quality.toFixed(2)}`, "success");
+            state.totalInlayedItems = (state.totalInlayedItems || 0) + 1;
 
-            const xpEarned = Math.max(1, Math.floor(item.quality * 30));
+            let xpEarned = Math.max(1, Math.floor(item.quality * 30));
+            xpEarned = Math.floor(xpEarned * (state.masteryXpModifier || 1.0)); // НОВОЕ: Применение модификатора XP
             state.masteryXP += xpEarned;
 
             while (state.masteryXP >= state.masteryXPToNextLevel) {
@@ -232,8 +242,10 @@ export function handleCompleteGraving(state, gravingProject, showToast) {
             item.gravingLevel = (item.gravingLevel || 0) + 1;
             item.location = 'inventory';
             showToast(`Гравировка "${definitions.items[item.itemKey].name}" завершена! Уровень гравировки: ${item.gravingLevel}`, "success");
+            state.totalGravedItems = (state.totalGravedItems || 0) + 1;
 
-            const xpEarned = Math.max(1, Math.floor((item.gravingLevel || 0) * 50));
+            let xpEarned = Math.max(1, Math.floor((item.gravingLevel || 0) * 50));
+            xpEarned = Math.floor(xpEarned * (state.masteryXpModifier || 1.0)); // НОВОЕ: Применение модификатора XP
             state.masteryXP += xpEarned;
 
             while (state.masteryXP >= state.masteryXPToNextLevel) {
@@ -285,11 +297,12 @@ export function handleOrderCompletion(state, order, showToast, setCompletedOrder
         finalMatter += Math.floor(finalSparks / 100);
     }
     state.sparks += finalSparks;
+    state.totalSparksEarned += finalSparks;
     state.matter += finalMatter;
-    const xpEarned = Math.max(1, Math.floor((definitions.items[order.itemKey].components.reduce((sum, c) => sum + c.progress, 0) / 10) * rewardMultiplier));
+    const xpEarnedRaw = Math.max(1, Math.floor((definitions.items[order.itemKey].components.reduce((sum, c) => sum + c.progress, 0) / 10) * rewardMultiplier));
+    const xpEarned = Math.floor(xpEarnedRaw * (state.masteryXpModifier || 1.0)); // НОВОЕ: Применение модификатора XP
     state.masteryXP += xpEarned;
-    // Увеличиваем счетчик созданных предметов здесь
-    state.totalItemsCrafted = (state.totalItemsCrafted || 0) + 1; // <-- Увеличиваем счетчик
+    state.totalItemsCrafted = (state.totalItemsCrafted || 0) + 1;
 
     while (state.masteryXP >= state.masteryXPToNextLevel) {
         state.masteryXP -= state.masteryXPToNextLevel;
@@ -302,6 +315,13 @@ export function handleOrderCompletion(state, order, showToast, setCompletedOrder
         const questDef = definitions.quests[quest.id];
         if (state.journal.activeQuests.some(activeQuest => activeQuest.id === quest.id) && questDef.target.type === 'craft' && questDef.target.itemId === order.itemKey) {
             state.journal.questProgress[quest.id] = (state.journal.questProgress[quest.id] || 0) + 1;
+            if (questDef.factionId === 'court') {
+                state.totalCourtOrdersCompleted = (state.totalCourtOrdersCompleted || 0) + 1;
+            }
+            if (order.isRisky) {
+                state.totalRiskyOrdersCompleted = (state.totalRiskyOrdersCompleted || 0) + 1;
+            }
+
             if (state.journal.questProgress[quest.id] >= questDef.target.count) {
                 state.journal.completedQuests.push(quest.id);
                 state.journal.activeQuests = state.journal.activeQuests.filter(q => q.id !== quest.id);
