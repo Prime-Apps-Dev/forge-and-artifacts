@@ -30,7 +30,7 @@ import WorldMapModal from './components/modals/WorldMapModal';
 import EternalSkillsView from './components/views/EternalSkillsView';
 import AudioVisualizer from './components/effects/AudioVisualizer';
 import AchievementRewardModal from './components/modals/AchievementRewardModal';
-import AvatarSelectionModal from './components/modals/AvatarSelectionModal'; // <-- ОБЯЗАТЕЛЬНЫЙ ИМПОРТ
+import AvatarSelectionModal from './components/modals/AvatarSelectionModal';
 import CreditsModal from './components/modals/CreditsModal'; // <-- ОБЯЗАТЕЛЬНЫЙ ИМПОРТ
 
 const LeftPanelButton = memo(({ viewId, icon, label, onClick, activeView }) => (

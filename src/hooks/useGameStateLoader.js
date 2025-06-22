@@ -12,9 +12,9 @@ export const initialGameState = {
     inventory: [],
     inventoryCapacity: 8,
     shopShelves: [
-        { itemId: null, customer: null, saleProgress: 0, saleTimer: 0 },
-        { itemId: null, customer: null, saleProgress: 0, saleTimer: 0 },
-        { itemId: null, customer: null, saleProgress: 0, saleTimer: 0 }
+        { id: 'shelf_0', itemId: null, customer: null, saleProgress: 0, saleTimer: 0 }, // Добавлен id
+        { id: 'shelf_1', itemId: null, customer: null, saleProgress: 0, saleTimer: 0 }, // Добавлен id
+        { id: 'shelf_2', itemId: null, customer: null, saleProgress: 0, saleTimer: 0 }  // Добавлен id
     ],
     passiveGeneration: { ironOre: 0, copperOre: 0, ironIngots: 0, forgeProgress: 0, sparks: 0 },
     orderQueue: [],
@@ -72,6 +72,7 @@ export const initialGameState = {
     questRewardModifier: 1.0,
     completedAchievements: [],
     totalItemsCrafted: 0, // <-- НОВОЕ ПОЛЕ: Общее количество созданных предметов
+    totalIngotsSmelted: 0, // <-- НОВОЕ ПОЛЕ: Общее количество переплавленных слитков
 };
 
 
@@ -125,26 +126,23 @@ export function useGameStateLoader(showToast) {
                         gravingLevel: item.gravingLevel || 0,
                     }));
                 } else if (key === 'shopShelves') {
-                    tempState.shopShelves = initialGameState.shopShelves.map((initialShelf, index) => {
-                        const savedShelfData = parsed.shopShelves?.[index];
-                        if (savedShelfData && typeof savedShelfData === 'object' && 'itemId' in savedShelfData) {
-                            return {
-                                itemId: savedShelfData.itemId,
-                                customer: null,
-                                saleProgress: 0,
-                                saleTimer: 0
-                            };
-                        }
-                        return initialShelf;
-                    });
+                    // Копируем сохраненные полки, но сбрасываем активные состояния
+                    const loadedShelves = parsed.shopShelves || initialGameState.shopShelves;
+                    tempState.shopShelves = loadedShelves.map((shelf, index) => ({
+                        id: shelf.id || `shelf_${index}`, // Добавляем ID, если его нет
+                        itemId: shelf.itemId || null,
+                        customer: null, // Сбрасываем клиента
+                        saleProgress: 0, // Сбрасываем прогресс
+                        saleTimer: 0 // Сбрасываем таймер
+                    }));
                 } else if (key === 'completedAchievements') {
                     tempState.completedAchievements = parsed.completedAchievements || [];
                 }
                 else {
-                    tempState[key] = parsed[key] || initialGameState[key];
+                    tempState[key] = parsed[key] !== undefined ? parsed[key] : initialGameState[key];
                 }
             }
-            else if (['eternalSkills', 'prestigePoints', 'regionsVisited', 'isFirstPlaythrough', 'initialGravingLevel', 'regionUnlockCostReduction', 'questRewardModifier', 'playerAvatarId', 'totalItemsCrafted'].includes(key)) { // <-- ДОБАВЛЕНО 'totalItemsCrafted'
+            else if (['eternalSkills', 'prestigePoints', 'regionsVisited', 'isFirstPlaythrough', 'initialGravingLevel', 'regionUnlockCostReduction', 'questRewardModifier', 'playerAvatarId', 'totalItemsCrafted', 'totalIngotsSmelted'].includes(key)) { // <-- ДОБАВЛЕНО 'totalIngotsSmelted'
                 tempState[key] = parsed[key] !== undefined ? parsed[key] : initialGameState[key];
             }
             else if (['lastClickTime', 'clickCount', 'activeReforge', 'activeInlay', 'activeGraving', 'activeInfoModal', 'activeOrder', 'activeFreeCraft', 'currentEpicOrder', 'smeltingProcess', 'activeSale', 'apprenticeOrder'].includes(key)) {
@@ -153,6 +151,12 @@ export function useGameStateLoader(showToast) {
                 tempState[key] = parsed[key] !== undefined ? parsed[key] : initialGameState[key];
             }
         });
+
+        // Заполняем недостающие shopShelves до initialGameState.shopShelves.length, если сохраненных было меньше
+        while (tempState.shopShelves.length < initialGameState.shopShelves.length) {
+            tempState.shopShelves.push({ id: `shelf_${tempState.shopShelves.length}`, itemId: null, customer: null, saleProgress: 0, saleTimer: 0 });
+        }
+
 
         if (parsed.masterFame !== undefined && tempState.masteryXP === undefined) {
             tempState.masteryXP = parsed.masterFame;

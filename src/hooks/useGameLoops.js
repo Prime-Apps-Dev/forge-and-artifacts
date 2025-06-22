@@ -9,9 +9,9 @@ import { startGameLoop, startMarketLoop, startOrderGenerationLoop } from '../log
  * @param {function} updateState - Функция для обновления игрового состояния (из useGameState).
  * @param {object} handlers - Объект со всеми обработчиками действий (из usePlayerActions, gameCoreHandlers).
  * @param {function} showToast - Функция для отображения уведомлений (из useNotifications).
- * @returns {void}
+ * @param {object} displayedGameState - Текущее отображаемое состояние игры.
  */
-export function useGameLoops(updateState, handlers, showToast) {
+export function useGameLoops(updateState, handlers, showToast, displayedGameState) { //
     useEffect(() => {
         // Логика разблокировки магазина по истечении времени
         const shopLockInterval = setInterval(() => {
@@ -33,7 +33,7 @@ export function useGameLoops(updateState, handlers, showToast) {
 
         // Запускаем основные игровые циклы, передавая им необходимые зависимости
         // Теперь handlers содержит handleGenerateNewOrderInQueue и checkForNewQuests
-        const gameLoopInterval = startGameLoop(updateState, handlers, showToast);
+        const gameLoopInterval = startGameLoop(updateState, handlers, showToast, handlers.setAchievementToDisplay, handlers.setIsAchievementRewardModalOpen); //
         const marketLoopInterval = startMarketLoop(updateState, showToast);
         const orderGenLoopInterval = startOrderGenerationLoop(handlers.handleGenerateNewOrderInQueue);
 
@@ -48,5 +48,18 @@ export function useGameLoops(updateState, handlers, showToast) {
             clearInterval(marketLoopInterval);
             clearInterval(orderGenLoopInterval);
         };
-    }, [updateState, handlers, showToast]); // Зависимости: updateState, handlers (должен быть стабильным объектом), showToast
+    }, [updateState, handlers, showToast]); //
+
+    // НОВЫЙ useEffect для реакции на изменения в completedAchievements
+    useEffect(() => {
+        // Эта логика перенесена из gameLogic.js, чтобы избежать бесконечного цикла обновлений UI.
+        // Мы используем displayedGameState, который является стабильной ссылкой на текущее состояние UI.
+        Object.values(displayedGameState.completedAchievements).forEach(achievementId => { //
+            const achievementDef = definitions.achievements[achievementId]; //
+            if (achievementDef && !displayedGameState.completedAchievements.includes(achievementDef.id)) { // Проверяем, что достижение еще не было обработано
+                 // Это условие здесь не должно сработать, т.к. мы уже фильтруем по state.completedAchievements в gameLogic
+                 // и просто реагируем на уже добавленные достижения.
+            }
+        });
+    }, [displayedGameState.completedAchievements, handlers, showToast]); // Зависимости этого useEffect
 }

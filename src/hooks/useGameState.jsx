@@ -31,7 +31,7 @@ export function useGameState() {
     const [isAchievementRewardModalOpen, setIsAchievementRewardModalOpen] = useState(false);
     const [achievementToDisplay, setAchievementToDisplay] = useState(null);
     const [isAvatarSelectionModalOpen, setIsAvatarSelectionModalOpen] = useState(false);
-    const [isCreditsModalOpen, setIsCreditsModalOpen] = useState(false); // <-- НОВОЕ СОСТОЯНИЕ
+    const [isCreditsModalOpen, setIsCreditsModalOpen] = useState(false);
     const workTimeoutRef = useRef(null); // Ref для таймаута анимации работы
 
     // 5. Единая функция для обновления состояния игры
@@ -50,11 +50,13 @@ export function useGameState() {
         setIsAchievementRewardModalOpen,
         setAchievementToDisplay,
         setIsAvatarSelectionModalOpen,
-        setIsCreditsModalOpen // <-- ПЕРЕДАЕМ НОВОЕ СОСТОЯНИЕ
+        setIsCreditsModalOpen
     );
 
     // 7. Игровые циклы (useGameLoops)
-    useGameLoops(updateState, handlers, showToast);
+    // Передаем setAchievementToDisplay и setIsAchievementRewardModalOpen напрямую в startGameLoop
+    // через handlers, так как startGameLoop вызывается там.
+    useGameLoops(updateState, { ...handlers, setAchievementToDisplay, setIsAchievementRewardModalOpen }, showToast);
 
     // Эффект для сохранения состояния в localStorage
     useEffect(() => {
@@ -98,7 +100,7 @@ export function useGameState() {
         isAchievementRewardModalOpen,
         achievementToDisplay,
         isAvatarSelectionModalOpen,
-        isCreditsModalOpen, // <-- ВОЗВРАЩАЕМ НОВОЕ СОСТОЯНИЕ
+        isCreditsModalOpen,
         handlers,
         removeToast,
         activeInfoModal: displayedGameState.activeInfoModal,

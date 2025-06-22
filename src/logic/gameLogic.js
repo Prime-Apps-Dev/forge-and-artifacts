@@ -7,14 +7,14 @@ import { recalculateAllModifiers } from '../utils/gameStateUtils';
 
 let achievementCheckTimer = 0;
 
-export function startGameLoop(updateState, handlers, showToast, setAchievementToDisplay, setIsAchievementRewardModalOpen) {
+export function startGameLoop(updateState, handlers, showToast, setAchievementToDisplay, setIsAchievementRewardModalOpen) { //
     return setInterval(() => {
         updateState(state => {
             const deltaTime = 0.1;
             const modifier = state.passiveIncomeModifier;
             const currentRegion = definitions.regions[state.currentRegion];
 
-            // Пассивная генерация
+            // Пассивная генерация (руд и слитков)
             if (state.passiveGeneration.ironOre > 0) {
                 const regionMod = currentRegion?.modifiers?.miningSpeed?.ironOre || 1.0;
                 state.ironOre += state.passiveGeneration.ironOre * modifier * regionMod * deltaTime;
@@ -31,72 +31,92 @@ export function startGameLoop(updateState, handlers, showToast, setAchievementTo
                     state.ironIngots += smeltAmount;
                 }
             }
-            if (state.passiveGeneration.forgeProgress > 0) {
-                if (!state.apprenticeOrder && state.orderQueue.length > 0) {
-                    const availableOrderForApprentice = state.orderQueue.find(order =>
-                        !order.isRisky && !definitions.items[order.itemKey]?.isQuestRecipe
-                    );
-                    if (availableOrderForApprentice) {
-                        const orderIndex = state.orderQueue.findIndex(o => o.id === availableOrderForApprentice.id);
-                        if (orderIndex !== -1) {
-                            const [orderToAccept] = state.orderQueue.splice(orderIndex, 1);
-                            orderToAccept.startTime = Date.now();
-                            orderToAccept.timeLimits = {
-                                gold: (definitions.items[orderToAccept.itemKey].components.reduce((sum, c) => sum + c.progress, 0) / 2) * state.timeLimitModifier,
-                                silver: definitions.items[orderToAccept.itemKey].components.reduce((sum, c) => sum + c.progress, 0) * state.timeLimitModifier
-                            };
-                            state.apprenticeOrder = { ...orderToAccept, isApprenticeOrder: true };
-                            showToast(`Подмастерье-кузнец начал работу над заказом: "${definitions.items[orderToAccept.itemKey].name}"`, "info");
-                        }
-                    }
-                }
-                if (state.apprenticeOrder) {
-                    const apprenticeProject = state.apprenticeOrder;
-                    const itemDef = definitions.items[apprenticeProject.itemKey];
-                    let activeComponent = itemDef.components.find(c => c.id === apprenticeProject.activeComponentId);
-                    if (!activeComponent || (apprenticeProject.componentProgress[activeComponent.id] || 0) >= activeComponent.progress) {
-                        const nextComponent = itemDef.components.find(c =>
-                            !c.requires || c.requires.every(reqId => (apprenticeProject.componentProgress[reqId] || 0) >= definitions.items[apprenticeProject.itemKey].components.find(comp => comp.id === reqId).progress) &&
-                            (apprenticeProject.componentProgress[c.id] || 0) < c.progress
-                        );
-                        if (nextComponent) {
-                            apprenticeProject.activeComponentId = nextComponent.id;
-                            activeComponent = nextComponent;
-                        } else {
-                            handlers.handleOrderCompletion(state, apprenticeProject, showToast, () => {});
-                            state.apprenticeOrder = null;
-                            return state;
-                        }
-                    }
-                    if (activeComponent) {
-                        const progressAmount = state.passiveGeneration.forgeProgress * modifier * deltaTime;
-                        if (!apprenticeProject.componentProgress[activeComponent.id]) apprenticeProject.componentProgress[activeComponent.id] = 0;
-                        if (apprenticeProject.componentProgress[activeComponent.id] === 0 && activeComponent.cost) {
-                            let canAfford = true;
-                            for (const resource in activeComponent.cost) {
-                                const cost = activeComponent.cost[resource];
-                                const resourceStorage = resource in state.specialItems ? 'specialItems' : 'main';
-                                const currentAmount = resourceStorage === 'main' ? state[resource] : state.specialItems[resource];
-                                if (currentAmount < cost) {
-                                    showToast(`Подмастерье не может продолжить: недостаточно ${resource} для компонента "${activeComponent.name}"!`, 'error');
-                                    state.apprenticeOrder = null;
-                                    return state;
-                                }
-                            }
-                            for (const resource in activeComponent.cost) {
-                                const cost = activeComponent.cost[resource];
-                                const resourceStorage = resource in state.specialItems ? 'specialItems' : 'main';
-                                if (resourceStorage === 'main') { state[resource] -= cost; }
-                                else { state.specialItems[resource] -= cost; }
-                            }
-                        }
-                        apprenticeProject.componentProgress[activeComponent.id] = Math.min(
-                            activeComponent.progress,
-                            apprenticeProject.componentProgress[activeComponent.id] + progressAmount
-                        );
-                    }
+            // ... (остальные пассивные генерации, если есть)
+
+            // Процесс плавки (для игрока)
+            if (state.smeltingProcess) {
+                const recipe = definitions.recipes[state.smeltingProcess.recipeId];
+                state.smeltingProcess.progress += deltaTime * 10 * state.smeltingSpeedModifier;
+                if (state.smeltingProcess.progress >= recipe.requiredProgress) {
+                    const outputResource = Object.keys(recipe.output)[0];
+                    const outputAmount = recipe.output[outputResource];
+                    state[outputResource] += outputAmount;
+                    state.smeltingProcess = null;
+                    // Увеличиваем totalIngotsSmelted после завершения плавки
+                    state.totalIngotsSmelted = (state.totalIngotsSmelted || 0) + outputAmount; //
+                    showToast(`Готово: +${outputAmount} ${recipe.name}`, 'success');
                 }
             }
+
+            // --- ВРЕМЕННО ОТКЛЮЧЕНО: ЛОГИКА ДЛЯ ПОДМАСТЕРЬЯ-КУЗНЕЦА ---
+            // if (state.passiveGeneration.forgeProgress > 0) {
+            //     if (!state.apprenticeOrder && state.orderQueue.length > 0) {
+            //         const availableOrderForApprentice = state.orderQueue.find(order =>
+            //             !order.isRisky && !definitions.items[order.itemKey]?.isQuestRecipe
+            //         );
+            //         if (availableOrderForApprentice) {
+            //             const orderIndex = state.orderQueue.findIndex(o => o.id === availableOrderForApprentice.id);
+            //             if (orderIndex !== -1) {
+            //                 const [orderToAccept] = state.orderQueue.splice(orderIndex, 1);
+            //                 orderToAccept.startTime = Date.now();
+            //                 orderToAccept.timeLimits = {
+            //                     gold: (definitions.items[orderToAccept.itemKey].components.reduce((sum, c) => sum + c.progress, 0) / 2) * state.timeLimitModifier,
+            //                     silver: definitions.items[orderToAccept.itemKey].components.reduce((sum, c) => sum + c.progress, 0) * state.timeLimitModifier
+            //                 };
+            //                 state.apprenticeOrder = { ...orderToAccept, isApprenticeOrder: true };
+            //                 showToast(`Подмастерье-кузнец начал работу над заказом: "${definitions.items[orderToAccept.itemKey].name}"`, "info");
+            //             }
+            //         }
+            //     }
+            //     if (state.apprenticeOrder) {
+            //         const apprenticeProject = state.apprenticeOrder;
+            //         const itemDef = definitions.items[apprenticeProject.itemKey];
+            //         let activeComponent = itemDef.components.find(c => c.id === apprenticeProject.activeComponentId);
+            //         if (!activeComponent || (apprenticeProject.componentProgress[activeComponent.id] || 0) >= activeComponent.progress) {
+            //             const nextComponent = itemDef.components.find(c =>
+            //                 !c.requires || c.requires.every(reqId => (apprenticeProject.componentProgress[reqId] || 0) >= definitions.items[apprenticeProject.itemKey].components.find(comp => comp.id === reqId).progress) &&
+            //                 (apprenticeProject.componentProgress[c.id] || 0) < c.progress
+            //             );
+            //             if (nextComponent) {
+            //                 apprenticeProject.activeComponentId = nextComponent.id;
+            //                 activeComponent = nextComponent;
+            //             } else {
+            //                 handlers.handleOrderCompletion(state, apprenticeProject, showToast, () => {});
+            //                 state.apprenticeOrder = null;
+            //                 return state;
+            //             }
+            //         }
+            //         if (activeComponent) {
+            //             const progressAmount = state.passiveGeneration.forgeProgress * modifier * deltaTime;
+            //             if (!apprenticeProject.componentProgress[activeComponent.id]) apprenticeProject.componentProgress[activeComponent.id] = 0;
+            //             if (apprenticeProject.componentProgress[activeComponent.id] === 0 && activeComponent.cost) {
+            //                 let canAfford = true;
+            //                 for (const resource in activeComponent.cost) {
+            //                     const cost = activeComponent.cost[resource];
+            //                     const resourceStorage = resource in state.specialItems ? 'specialItems' : 'main';
+            //                     const currentAmount = resourceStorage === 'main' ? state[resource] : state.specialItems[resource];
+            //                     if (currentAmount < cost) {
+            //                         showToast(`Подмастерье не может продолжить: недостаточно ${resource} для компонента "${activeComponent.name}"!`, 'error');
+            //                         state.apprenticeOrder = null;
+            //                         return state;
+            //                     }
+            //                 }
+            //                 for (const resource in activeComponent.cost) {
+            //                     const cost = activeComponent.cost[resource];
+            //                     const resourceStorage = resource in state.specialItems ? 'specialItems' : 'main';
+            //                     if (resourceStorage === 'main') { state[resource] -= cost; }
+            //                     else { state.specialItems[resource] -= cost; }
+            //                 }
+            //             }
+            //             apprenticeProject.componentProgress[activeComponent.id] = Math.min(
+            //                 activeComponent.progress,
+            //                 apprenticeProject.componentProgress[activeComponent.id] + progressAmount
+            //             );
+            //         }
+            //     }
+            // }
+
+            // Логика мини-игры и пассивного крафта (для игрока)
             const activeProject = state.activeOrder || state.activeFreeCraft;
             if (activeProject?.minigameState?.active) {
                 const component = definitions.items[activeProject.itemKey].components.find(c => c.id === activeProject.activeComponentId);
@@ -108,6 +128,8 @@ export function startGameLoop(updateState, handlers, showToast, setAchievementTo
             } else if (state.passiveGeneration.forgeProgress > 0 && (state.activeOrder || state.activeFreeCraft || state.currentEpicOrder || state.activeReforge || state.activeInlay || state.activeGraving)) {
                      handlers.applyProgress(state, state.passiveGeneration.forgeProgress * modifier * deltaTime);
             }
+
+            // ... (остальные циклы: миссии, инвестиции, магазин, очередь заказов)
             if (state.activeMissions && state.activeMissions.length > 0) {
                 const now = Date.now();
                 const completedMissionIds = [];
@@ -160,28 +182,28 @@ export function startGameLoop(updateState, handlers, showToast, setAchievementTo
                 return true;
             });
 
-            // === КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: ЛОГИКА ПРОВЕРКИ ДОСТИЖЕНИЙ ===
+            // === ЛОГИКА ПРОВЕРКИ ДОСТИЖЕНИЙ ===
             achievementCheckTimer += deltaTime;
-            if (achievementCheckTimer >= 1) {
-                achievementCheckTimer = 0;
-                Object.values(definitions.achievements).forEach(achievementDef => {
-                    const achievementStatus = achievementDef.check(state, definitions);
-                    if (achievementStatus.isComplete && !state.completedAchievements.includes(achievementDef.id)) {
-                        state.completedAchievements.push(achievementDef.id);
-                        showToast(`Достижение выполнено: "${achievementDef.title}"!`, 'levelup');
-                        audioController.play('levelup', 'G6', '2n');
-                        setAchievementToDisplay(achievementDef);
-                        setIsAchievementRewardModalOpen(true);
-                        recalculateAllModifiers(state);
+            if (achievementCheckTimer >= 1) { // Проверяем достижения каждую секунду
+                achievementCheckTimer = 0; //
+                Object.values(definitions.achievements).forEach(achievementDef => { //
+                    // Проверяем, что достижение еще не выполнено
+                    if (!state.completedAchievements.includes(achievementDef.id)) { //
+                        const achievementStatus = achievementDef.check(state, definitions); //
+                        if (achievementStatus.isComplete) { //
+                            state.completedAchievements.push(achievementDef.id); // Добавляем ID завершенного достижения
+                            showToast(`Достижение выполнено: "${achievementDef.title}"!`, 'levelup'); //
+                            audioController.play('levelup', 'G6', '2n'); //
+                            
+                            // Вызываем setAchievementToDisplay и setIsAchievementRewardModalOpen здесь
+                            // Эти функции передаются из useGameLoops, которая, в свою очередь, получает их из useGameState.
+                            setAchievementToDisplay(achievementDef); //
+                            setIsAchievementRewardModalOpen(true); //
+                            recalculateAllModifiers(state); // Применяем эффекты сразу
+                        }
                     }
                 });
             }
-
-            // ИЗМЕНЕНО: Увеличение totalIngotsSmelted после плавки
-            if (state.smeltingProcess && state.smeltingProcess.progress >= definitions.recipes[state.smeltingProcess.recipeId].requiredProgress) {
-                state.totalIngotsSmelted = (state.totalIngotsSmelted || 0) + 1;
-            }
-
 
             return state;
         });

@@ -22,50 +22,49 @@ const CreditsModal = ({ isOpen, onClose }) => {
                     <h3 className="font-cinzel text-xl text-yellow-400 mb-2">Музыкальные Треки (Pixabay Content License)</h3>
                     <ul className="list-disc list-inside ml-4 space-y-2 mb-6">
                         <li>
-                            <strong>"Cithare Medieval 1"</strong> by LioN_X (<a href="https://pixabay.com/music/acoustic-guitars-cithare-medieval-1-307558/" className="text-blue-400 hover:underline">Перейти к источнику</a>)
+                            **"Cithare Medieval 1"** by LioN_X (https://pixabay.com/music/acoustic-guitars-cithare-medieval-1-307558/)
                         </li>
                         <li>
-                            <strong>"Fantasy Medieval Ambient"</strong> by Coma-Media (<a href="https://pixabay.com/music/ambient-fantasy-medieval-ambient-237371/" className="text-blue-400 hover:underline">Перейти к источнику</a>)
+                            **"Fantasy Medieval Ambient"** by Coma-Media (https://pixabay.com/music/ambient-fantasy-medieval-ambient-237371/)
                         </li>
                         <li>
-                            <strong>"Fantasy Medieval Mystery Ambient"</strong> by Coma-Media (<a href="https://pixabay.com/music/ambient-fantasy-medieval-mystery-ambient-292418/" className="text-blue-400 hover:underline">Перейти к источнику</a>)
+                            **"Fantasy Medieval Mystery Ambient"** by Coma-Media (https://pixabay.com/music/ambient-fantasy-medieval-mystery-ambient-292418/)
                         </li>
                         <li>
-                            <strong>"Medieval Ambient"</strong> by RomanBelov (<a href="https://pixabay.com/music/ambient-medieval-ambient-236809/" className="text-blue-400 hover:underline">Перейти к источнику</a>)
+                            **"Medieval Ambient"** by RomanBelov (https://pixabay.com/music/ambient-medieval-ambient-236809/)
                         </li>
                         <li>
-                            <strong>"Medieval Background"</strong> by Music_Unlimited (<a href="https://pixabay.com/music/medieval-background-196571/" className="text-blue-400 hover:underline">Перейти к источнику</a>)
+                            **"Medieval Background"** by Music_Unlimited (https://pixabay.com/music/medieval-background-196571/)
                         </li>
                         <li>
-                            <strong>"Medieval Background"</strong> by Coma-Media (<a href="https://pixabay.com/music/meditation-medieval-background-351307/" className="text-blue-400 hover:underline">Перейти к источнику</a>)
+                            **"Medieval Background"** by Coma-Media (https://pixabay.com/music/meditation-medieval-background-351307/)
                         </li>
                         <li>
-                            <strong>"Medieval City Tavern Ambient"</strong> by Music_Unlimited (<a href="https://pixabay.com/music/city-medieval-citytavern-ambient-235876/" className="text-blue-400 hover:underline">Перейти к источнику</a>)
+                            **"Medieval City Tavern Ambient"** by Music_Unlimited (https://pixabay.com/music/city-medieval-citytavern-ambient-235876/)
                         </li>
                         <li>
-                            <strong>"Medieval Track"</strong> by RomanBelov (<a href="https://pixabay.com/music/classical-medieval-track-161051/" className="text-blue-400 hover:underline">Перейти к источнику</a>)
+                            **"Medieval Track"** by RomanBelov (https://pixabay.com/music/classical-medieval-track-161051/)
                         </li>
                         <li>
-                            <strong>"The Ballad of My Sweet Fair Maiden (Medieval style music)"</strong> by Lexin_Music (<a href="https://pixabay.com/music/country-folk-the-ballad-of-my-sweet-fair-maiden-medieval-style-music-358306/" className="text-blue-400 hover:underline">Перейти к источнику</a>)
+                            **"The Ballad of My Sweet Fair Maiden (Medieval style music)"** by Lexin_Music (https://pixabay.com/music/country-folk-the-ballad-of-my-sweet-fair-maiden-medieval-style-music-358306/)
                         </li>
                     </ul>
 
                     <h3 className="font-cinzel text-xl text-yellow-400 mb-2">Иконки и Ассеты</h3>
                     <ul className="list-disc list-inside ml-4 space-y-2 mb-6">
                         <li>
-                            <strong>Material Icons Outlined</strong> by Google (<a href="https://fonts.google.com/icons" className="text-blue-400 hover:underline">Перейти к источнику</a>)
+                            **Material Icons Outlined** by Google (https://fonts.google.com/icons)
                         </li>
                         <li>
-                            <strong>Изображения-заглушки (Placeholders)</strong> от Placehold.co (<a href="https://placehold.co" className="text-blue-400 hover:underline">Перейти к источнику</a>)
+                            **Изображения-заглушки (Placeholders)** от Placehold.co (https://placehold.co)
                         </li>
                     </ul>
 
                     <h3 className="font-cinzel text-xl text-yellow-400 mb-2">Разработка</h3>
                     <ul className="list-disc list-inside ml-4 space-y-2 mb-6">
-                        <li><strong>Игра разработана:</strong> Prime Games</li>
-                        <li><strong>Инструменты:</strong> React, Vite, Tailwind CSS, Tone.js</li>
-                        <li><strong>Изображения:</strong> Recraft.ai</li>
-                        <li><strong>Особая благодарность:</strong> Модели Gemini за помощь в разработке.</li>
+                        <li>**Игра разработана:** [Ваше Имя / Название Студии]</li>
+                        <li>**Инструменты:** React, Vite, Tailwind CSS, Tone.js</li>
+                        <li>**Особая благодарность:** Модели Gemini за помощь в разработке.</li>
                     </ul>
 
                     <p className="text-gray-400 italic mt-6">

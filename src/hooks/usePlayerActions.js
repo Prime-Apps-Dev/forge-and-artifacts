@@ -51,7 +51,7 @@ export function usePlayerActions(
             else { state.specialItems[resourceType] -= costAmount; }
         }
         return true;
-    }, [showToast, definitions]); // Добавил definitions в зависимости
+    }, [showToast, definitions]);
 
     const handleStartMission = useCallback((missionId, committedGear) => {
         updateState(state => {
@@ -65,12 +65,12 @@ export function usePlayerActions(
                     if(requirement) { totalQualityBonus += Math.max(0, item.quality - requirement.minQuality); }
                     return false; } return true; });
             state.inventory = newInventory;
-            const newActiveMission = { id: `${missionId}_${Date.now()}`, missionId: missionId, startTime: Date.now(), duration: missionDef.duration, qualityBonus: totalQualityBonus, };
+            const newActiveMission = { id: `${Date.now()}_${Math.random()}`, missionId: missionId, startTime: Date.now(), duration: missionDef.duration, qualityBonus: totalQualityBonus, };
             state.activeMissions.push(newActiveMission);
             showToast(`Экспедиция "${missionDef.name}" отправлена!`, "info");
             audioController.play('complete', 'D4', '8n'); return state;
         });
-    }, [updateState, showToast, definitions]); // Добавил definitions в зависимости
+    }, [updateState, showToast, definitions]);
 
     const handleClickSale = useCallback((shelfIndex) => {
         audioController.play('click', 'E4', '16n');
@@ -81,13 +81,13 @@ export function usePlayerActions(
             const saleProgressPerClick = 5 * clientSaleModifier;
             shelf.saleProgress += saleProgressPerClick;
             const item = state.inventory.find(i => i.uniqueId === shelf.itemId);
-            if (!item) { showToast("Ошибка: проданный предмет не найден в инвентаре!", "error"); state.shopShelves[shelfIndex] = { itemId: null, customer: null, saleProgress: 0, saleTimer: 0 }; return state; }
+            if (!item) { showToast("Ошибка: проданный предмет не найден в инвентаре!", "error"); state.shopShelves[shelfIndex] = { id: `${Date.now()}_${Math.random()}`, itemId: null, customer: null, saleProgress: 0, saleTimer: 0 }; return state; } // Добавил id
             const itemDef = definitions.items[item.itemKey];
             const baseValue = itemDef.components.reduce((sum, c) => sum + c.progress, 0);
             const requiredProgress = (baseValue * item.quality) / 2;
             if (shelf.saleProgress >= Math.max(50, requiredProgress)) { handleSaleCompletion(state, shelfIndex, showToast); } return state;
         });
-    }, [updateState, showToast, definitions]); // Добавил definitions в зависимости
+    }, [updateState, showToast, definitions]);
 
     const handleCloseInfoModal = useCallback(() => {
         updateState(state => { state.activeInfoModal = null; return state; });
@@ -172,11 +172,11 @@ export function usePlayerActions(
             if (gameStateRef.current.activeInfoModal) { updateState(state => { state.activeInfoModal = null; return state; }); }
             setTimeout(() => { updateState(state => { state.activeInfoModal = shouldInfoModal; return state; }); }, 100);
         }
-    }, [updateState, showToast, canAffordAndPay, recalculateAllModifiers, setIsSpecializationModalOpen, gameStateRef, definitions]); // Добавил definitions в зависимости
+    }, [updateState, showToast, canAffordAndPay, recalculateAllModifiers, setIsSpecializationModalOpen, gameStateRef, definitions]);
 
     const handleSelectSpecialization = useCallback((specId) => {
         updateState(state => { if (state.specialization === null) { state.specialization = specId; showToast(`Вы выбрали путь Мастера-${definitions.specializations[specId].name}!`, 'levelup'); } return state; }); setIsSpecializationModalOpen(false);
-    }, [updateState, showToast, setIsSpecializationModalOpen, definitions]); // Добавил definitions в зависимости
+    }, [updateState, showToast, setIsSpecializationModalOpen, definitions]);
 
     const handleBuyFactionUpgrade = useCallback((upgradeId) => {
         updateState(state => {
@@ -186,7 +186,7 @@ export function usePlayerActions(
             if (!canAffordAndPay(state, upgrade.cost, showToast)) { return state; }
             state.purchasedFactionUpgrades[upgradeId] = true; recalculateAllModifiers(state); showToast(`Улучшение "${upgrade.name}" приобретено!`, 'levelup'); audioController.play('levelup', 'A4', '8n'); return state;
         });
-    }, [updateState, showToast, canAffordAndPay, recalculateAllModifiers, definitions]); // Добавил definitions в зависимости
+    }, [updateState, showToast, canAffordAndPay, recalculateAllModifiers, definitions]);
 
     const handleVolumeChange = useCallback((type, value) => {
         const numericValue = parseInt(value, 10);
@@ -195,15 +195,15 @@ export function usePlayerActions(
 
     const handleMoveItemToShelf = useCallback((itemUniqueId) => {
         updateState(state => {
-            if (state.isShopLocked) { showToast("Ваш магазин заблокирован! Попробуйте позже.", "error"); return state; } const emptyShelfIndex = state.shopShelves.findIndex(shelf => shelf.itemId === null); if (emptyShelfIndex === -1) { showToast("Все полки в магазине заняты!", 'error'); return state; } const itemToMove = state.inventory.find(item => item.uniqueId === itemUniqueId); if (!itemToMove || itemToMove.location !== 'inventory') return state; itemToMove.location = 'shelf'; state.shopShelves[emptyShelfIndex].itemId = itemUniqueId; showToast(`Предмет "${definitions.items[itemToMove.itemKey].name}" выставлен на продажу!`, "info"); return state;
+            if (state.isShopLocked) { showToast("Ваш магазин заблокирован! Попробуйте позже.", "error"); return state; } const emptyShelfIndex = state.shopShelves.findIndex(shelf => shelf.itemId === null); if (emptyShelfIndex === -1) { showToast("Все полки в магазине заняты!", 'error'); return state; } const itemToMove = state.inventory.find(item => item.uniqueId === itemUniqueId); if (!itemToMove || itemToMove.location !== 'inventory') return state; itemToMove.location = 'shelf'; state.shopShelves[emptyShelfIndex] = { id: `${Date.now()}_${Math.random()}`, itemId: itemUniqueId, customer: null, saleProgress: 0, saleTimer: 0 }; showToast(`Предмет "${definitions.items[itemToMove.itemKey].name}" выставлен на продажу!`, "info"); return state;
         });
-    }, [updateState, showToast, definitions]); // Добавил definitions в зависимости
+    }, [updateState, showToast, definitions]);
 
     const handleRemoveItemFromShelf = useCallback((itemUniqueId) => {
         updateState(state => {
-            const shelfToClearIndex = state.shopShelves.findIndex(shelf => shelf.itemId === itemUniqueId); if (shelfToClearIndex === -1) return state; const itemToReturn = state.inventory.find(item => item.uniqueId === itemUniqueId); if (!itemToReturn) { state.shopShelves[shelfToClearIndex].itemId = null; return state; } itemToReturn.location = 'inventory'; state.shopShelves[shelfToClearIndex].itemId = null; showToast(`Предмет "${definitions.items[itemToReturn.itemKey].name}" убран с полки.`, "info"); return state;
+            const shelfToClearIndex = state.shopShelves.findIndex(shelf => shelf.itemId === itemUniqueId); if (shelfToClearIndex === -1) return state; const itemToReturn = state.inventory.find(item => item.uniqueId === itemUniqueId); if (!itemToReturn) { state.shopShelves[shelfToClearIndex] = { id: `${Date.now()}_${Math.random()}`, itemId: null, customer: null, saleProgress: 0, saleTimer: 0 }; return state; } itemToReturn.location = 'inventory'; state.shopShelves[shelfToClearIndex] = { id: `${Date.now()}_${Math.random()}`, itemId: null, customer: null, saleProgress: 0, saleTimer: 0 }; showToast(`Предмет "${definitions.items[itemToReturn.itemKey].name}" убран с полки.`, "info"); return state;
         });
-    }, [updateState, showToast, definitions]); // Добавил definitions в зависимости
+    }, [updateState, showToast, definitions]);
 
     const handleGenerateNewOrderInQueue = useCallback(() => {
         updateState(state => {
@@ -247,7 +247,7 @@ export function usePlayerActions(
             const now = Date.now();
             const orderTTL = definitions.gameConfig.orderTTL;
 
-            const availableClients = Object.values(definitions.clients).filter(clientDef => { // Использовал Object.values(definitions.clients)
+            const availableClients = Object.values(definitions.clients).filter(clientDef => {
                 const meetsLevel = (state.masteryLevel || 0) >= (clientDef.unlockLevel || 0);
                 const meetsSkill = !clientDef.unlockSkill || (state.purchasedSkills[clientDef.unlockSkill]);
                 return meetsLevel && meetsSkill;
@@ -288,7 +288,7 @@ export function usePlayerActions(
                     return !item.isQuestRecipe && (!item.requiredSkill || state.purchasedSkills[item.requiredSkill]) &&
                            (!item.firstPlaythroughLocked || !state.isFirstPlaythrough);
                 });
-                itemKey = availableItemsForOrders[Math.floor(Math.random() * availableItemsForOrders.length)];
+                itemKey = availableItemsForOrders.length > 0 ? availableItemsForOrders[Math.floor(Math.random() * availableItemsForOrders.length)] : null; // Fallback to null if no items
             }
             
             if (!itemKey || !client) {
@@ -593,13 +593,12 @@ export function usePlayerActions(
 
             state.upgradeLevels[upgradeId] = (state.upgradeLevels[upgradeId] || 0) + amount;
             if (upgrade.id === 'inventoryExpansion') { state.inventoryCapacity += 2 * amount; }
-            else if (upgrade.id === 'shopShelfExpansion') { for(let i=0; i < amount; i++) state.shopShelves.push({ itemId: null, customer: null, saleProgress: 0, saleTimer: 0 }); }
-
+            else if (upgrade.id === 'shopShelfExpansion') { for(let i=0; i < amount; i++) state.shopShelves.push({ id: `${Date.now()}_${Math.random()}`, itemId: null, customer: null, saleProgress: 0, saleTimer: 0 }); } // Добавил id
             recalculateAllModifiers(state);
 
             showToast(`Улучшение "${upgrade.name}" куплено! (x${amount})`, 'success'); return state;
         });
-    }, [updateState, showToast, recalculateAllModifiers, canAffordAndPay]);
+    }, [updateState, showToast, recalculateAllModifiers, canAffordAndPay, definitions]);
 
     const handleCraftArtifact = useCallback((artifactId) => {
         updateState(state => {
@@ -731,6 +730,9 @@ export function usePlayerActions(
 
 
     return useMemo(() => {
+        // Зависимости useMemo должны быть максимально стабильными.
+        // Передаем только dispatch-функции useState, useRef, и статические definitions.
+        // Функции useCallback, определенные выше, уже зависят от этих стабильных значений.
         return {
             handleCloseInfoModal,
             handleCloseWorldMapModal,
@@ -739,10 +741,9 @@ export function usePlayerActions(
             handleOpenAvatarSelectionModal,
             handleCloseAvatarSelectionModal,
             handleSelectAvatar,
-            handleOpenCreditsModal, // <-- ВОЗВРАЩАЕМ
-            handleCloseCreditsModal, // <-- ВОЗВРАЩАЕМ
+            handleOpenCreditsModal,
+            handleCloseCreditsModal,
             handleSelectRegion,
-            checkForNewQuests: (state) => checkForNewQuests(state, showToast),
             handleBuySkill,
             handleSelectSpecialization,
             handleBuyFactionUpgrade,
@@ -770,21 +771,42 @@ export function usePlayerActions(
             handleClickSale,
             handleStartNewSettlement,
             handleBuyEternalSkill,
-            applyProgress: (progressAmount) => updateState(state => coreHandlers.applyProgress(state, progressAmount)),
-            handleStrikeAnvil: () => updateState(coreHandlers.handleStrikeAnvil),
-            handleSelectComponent: (componentId) => updateState(state => coreHandlers.handleSelectComponent(state, componentId)),
-            handleSelectWorkstation: (workstationId) => updateState(state => coreHandlers.handleSelectWorkstation(state, workstationId)),
+            
+            // Core handlers (уже мемоизированы внутри)
+            applyProgress: coreHandlers.applyProgress,
+            handleStrikeAnvil: coreHandlers.handleStrikeAnvil,
+            handleSelectComponent: coreHandlers.handleSelectComponent,
+            handleSelectWorkstation: coreHandlers.handleSelectWorkstation,
             handleCloseRewardModal: coreHandlers.handleCloseRewardModal,
+            checkForNewQuests: (state) => checkForNewQuests(state, showToast), // checkForNewQuests нуждается в showToast
         };
     }, [
-        handleCloseInfoModal, handleCloseWorldMapModal, handleCloseAchievementRewardModal, handleClaimAchievementReward, handleOpenAvatarSelectionModal, handleCloseAvatarSelectionModal, handleSelectAvatar, handleOpenCreditsModal, handleCloseCreditsModal, showToast, updateState, canAffordAndPay,
-        handleBuySkill, handleSelectSpecialization, handleBuyFactionUpgrade,
-        handleVolumeChange, handleMoveItemToShelf, handleRemoveItemFromShelf,
-        handleGenerateNewOrderInQueue, handleAcceptOrder, handleStartFreeCraft,
-        handleMineOre, handleSmelt, handleForgeAlloy, handleBuyResource,
+        // Диспетчеры useState, которые стабильны
+        updateState, showToast,
+        setIsWorking, setCompletedOrderInfo, setIsSpecializationModalOpen,
+        setIsWorldMapModalOpen, setIsAchievementRewardModalOpen, setAchievementToDisplay,
+        setIsAvatarSelectionModalOpen, setIsCreditsModalOpen,
+
+        // Refs (стабильны)
+        gameStateRef, workTimeoutRef,
+
+        // Статические определения (стабильны)
+        definitions, initialGameState, recalculateAllModifiers,
+
+        // Мемоизированные функции, которые зависят от стабильных значений
+        // (их нет необходимости перечислять по одной, если они определены как useCallback и зависят от стабильных пропсов/состояний)
+        // Но для ясности и гарантии стабильности handlers, перечисляем их здесь.
+        canAffordAndPay, handleStartMission, handleClickSale, handleCloseInfoModal, handleCloseWorldMapModal,
+        handleCloseAchievementRewardModal, handleClaimAchievementReward, handleOpenAvatarSelectionModal,
+        handleCloseAvatarSelectionModal, handleOpenCreditsModal, handleCloseCreditsModal, handleSelectAvatar,
+        handleBuySkill, handleSelectSpecialization, handleBuyFactionUpgrade, handleVolumeChange,
+        handleMoveItemToShelf, handleRemoveItemFromShelf, handleGenerateNewOrderInQueue, handleAcceptOrder,
+        handleStartFreeCraft, handleMineOre, handleSmelt, handleForgeAlloy, handleBuyResource,
         handleSellResource, handleBuySpecialItem, handleInvest, handleBuyUpgrade,
-        handleCraftArtifact, handleStartReforge, handleStartInlay,
-        handleStartGraving, handleStartQuest, handleResetGame, handleStartMission,
-        handleClickSale, handleStartNewSettlement, handleBuyEternalSkill, coreHandlers, recalculateAllModifiers, setIsSpecializationModalOpen, gameStateRef, definitions
+        handleCraftArtifact, handleStartQuest, handleResetGame, handleStartMission,
+        handleStartNewSettlement, handleBuyEternalSkill, handleStartReforge, handleStartInlay, handleStartGraving,
+
+        // Мемоизированный объект coreHandlers
+        coreHandlers
     ]);
 }

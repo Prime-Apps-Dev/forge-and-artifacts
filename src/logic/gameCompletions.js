@@ -58,7 +58,7 @@ export function handleCompleteMission(state, activeMissionId, showToast) {
     }
 
     showToast(rewardToast.join(' '), 'success');
-    audioController.play('levelup', 'A4', '4n'); // Добавил проигрывание звука здесь, если его не было
+    audioController.play('levelup', 'A4', '4n');
 }
 
 export function handleSaleCompletion(state, shelfIndex, showToast) {
