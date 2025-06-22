@@ -1,8 +1,8 @@
 // src/hooks/useGameStateLoader.js
 
 import { useState, useRef } from 'react';
-import { definitions } from '../data/definitions';
-import { recalculateAllModifiers } from '../utils/gameStateUtils';
+import { definitions } from '../data/definitions.js';
+import { recalculateAllModifiers } from '../utils/gameStateUtils.js';
 
 export const initialGameState = {
     sparks: 0, matter: 0,
@@ -12,9 +12,9 @@ export const initialGameState = {
     inventory: [],
     inventoryCapacity: 8,
     shopShelves: [
-        { id: 'shelf_0', itemId: null, customer: null, saleProgress: 0, saleTimer: 0 }, // Добавлен id
-        { id: 'shelf_1', itemId: null, customer: null, saleProgress: 0, saleTimer: 0 }, // Добавлен id
-        { id: 'shelf_2', itemId: null, customer: null, saleProgress: 0, saleTimer: 0 }  // Добавлен id
+        { id: 'shelf_0', itemId: null, customer: null, saleProgress: 0, saleTimer: 0 },
+        { id: 'shelf_1', itemId: null, customer: null, saleProgress: 0, saleTimer: 0 },
+        { id: 'shelf_2', itemId: null, customer: null, saleProgress: 0, saleTimer: 0 }
     ],
     passiveGeneration: { ironOre: 0, copperOre: 0, ironIngots: 0, forgeProgress: 0, sparks: 0 },
     orderQueue: [],
@@ -71,14 +71,15 @@ export const initialGameState = {
     regionUnlockCostReduction: 0,
     questRewardModifier: 1.0,
     completedAchievements: [],
+    appliedAchievementRewards: [], // НОВОЕ: Массив для отслеживания примененных наград достижений
     totalItemsCrafted: 0,
     totalIngotsSmelted: 0,
-    totalClicks: 0, // НОВОЕ ПОЛЕ: Общее количество кликов по наковальне
-    totalSparksEarned: 0, // НОВОЕ ПОЛЕ: Общее количество заработанных искр
-    totalMatterSpent: 0, // НОВОЕ ПОЛЕ: Общее количество потраченной материи
-    totalExpeditionMapsBought: 0, // НОВОЕ ПОЛЕ: Общее количество купленных карт вылазок
-    totalCourtOrdersCompleted: 0, // НОВОЕ ПОЛЕ: Общее количество выполненных заказов для Королевского Двора
-    totalRiskyOrdersCompleted: 0, // НОВОЕ ПОЛЕ: Общее количество выполненных рискованных заказов
+    totalClicks: 0,
+    totalSparksEarned: 0,
+    totalMatterSpent: 0,
+    totalExpeditionMapsBought: 0,
+    totalCourtOrdersCompleted: 0,
+    totalRiskyOrdersCompleted: 0,
 };
 
 
@@ -135,20 +136,20 @@ export function useGameStateLoader(showToast) {
                     // Копируем сохраненные полки, но сбрасываем активные состояния
                     const loadedShelves = parsed.shopShelves || initialGameState.shopShelves;
                     tempState.shopShelves = loadedShelves.map((shelf, index) => ({
-                        id: shelf.id || `shelf_${index}`, // Добавляем ID, если его нет
+                        id: shelf.id || `shelf_${index}`,
                         itemId: shelf.itemId || null,
-                        customer: null, // Сбрасываем клиента
-                        saleProgress: 0, // Сбрасываем прогресс
-                        saleTimer: 0 // Сбрасываем таймер
+                        customer: null,
+                        saleProgress: 0,
+                        saleTimer: 0
                     }));
-                } else if (key === 'completedAchievements') {
-                    tempState.completedAchievements = parsed.completedAchievements || [];
+                } else if (key === 'completedAchievements' || key === 'appliedAchievementRewards') { // ИЗМЕНЕНО: Обработка appliedAchievementRewards
+                    tempState[key] = parsed[key] || [];
                 }
                 else {
                     tempState[key] = parsed[key] !== undefined ? parsed[key] : initialGameState[key];
                 }
             }
-            else if (['eternalSkills', 'prestigePoints', 'regionsVisited', 'isFirstPlaythrough', 'initialGravingLevel', 'regionUnlockCostReduction', 'questRewardModifier', 'playerAvatarId', 'totalItemsCrafted', 'totalIngotsSmelted', 'totalClicks', 'totalSparksEarned', 'totalMatterSpent', 'totalExpeditionMapsBought', 'totalCourtOrdersCompleted', 'totalRiskyOrdersCompleted'].includes(key)) { // НОВОЕ: добавлены новые поля
+            else if (['eternalSkills', 'prestigePoints', 'regionsVisited', 'isFirstPlaythrough', 'initialGravingLevel', 'regionUnlockCostReduction', 'questRewardModifier', 'playerAvatarId', 'totalItemsCrafted', 'totalIngotsSmelted', 'totalClicks', 'totalSparksEarned', 'totalMatterSpent', 'totalExpeditionMapsBought', 'totalCourtOrdersCompleted', 'totalRiskyOrdersCompleted'].includes(key)) {
                 tempState[key] = parsed[key] !== undefined ? parsed[key] : initialGameState[key];
             }
             else if (['lastClickTime', 'clickCount', 'activeReforge', 'activeInlay', 'activeGraving', 'activeInfoModal', 'activeOrder', 'activeFreeCraft', 'currentEpicOrder', 'smeltingProcess', 'activeSale', 'apprenticeOrder'].includes(key)) {
@@ -158,11 +159,9 @@ export function useGameStateLoader(showToast) {
             }
         });
 
-        // Заполняем недостающие shopShelves до initialGameState.shopShelves.length, если сохраненных было меньше
         while (tempState.shopShelves.length < initialGameState.shopShelves.length) {
             tempState.shopShelves.push({ id: `shelf_${tempState.shopShelves.length}`, itemId: null, customer: null, saleProgress: 0, saleTimer: 0 });
         }
-
 
         if (parsed.masterFame !== undefined && tempState.masteryXP === undefined) {
             tempState.masteryXP = parsed.masterFame;
@@ -179,6 +178,61 @@ export function useGameStateLoader(showToast) {
             tempState.shopLockEndTime = 0;
         }
 
+        // --- НОВОЕ: ПРИМЕНЕНИЕ ЭФФЕКТОВ ДОСТИЖЕНИЙ ПРИ ЗАГРУЗКЕ ИГРЫ (ОДИН РАЗ) ---
+        // Итерируем по всем завершенным достижениям и применяем их эффекты, если они еще не были применены.
+        // Это необходимо, чтобы эффекты сохранялись после перезагрузки.
+        Object.values(definitions.achievements).forEach(achievementDef => {
+            const achievementStatus = achievementDef.check(tempState, definitions); // Проверяем статус для текущего tempState
+            if (achievementStatus.isComplete) {
+                // Если достижение одноуровневое
+                if (!achievementDef.levels) {
+                    if (!tempState.appliedAchievementRewards.includes(achievementDef.id)) {
+                        achievementDef.apply(tempState); // Применяем эффект
+                        tempState.appliedAchievementRewards.push(achievementDef.id); // Помечаем как примененное
+                    }
+                } 
+                // Если достижение многоуровневое
+                else {
+                    achievementDef.levels.forEach((level, index) => {
+                        const levelId = `${achievementDef.id}_level_${index + 1}`;
+                        if (achievementStatus.current >= level.target && !tempState.appliedAchievementRewards.includes(levelId)) {
+                            // Применяем только специфичный эффект для этого уровня
+                            if (level.reward.sparksModifier) tempState.sparksModifier += level.reward.sparksModifier;
+                            if (level.reward.matterModifier) tempState.matterModifier += level.reward.matterModifier;
+                            if (level.reward.critChance) tempState.critChance += level.reward.critChance;
+                            if (level.reward.orePerClick) tempState.orePerClick += level.reward.orePerClick;
+                            if (level.reward.progressPerClick) tempState.progressPerClick += level.reward.progressPerClick;
+                            if (level.reward.smeltingSpeedModifier) tempState.smeltingSpeedModifier += level.reward.smeltingSpeedModifier;
+                            if (level.reward.matterCostReduction) tempState.matterCostReduction += level.reward.matterCostReduction;
+                            if (level.reward.reputationGainModifier) {
+                                for (const factionId in level.reward.reputationGainModifier) {
+                                    tempState.reputationGainModifier[factionId] = (tempState.reputationGainModifier[factionId] || 1) + level.reward.reputationGainModifier[factionId];
+                                }
+                            }
+                            if (level.reward.riskModifier) tempState.riskModifier = (tempState.riskModifier || 1.0) * (1 - level.reward.riskModifier); // Уменьшение риска
+                            if (level.reward.expeditionMapCostModifier) tempState.expeditionMapCostModifier = (tempState.expeditionMapCostModifier || 1.0) * (1 - level.reward.expeditionMapCostModifier); // Снижение стоимости карт
+                            if (level.reward.passiveIncomeModifier) tempState.passiveIncomeModifier = (tempState.passiveIncomeModifier || 1.0) + level.reward.passiveIncomeModifier; // Эффективность подмастерьев
+                            if (level.reward.masteryXpModifier) tempState.masteryXpModifier = (tempState.masteryXpModifier || 1.0) + level.reward.masteryXpModifier; // XP модификатор
+                            if (level.reward.regionUnlockCostReduction) tempState.regionUnlockCostReduction = (tempState.regionUnlockCostReduction || 0) + level.reward.regionUnlockCostReduction; // Снижение стоимости регионов
+                            if (level.reward.questRewardModifier) tempState.questRewardModifier = (tempState.questRewardModifier || 1.0) + level.reward.questRewardModifier; // Награды за квесты
+
+                            // Специальные эффекты, которые не являются простыми модификаторами
+                            if (level.reward.item) {
+                                tempState.specialItems[level.reward.item.id] = (tempState.specialItems[level.reward.item.id] || 0) + level.reward.item.amount;
+                            }
+                            if (level.reward.shopShelf) {
+                                tempState.shopShelves.push({ id: `shelf_${tempState.shopShelves.length}`, itemId: null, customer: null, saleProgress: 0, saleTimer: 0 });
+                            }
+                            // Если эффект артефакта, который мы могли добавить напрямую, здесь не требуется, т.к. они из artifacts.js
+
+                            tempState.appliedAchievementRewards.push(levelId); // Помечаем как примененное
+                        }
+                    });
+                }
+            }
+        });
+
+        // Теперь recalculateAllModifiers не будет повторно применять эффекты достижений.
         recalculateAllModifiers(tempState);
 
         return tempState;

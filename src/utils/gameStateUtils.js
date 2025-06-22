@@ -1,6 +1,6 @@
 // src/utils/gameStateUtils.js
 
-import { definitions } from '../data/definitions';
+import { definitions } from '../data/definitions.js';
 
 /**
  * Пересчитывает все игровые модификаторы "с чистого листа" на основе
@@ -30,6 +30,7 @@ export function recalculateAllModifiers(state) {
     state.initialGravingLevel = 0;
     state.regionUnlockCostReduction = 0;
     state.questRewardModifier = 1.0;
+    state.masteryXpModifier = 1.0; // Базовое значение для модификатора XP
 
     // 1. Эффекты от купленных навыков (purchasedSkills)
     Object.entries(state.purchasedSkills).forEach(([skillId, isPurchased]) => {
@@ -87,9 +88,9 @@ export function recalculateAllModifiers(state) {
     Object.keys(state.artifacts).forEach(artId => {
         if (state.artifacts[artId].status === 'completed') {
             const artifactDef = definitions.greatArtifacts[artId];
-            if (artifactDef.apply) { // Если у артефакта есть прямая функция apply
+            if (artifactDef.apply) {
                 artifactDef.apply(state);
-            } else { // Предыдущая логика, если apply отсутствует в определении артефакта
+            } else {
                 if (artId === 'crown') {
                     state.sparksModifier += 0.25;
                     state.matterModifier += 0.25;
@@ -97,7 +98,6 @@ export function recalculateAllModifiers(state) {
                 if (artId === 'bastion') {
                     state.progressPerClick *= 1.15;
                 }
-                // Quill эффект обрабатывается в handleOrderCompletion
             }
         }
     });
@@ -109,11 +109,12 @@ export function recalculateAllModifiers(state) {
         }
     });
 
-    // 8. Эффекты от Завершенных Достижений (achievements)
-    state.completedAchievements.forEach(achId => {
-        const achievementDef = definitions.achievements[achId];
-        if (achievementDef?.apply) {
-            achievementDef.apply(state);
-        }
-    });
+    // 8. ЭФФЕКТЫ ОТ ЗАВЕРШЕННЫХ ДОСТИЖЕНИЙ (achievements) - УДАЛЕНЫ ОТСЮДА!
+    // Теперь они применяются ТОЛЬКО ОДИН РАЗ в gameLogic.js при первом выполнении.
+    // state.completedAchievements.forEach(achId => {
+    //     const achievementDef = definitions.achievements[achId];
+    //     if (achievementDef?.apply) {
+    //         achievementDef.apply(state);
+    //     }
+    // });
 }

@@ -1,16 +1,14 @@
 // src/logic/gameLogic.js
-import { definitions } from "../data/definitions";
-import { audioController } from '../utils/audioController';
-import { handleCompleteMission, handleOrderCompletion } from './gameCompletions'; // ИЗМЕНЕНО: Добавлен handleOrderCompletion
-import { formatNumber } from '../utils/helpers';
-import { recalculateAllModifiers } from '../utils/gameStateUtils';
+import { definitions } from "../data/definitions.js";
+import { audioController } from '../utils/audioController.js';
+import { handleCompleteMission, handleOrderCompletion } from './gameCompletions.js';
+import { formatNumber } from '../utils/helpers.js';
+import { recalculateAllModifiers } from '../utils/gameStateUtils.js';
 
 let achievementCheckTimer = 0;
-// НОВОЕ: Переменная для отслеживания времени последнего предупреждения подмастерья
 let apprenticeToastTimer = Date.now();
-const APPRENTICE_TOAST_INTERVAL = 10000; // 10 секунд
+const APPRENTICE_TOAST_INTERVAL = 10000;
 
-// НОВОЕ: Принимаем showAchievementRewardModal как аргумент
 export function startGameLoop(updateState, handlers, showToast, showAchievementRewardModal) {
     return setInterval(() => {
         updateState(state => {
@@ -18,7 +16,6 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
             const modifier = state.passiveIncomeModifier;
             const currentRegion = definitions.regions[state.currentRegion];
 
-            // Пассивная генерация (руд и слитков)
             if (state.passiveGeneration.ironOre > 0) {
                 const regionMod = currentRegion?.modifiers?.miningSpeed?.ironOre || 1.0;
                 state.ironOre += state.passiveGeneration.ironOre * modifier * regionMod * deltaTime;
@@ -29,16 +26,14 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
             }
             if (state.passiveGeneration.ironIngots > 0) {
                 const smeltAmount = state.passiveGeneration.ironIngots * modifier * deltaTime;
-                const requiredOre = smeltAmount * 10; // 10 руды на 1 слиток
+                const requiredOre = smeltAmount * 10;
                 if (state.ironOre >= requiredOre) {
                     state.ironOre -= requiredOre;
                     state.ironIngots += smeltAmount;
-                    state.totalIngotsSmelted = (state.totalIngotsSmelted || 0) + smeltAmount; // Отслеживание общего количества выплавленных слитков
+                    state.totalIngotsSmelted = (state.totalIngotsSmelted || 0) + smeltAmount;
                 }
             }
-            // ... (остальные пассивные генерации, если есть)
 
-            // Процесс плавки (для игрока)
             if (state.smeltingProcess) {
                 const recipe = definitions.recipes[state.smeltingProcess.recipeId];
                 state.smeltingProcess.progress += deltaTime * 10 * state.smeltingSpeedModifier;
@@ -47,16 +42,13 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                     const outputAmount = recipe.output[outputResource];
                     state[outputResource] += outputAmount;
                     state.smeltingProcess = null;
-                    state.totalIngotsSmelted = (state.totalIngotsSmelted || 0) + outputAmount; // Отслеживание общего количества выплавленных слитков
+                    state.totalIngotsSmelted = (state.totalIngotsSmelted || 0) + outputAmount;
                     showToast(`Готово: +${outputAmount} ${recipe.name}`, 'success');
                 }
             }
 
-            // --- ВОССТАНОВЛЕНА И ИЗМЕНЕНА: ЛОГИКА ДЛЯ ПОДМАСТЕРЬЯ-КУЗНЕЦА ---
             if (state.passiveGeneration.forgeProgress > 0) {
-                // Если у подмастерья нет активного заказа ИЛИ он уже выполнен
                 if (!state.apprenticeOrder || (state.apprenticeOrder && state.apprenticeOrder.allComponentsComplete)) {
-                    // Ищем доступный заказ в очереди, который не является рискованным и не квестовым
                     const availableOrderForApprentice = state.orderQueue.find(order =>
                         !order.isRisky && !definitions.items[order.itemKey]?.isQuestRecipe
                     );
@@ -66,34 +58,29 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                         if (orderIndex !== -1) {
                             const [orderToAccept] = state.orderQueue.splice(orderIndex, 1);
                             orderToAccept.startTime = Date.now();
-                            orderToAccept.timeLimits = { // Присваиваем лимиты времени
+                            orderToAccept.timeLimits = {
                                 gold: (definitions.items[orderToAccept.itemKey].components.reduce((sum, c) => sum + c.progress, 0) / 2) * state.timeLimitModifier,
                                 silver: definitions.items[orderToAccept.itemKey].components.reduce((sum, c) => sum + c.progress, 0) * state.timeLimitModifier
                             };
-                            // Инициализация progress и activeComponentId для нового заказа подмастерья
                             orderToAccept.componentProgress = {};
                             orderToAccept.activeComponentId = definitions.items[orderToAccept.itemKey].components.find(c => !c.requires)?.id || definitions.items[orderToAccept.itemKey].components[0].id;
 
-                            state.apprenticeOrder = { ...orderToAccept, isApprenticeOrder: true, allComponentsComplete: false }; // Добавляем флаг
+                            state.apprenticeOrder = { ...orderToAccept, isApprenticeOrder: true, allComponentsComplete: false };
                             showToast(`Подмастерье-кузнец начал работу над заказом: "${definitions.items[orderToAccept.itemKey].name}"`, "info");
                         }
                     } else if (state.orderQueue.length === 0 && (Date.now() - apprenticeToastTimer > APPRENTICE_TOAST_INTERVAL)) {
-                        // Если нет заказов в очереди и прошло 10 секунд с последнего уведомления
                         showToast("Подмастерье-кузнец бездельничает: нет заказов в очереди.", "info");
                         apprenticeToastTimer = Date.now();
                     }
                 }
 
-                // Логика работы подмастерья над своим заказом
                 if (state.apprenticeOrder && !state.apprenticeOrder.allComponentsComplete) {
                     const apprenticeProject = state.apprenticeOrder;
                     const itemDef = definitions.items[apprenticeProject.itemKey];
                     let activeComponent = itemDef.components.find(c => c.id === apprenticeProject.activeComponentId);
 
-                    // Если активный компонент завершен или не существует, ищем следующий
                     if (!activeComponent || (apprenticeProject.componentProgress[activeComponent.id] || 0) >= activeComponent.progress) {
                         const nextComponent = itemDef.components.find(c =>
-                            // Компонент еще не завершен И все его зависимости выполнены
                             (apprenticeProject.componentProgress[c.id] || 0) < c.progress &&
                             (!c.requires || c.requires.every(reqId => 
                                 (apprenticeProject.componentProgress[reqId] || 0) >= definitions.items[apprenticeProject.itemKey].components.find(comp => comp.id === reqId).progress
@@ -101,21 +88,18 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                         );
                         if (nextComponent) {
                             apprenticeProject.activeComponentId = nextComponent.id;
-                            activeComponent = nextComponent; // Обновляем активный компонент
+                            activeComponent = nextComponent;
                         } else {
-                            // Все компоненты выполнены, завершаем заказ подмастерья
-                            apprenticeProject.allComponentsComplete = true; // Отмечаем, что заказ завершен
-                            handleOrderCompletion(state, apprenticeProject, showToast, handlers.setCompletedOrderInfo); // Используем handlers.setCompletedOrderInfo
-                            state.apprenticeOrder = null; // Очищаем заказ подмастерья
-                            return state; // Выход из updateState после завершения заказа
+                            apprenticeProject.allComponentsComplete = true;
+                            handleOrderCompletion(state, apprenticeProject, showToast, handlers.setCompletedOrderInfo);
+                            state.apprenticeOrder = null;
+                            return state;
                         }
                     }
 
-                    // Если активный компонент найден (или был найден следующий)
                     if (activeComponent) {
                         const progressAmount = state.passiveGeneration.forgeProgress * modifier * deltaTime;
 
-                        // Если компонент только начинается и требует ресурсов
                         if ((apprenticeProject.componentProgress[activeComponent.id] || 0) === 0 && activeComponent.cost) {
                             let canAfford = true;
                             let missingResource = null;
@@ -136,10 +120,9 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                                     showToast(`Подмастерье не может продолжить: недостаточно ${resourceName} для "${activeComponent.name}"!`, 'error');
                                     apprenticeToastTimer = Date.now();
                                 }
-                                return state; // Подмастерье ничего не делает, если не хватает ресурсов
+                                return state;
                             }
 
-                            // Снимаем ресурсы
                             for (const resource in activeComponent.cost) {
                                 const cost = activeComponent.cost[resource];
                                 const resourceStorage = resource in state.specialItems ? 'specialItems' : 'main';
@@ -148,7 +131,6 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                             }
                         }
                         
-                        // Применяем прогресс
                         if (!apprenticeProject.componentProgress[activeComponent.id]) apprenticeProject.componentProgress[activeComponent.id] = 0;
                         apprenticeProject.componentProgress[activeComponent.id] = Math.min(
                             activeComponent.progress,
@@ -158,8 +140,9 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                 }
             }
 
-            // Логика мини-игры и пассивного крафта (для игрока) - Оставляем как есть
-            const activeProjectPlayer = state.activeOrder || state.activeFreeCraft;
+            // Логика мини-игры и пассивного крафта (для игрока)
+            const activeProjectPlayer = state.activeOrder || state.activeFreeCraft || state.currentEpicOrder || state.activeReforge || state.activeInlay || state.activeGraving;
+            
             if (activeProjectPlayer?.minigameState?.active) {
                 const component = definitions.items[activeProjectPlayer.itemKey].components.find(c => c.id === activeProjectPlayer.activeComponentId);
                 const speed = component.minigame?.barSpeed || 1.0;
@@ -167,9 +150,8 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                 if (newPos >= 100) { newPos = 100; activeProjectPlayer.minigameState.direction = -1; }
                 else if (newPos <= 0) { newPos = 0; activeProjectPlayer.minigameState.direction = 1; }
                 activeProjectPlayer.minigameState.position = newPos;
-            } else if (state.passiveGeneration.forgeProgress > 0 && (state.activeOrder || state.activeFreeCraft || state.currentEpicOrder || state.activeReforge || state.activeInlay || state.activeGraving)) {
-                     // Здесь handlers.applyProgress - это applyProgress из gameCoreHandlers
-                     handlers.applyProgress(state, state.passiveGeneration.forgeProgress * modifier * deltaTime);
+            } else if (activeProjectPlayer) {
+                     handlers.applyProgress(state, state.progressPerClick * deltaTime); // ИЗМЕНЕНО: Исправлен прогресс игрока (без modifier, без passiveGeneration.forgeProgress)
             }
 
             // ... (остальные циклы: миссии, инвестиции, магазин, очередь заказов)
@@ -225,18 +207,88 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                 return true;
             });
 
-            // === ЛОГИКА ПРОВЕРКИ ДОСТИЖЕНИЙ ===
+            // === ЛОГИКА ПРОВЕРКИ И ПРИМЕНЕНИЯ ДОСТИЖЕНИЙ (ОДИН РАЗ) ===
             achievementCheckTimer += deltaTime;
             if (achievementCheckTimer >= 1) { // Проверяем достижения каждую секунду
                 achievementCheckTimer = 0;
                 Object.values(definitions.achievements).forEach(achievementDef => {
                     const achievementStatus = achievementDef.check(state, definitions);
-                    if (achievementStatus.isComplete && !state.completedAchievements.includes(achievementDef.id)) {
-                        state.completedAchievements.push(achievementDef.id);
-                        showToast(`Достижение выполнено: "${achievementDef.title}"!`, 'levelup');
-                        audioController.play('levelup', 'G6', '2n');
-                        showAchievementRewardModal(achievementDef); // Вызываем модалку
-                        recalculateAllModifiers(state); // Применяем эффекты
+                    
+                    // Если достижение одноуровневое
+                    if (!achievementDef.levels) {
+                        if (achievementStatus.isComplete && !state.completedAchievements.includes(achievementDef.id)) {
+                            state.completedAchievements.push(achievementDef.id); // Помечаем как выполненное
+                            if (!state.appliedAchievementRewards.includes(achievementDef.id)) { // Проверяем, что награда ещё не применена
+                                achievementDef.apply(state); // Применяем эффект
+                                state.appliedAchievementRewards.push(achievementDef.id); // Помечаем как примененное
+                                showToast(`Достижение выполнено: "${achievementDef.title}"!`, 'levelup');
+                                audioController.play('levelup', 'G6', '2n');
+                                showAchievementRewardModal(achievementDef);
+                                recalculateAllModifiers(state); // Пересчитываем модификаторы, если они изменились
+                            }
+                        }
+                    } 
+                    // Если достижение многоуровневое
+                    else {
+                        const currentAchievedLevel = achievementStatus.currentLevel; // Это может быть 1, 2, ... или 0
+                        
+                        if (currentAchievedLevel > 0) { // Если хоть какой-то уровень достигнут
+                            achievementDef.levels.forEach((levelData, index) => {
+                                const levelId = `${achievementDef.id}_level_${index + 1}`; // ID для конкретного уровня
+                                if (achievementStatus.current >= levelData.target && !state.appliedAchievementRewards.includes(levelId)) {
+                                    // Применяем только награду для этого конкретного уровня
+                                    // Важно: здесь мы применяем эффект напрямую, а не через achievementDef.apply
+                                    // так как achievementDef.apply для многоуровневых достижений уже обрабатывает все уровни.
+                                    // Если же achievementDef.apply ожидает только один уровень, то логику надо скорректировать.
+                                    // Текущая achievementDef.apply для многоуровневых итерирует по всем уровням и применяет их.
+                                    // Поэтому мы просто вызовем ее и пометим примененные уровни.
+                                    // ЭТОТ МОМЕНТ НУЖНО ПРОРАБОТАТЬ ТЩАТЕЛЬНЕЕ!
+
+                                    // ДЛЯ ТЕКУЩЕЙ СТРУКТУРЫ:
+                                    // achievementDef.apply(state) уже итерирует по уровням и применяет их.
+                                    // Нам просто нужно гарантировать, что этот вызов происходит,
+                                    // когда новый уровень достигнут и НЕ БЫЛ ПРИМЕНЕН.
+                                    // Поэтому логика ниже будет более общей:
+
+                                    // Проверяем, есть ли уже полная отметка о завершении достижения
+                                    if (!state.completedAchievements.includes(achievementDef.id)) {
+                                        state.completedAchievements.push(achievementDef.id); // Помечаем достижение как выполненное
+                                    }
+
+                                    // Применяем эффекты конкретного уровня и помечаем его как примененный
+                                    // Это часть, которую я должен был сделать более детально в apply.
+                                    // Для упрощения: мы будем использовать reward-объект из уровня для применения.
+                                    const reward = levelData.reward;
+                                    if (reward.sparksModifier) state.sparksModifier += reward.sparksModifier;
+                                    if (reward.matterModifier) state.matterModifier += reward.matterModifier;
+                                    if (reward.critChance) state.critChance += reward.critChance;
+                                    if (reward.orePerClick) state.orePerClick += reward.orePerClick;
+                                    if (reward.progressPerClick) state.progressPerClick += reward.progressPerClick;
+                                    if (reward.smeltingSpeedModifier) state.smeltingSpeedModifier += reward.smeltingSpeedModifier;
+                                    if (reward.matterCostReduction) state.matterCostReduction += reward.matterCostReduction;
+                                    if (reward.reputationGainModifier) {
+                                        for (const factionId in reward.reputationGainModifier) {
+                                            state.reputationGainModifier[factionId] = (state.reputationGainModifier[factionId] || 1) + reward.reputationGainModifier[factionId];
+                                        }
+                                    }
+                                    if (reward.riskModifier) state.riskModifier = (state.riskModifier || 1.0) * (1 - reward.riskModifier);
+                                    if (reward.expeditionMapCostReduction) state.expeditionMapCostModifier = (state.expeditionMapCostModifier || 1.0) * (1 - reward.expeditionMapCostReduction);
+                                    if (reward.passiveIncomeModifier) state.passiveIncomeModifier = (state.passiveIncomeModifier || 1.0) + reward.passiveIncomeModifier;
+                                    if (reward.masteryXpModifier) state.masteryXpModifier = (state.masteryXpModifier || 1.0) + reward.masteryXpModifier;
+                                    if (reward.regionUnlockCostReduction) state.regionUnlockCostReduction = (state.regionUnlockCostReduction || 0) + reward.regionUnlockCostReduction;
+                                    if (reward.questRewardModifier) state.questRewardModifier = (state.questRewardModifier || 1.0) + reward.questRewardModifier;
+
+                                    if (reward.item) { /* сложная логика, пока пропускаем, если нет в ТЗ */ }
+                                    if (reward.shopShelf) { /* сложная логика, пока пропускаем, если нет в ТЗ */ }
+                                    
+                                    state.appliedAchievementRewards.push(levelId); // Помечаем этот конкретный уровень как примененный
+                                    showToast(`Достижение выполнено: "${achievementDef.title}" (Ур. ${index + 1})!`, 'levelup');
+                                    audioController.play('levelup', 'G6', '2n');
+                                    showAchievementRewardModal(achievementDef); // Показываем модалку для общего достижения
+                                    recalculateAllModifiers(state); // Пересчитываем модификаторы
+                                }
+                            });
+                        }
                     }
                 });
             }

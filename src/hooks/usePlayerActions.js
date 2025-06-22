@@ -18,7 +18,7 @@ import { checkForNewQuests } from '../utils/gameEventChecks';
 
 export function usePlayerActions(
     updateState, showToast, gameStateRef,
-    setIsWorking, workTimeoutRef, setCompletedOrderInfo,
+    setIsWorking, workTimeoutRef, setCompletedOrderInfo, // setCompletedOrderInfo нужен здесь
     setIsSpecializationModalOpen,
     setIsWorldMapModalOpen,
     setIsAchievementRewardModalOpen,
@@ -29,8 +29,8 @@ export function usePlayerActions(
     const clickData = useRef({ count: 0, lastTime: 0 });
 
     const coreHandlers = useMemo(() => createCoreHandlers({
-        showToast, setIsWorking, workTimeoutRef, setCompletedOrderInfo
-    }), [showToast, setIsWorking, workTimeoutRef, setCompletedOrderInfo]);
+        showToast, setIsWorking, workTimeoutRef, setCompletedOrderInfo // setCompletedOrderInfo передаем в coreHandlers
+    }), [showToast, setIsWorking, workTimeoutRef, setCompletedOrderInfo]); // и как зависимость
 
     const canAffordAndPay = useCallback((state, costs, showToastFunc) => {
         for (const resourceType in costs) {
@@ -173,7 +173,7 @@ export function usePlayerActions(
             if (gameStateRef.current.activeInfoModal) { updateState(state => { state.activeInfoModal = null; return state; }); }
             setTimeout(() => { updateState(state => { state.activeInfoModal = shouldOpenInfoModal; return state; }); }, 100);
         }
-    }, [updateState, showToast, canAffordAndPay, recalculateAllModifiers, setIsSpecializationModalOpen, gameStateRef, definitions, setIsAvatarSelectionModalOpen]); // ИЗМЕНЕНО: Добавлена setIsAvatarSelectionModalOpen в зависимости, если она там используется
+    }, [updateState, showToast, canAffordAndPay, recalculateAllModifiers, setIsSpecializationModalOpen, gameStateRef, definitions, setIsAvatarSelectionModalOpen]);
 
     const handleSelectSpecialization = useCallback((specId) => {
         updateState(state => { if (state.specialization === null) { state.specialization = specId; showToast(`Вы выбрали путь Мастера-${definitions.specializations[specId].name}!`, 'levelup'); } return state; }); setIsSpecializationModalOpen(false);
@@ -184,9 +184,7 @@ export function usePlayerActions(
             const upgrade = definitions.factionUpgrades[upgradeId];
             if (!upgrade || state.purchasedFactionUpgrades[upgradeId]) return state;
             if (!hasReputation(state.reputation, upgrade.factionId, upgrade.requiredRep)) { showToast("Недостаточно репутации!", 'error'); return state; }
-            if (!canAffordAndPay(state, upgrade.cost, showToast)) {
-                return state;
-            }
+            if (!canAffordAndPay(state, upgrade.cost, showToast)) { return state; }
             state.purchasedFactionUpgrades[upgradeId] = true; recalculateAllModifiers(state); showToast(`Улучшение "${upgrade.name}" приобретено!`, 'levelup'); audioController.play('levelup', 'A4', '8n'); return state;
         });
     }, [updateState, showToast, canAffordAndPay, recalculateAllModifiers, definitions]);
