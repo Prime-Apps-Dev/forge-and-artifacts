@@ -1,8 +1,9 @@
 // src/hooks/useGameStateLoader.js
+// src/hooks/useGameStateLoader.js
 
 import { useState, useRef } from 'react';
-import { definitions } from '../data/definitions.js';
-import { recalculateAllModifiers } from '../utils/gameStateUtils.js';
+import { definitions } from '../data/definitions.js'; //
+import { recalculateAllModifiers } from '../utils/gameStateUtils.js'; //
 
 export const initialGameState = {
     sparks: 0, matter: 0,
@@ -36,7 +37,7 @@ export const initialGameState = {
     reputation: { merchants: 0, adventurers: 0, court: 0 },
     market: { prices: { ironOre: { buy: 5, sell: 2 }, copperOre: { buy: 12, sell: 6 }, mithrilOre: { buy: 40, sell: 25 }, adamantiteOre: { buy: 100, sell: 60}, ironIngots: { buy: 25, sell: 15 }, copperIngots: { buy: 50, sell: 30 }, bronzeIngots: { buy: 100, sell: 70 }, sparksteelIngots: { buy: 200, sell: 150 }, mithrilIngots: { buy: 500, sell: 350 }, adamantiteIngots: { buy: 1000, sell: 600 }, arcaniteIngots: { buy: 2500, sell: 1800 } }, worldEvent: { message: "Рынок стабилен, priceModifiers: {}" }, nextEventIn: 300 },
     investments: { merchants: false },
-    artifacts: JSON.parse(JSON.stringify(definitions.greatArtifacts)),
+    artifacts: JSON.parse(JSON.stringify(definitions.greatArtifacts)), //
     journal: { availableQuests: [], activeQuests: [], completedQuests: [], unlockedRecipes: [], questProgress: {} },
     settings: { sfxVolume: 50, musicVolume: 30 },
     specialization: null,
@@ -62,8 +63,8 @@ export const initialGameState = {
     currentRegion: 'iron_hills',
     activeMissions: [],
     activeSale: null,
-    apprenticeOrder: null, // ИЗМЕНЕНО: Активный заказ подмастерья
-    apprenticeOrderQueue: [], // ИЗМЕНЕНО: Очередь заказов подмастерья
+    // apprenticeOrder: null, // УДАЛЕНО
+    // apprenticeOrderQueue: [], // УДАЛЕНО
     prestigePoints: 0,
     regionsVisited: [],
     isFirstPlaythrough: true,
@@ -101,11 +102,11 @@ export function useGameStateLoader(showToast) {
             return initialGameState;
         }
 
-        const tempState = JSON.parse(JSON.stringify(initialGameState));
+        const tempState = JSON.parse(JSON.stringify(initialGameState)); //
 
         Object.keys(initialGameState).forEach(key => {
             if (key === 'artifacts') {
-                tempState.artifacts = JSON.parse(JSON.stringify(initialGameState.artifacts));
+                tempState.artifacts = JSON.parse(JSON.stringify(initialGameState.artifacts)); //
                 if (parsed.artifacts) {
                     Object.keys(tempState.artifacts).forEach(artId => {
                         if (parsed.artifacts[artId]) {
@@ -135,7 +136,7 @@ export function useGameStateLoader(showToast) {
                     }));
                 } else if (key === 'shopShelves') {
                     // Копируем сохраненные полки, но сбрасываем активные состояния
-                    const loadedShelves = parsed.shopShelves || initialGameState.shopShelves;
+                    const loadedShelves = parsed.shopShelves || initialGameState.shopShelves; //
                     tempState.shopShelves = loadedShelves.map((shelf, index) => ({
                         id: shelf.id || `shelf_${index}`,
                         itemId: shelf.itemId || null,
@@ -143,38 +144,39 @@ export function useGameStateLoader(showToast) {
                         saleProgress: 0,
                         saleTimer: 0
                     }));
-                } else if (key === 'completedAchievements' || key === 'appliedAchievementRewards') {
+                } else if (key === 'completedAchievements' || key === 'appliedAchievementRewards') { //
                     tempState[key] = parsed[key] || [];
                 }
                 else {
                     tempState[key] = parsed[key] !== undefined ? parsed[key] : initialGameState[key];
                 }
             }
-            else if (['eternalSkills', 'prestigePoints', 'regionsVisited', 'isFirstPlaythrough', 'initialGravingLevel', 'regionUnlockCostReduction', 'questRewardModifier', 'playerAvatarId', 'totalItemsCrafted', 'totalIngotsSmelted', 'totalClicks', 'totalSparksEarned', 'totalMatterSpent', 'totalExpeditionMapsBought', 'totalCourtOrdersCompleted', 'totalRiskyOrdersCompleted', 'apprenticeOrder', 'apprenticeOrderQueue'].includes(key)) { // ИЗМЕНЕНО: Добавлены apprenticeOrder и apprenticeOrderQueue
+            // Удалены apprenticeOrder и apprenticeOrderQueue из списка ключей для загрузки
+            else if (['eternalSkills', 'prestigePoints', 'regionsVisited', 'isFirstPlaythrough', 'initialGravingLevel', 'regionUnlockCostReduction', 'questRewardModifier', 'playerAvatarId', 'totalItemsCrafted', 'totalIngotsSmelted', 'totalClicks', 'totalSparksEarned', 'totalMatterSpent', 'totalExpeditionMapsBought', 'totalCourtOrdersCompleted', 'totalRiskyOrdersCompleted'].includes(key)) {
                 tempState[key] = parsed[key] !== undefined ? parsed[key] : initialGameState[key];
             }
-            else if (['lastClickTime', 'clickCount', 'activeReforge', 'activeInlay', 'activeGraving', 'activeInfoModal', 'activeOrder', 'activeFreeCraft', 'currentEpicOrder', 'smeltingProcess', 'activeSale'].includes(key)) { // ИЗМЕНЕНО: apprenticeOrder удален отсюда
+            else if (['lastClickTime', 'clickCount', 'activeReforge', 'activeInlay', 'activeGraving', 'activeInfoModal', 'activeOrder', 'activeFreeCraft', 'currentEpicOrder', 'smeltingProcess', 'activeSale'].includes(key)) {
                  tempState[key] = initialGameState[key];
             } else {
                 tempState[key] = parsed[key] !== undefined ? parsed[key] : initialGameState[key];
             }
         });
 
-        while (tempState.shopShelves.length < initialGameState.shopShelves.length) {
-            tempState.shopShelves.push({ id: `shelf_${tempState.shopShelhes.length}`, itemId: null, customer: null, saleProgress: 0, saleTimer: 0 });
+        while (tempState.shopShelves.length < initialGameState.shopShelves.length) { //
+            tempState.shopShelves.push({ id: `shelf_${tempState.shopShelves.length}`, itemId: null, customer: null, saleProgress: 0, saleTimer: 0 });
         }
 
-        if (parsed.masterFame !== undefined && tempState.masteryXP === undefined) {
+        if (parsed.masterFame !== undefined && tempState.masteryXP === undefined) { //
             tempState.masteryXP = parsed.masterFame;
         }
-        tempState.masteryXP = tempState.masteryXP !== undefined ? tempState.masteryXP : initialGameState.masteryXP;
-        tempState.masteryLevel = tempState.masteryLevel !== undefined ? tempState.masteryLevel : initialGameState.masteryLevel;
-        tempState.masteryXPToNextLevel = tempState.masteryXPToNextLevel !== undefined ? tempState.masteryXPToNextLevel : initialGameState.masteryXPToNextLevel;
+        tempState.masteryXP = tempState.masteryXP !== undefined ? tempState.masteryXP : initialGameState.masteryXP; //
+        tempState.masteryLevel = tempState.masteryLevel !== undefined ? tempState.masteryLevel : initialGameState.masteryLevel; //
+        tempState.masteryXPToNextLevel = tempState.masteryXPToNextLevel !== undefined ? tempState.masteryXPToNextLevel : initialGameState.masteryXPToNextLevel; //
 
 
-        tempState.isShopLocked = parsed.isShopLocked || initialGameState.isShopLocked;
-        tempState.shopLockEndTime = parsed.shopLockEndTime || initialGameState.shopLockEndTime;
-        if (tempState.isShopLocked && Date.now() > tempState.shopLockEndTime) {
+        tempState.isShopLocked = parsed.isShopLocked || initialGameState.isShopLocked; //
+        tempState.shopLockEndTime = parsed.shopLockEndTime || initialGameState.shopLockEndTime; //
+        if (tempState.isShopLocked && Date.now() > tempState.shopLockEndTime) { //
             tempState.isShopLocked = false;
             tempState.shopLockEndTime = 0;
         }
@@ -182,19 +184,19 @@ export function useGameStateLoader(showToast) {
         // --- НОВОЕ: ПРИМЕНЕНИЕ ЭФФЕКТОВ ДОСТИЖЕНИЙ ПРИ ЗАГРУЗКЕ ИГРЫ (ОДИН РАЗ) ---
         // Итерируем по всем завершенным достижениям и применяем их эффекты, если они еще не были применены.
         // Это необходимо, чтобы эффекты сохранялись после перезагрузки.
-        Object.values(definitions.achievements).forEach(achievementDef => {
-            const achievementStatus = achievementDef.check(tempState, definitions); // Проверяем статус для текущего tempState
+        Object.values(definitions.achievements).forEach(achievementDef => { //
+            const achievementStatus = achievementDef.check(tempState, definitions); //
             if (achievementStatus.isComplete) {
                 // Если достижение одноуровневое
                 if (!achievementDef.levels) {
                     if (!tempState.appliedAchievementRewards.includes(achievementDef.id)) {
-                        achievementDef.apply(tempState); // Применяем эффект
+                        achievementDef.apply(tempState); //
                         tempState.appliedAchievementRewards.push(achievementDef.id); // Помечаем как примененное
                     }
                 } 
                 // Если достижение многоуровневое
                 else {
-                    achievementDef.levels.forEach((level, index) => {
+                    achievementDef.levels.forEach((level, index) => { //
                         const levelId = `${achievementDef.id}_level_${index + 1}`;
                         if (achievementStatus.current >= level.target && !tempState.appliedAchievementRewards.includes(levelId)) {
                             // Применяем только специфичный эффект для этого уровня
@@ -234,12 +236,12 @@ export function useGameStateLoader(showToast) {
         });
 
         // Теперь recalculateAllModifiers не будет повторно применять эффекты достижений.
-        recalculateAllModifiers(tempState);
+        recalculateAllModifiers(tempState); //
 
         return tempState;
     });
 
-    const gameStateRef = useRef(displayedGameState);
+    const gameStateRef = useRef(displayedGameState); //
 
-    return { displayedGameState, setDisplayedGameState, gameStateRef };
+    return { displayedGameState, setDisplayedGameState, gameStateRef }; //
 }

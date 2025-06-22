@@ -1,28 +1,25 @@
 // src/logic/gameLogic.js
-import { definitions } from "../data/definitions.js";
-import { audioController } from '../utils/audioController.js';
-import { handleCompleteMission, handleOrderCompletion } from './gameCompletions.js';
-import { formatNumber } from '../utils/helpers.js';
-import { recalculateAllModifiers } from '../utils/gameStateUtils.js';
+import { definitions } from "../data/definitions.js"; //
+import { audioController } from '../utils/audioController.js'; //
+import { handleCompleteMission, handleOrderCompletion } from './gameCompletions.js'; //
+import { formatNumber } from '../utils/helpers.js'; //
+import { recalculateAllModifiers } from '../utils/gameStateUtils.js'; //
 
 let achievementCheckTimer = 0;
-let apprenticeToastTimer = Date.now();
-const APPRENTICE_TOAST_INTERVAL = 10000;
-const APPRENTICE_ORDER_GENERATION_INTERVAL = 30000; // Подмастерье генерирует заказ раз в 30 секунд.
-let apprenticeOrderGenerationTimer = APPRENTICE_ORDER_GENERATION_INTERVAL;
+// Удалены apprenticeToastTimer, APPRENTICE_TOAST_INTERVAL, APPRENTICE_ORDER_GENERATION_INTERVAL, apprenticeOrderGenerationTimer
 
 export function startGameLoop(updateState, handlers, showToast, showAchievementRewardModal) {
     return setInterval(() => {
         updateState(state => {
             const deltaTime = 0.1;
             const modifier = state.passiveIncomeModifier;
-            const currentRegion = definitions.regions[state.currentRegion];
+            const currentRegion = definitions.regions[state.currentRegion]; //
 
             if (state.passiveGeneration.ironOre > 0) {
                 const regionMod = currentRegion?.modifiers?.miningSpeed?.ironOre || 1.0;
                 state.ironOre += state.passiveGeneration.ironOre * modifier * regionMod * deltaTime;
             }
-            if (state.purchasedSkills.findCopper && state.passiveGeneration.copperOre > 0) {
+            if (state.purchasedSkills.findCopper && state.passiveGeneration.copperOre > 0) { //
                 const regionMod = currentRegion?.modifiers?.miningSpeed?.copperOre || 1.0;
                 state.copperOre += state.passiveGeneration.copperOre * modifier * regionMod * deltaTime;
             }
@@ -37,7 +34,7 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
             }
 
             if (state.smeltingProcess) {
-                const recipe = definitions.recipes[state.smeltingProcess.recipeId];
+                const recipe = definitions.recipes[state.smeltingProcess.recipeId]; //
                 state.smeltingProcess.progress += deltaTime * 10 * state.smeltingSpeedModifier;
                 if (state.smeltingProcess.progress >= recipe.requiredProgress) {
                     const outputResource = Object.keys(recipe.output)[0];
@@ -49,136 +46,20 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                 }
             }
 
-            // --- ЛОГИКА ПОДМАСТЕРЬЯ-КУЗНЕЦА ---
-            if (state.passiveGeneration.forgeProgress > 0) {
-                // Генерация заказов для подмастерья
-                apprenticeOrderGenerationTimer -= deltaTime;
-                if (apprenticeOrderGenerationTimer <= 0 && state.apprenticeOrderQueue.length < 3) { // Лимит на 3 заказа в очереди подмастерья
-                    const availableItemsForApprentice = Object.keys(definitions.items).filter(id => {
-                        const item = definitions.items[id];
-                        // Подмастерье берет только базовые или медные предметы, не квестовые, не рискованные
-                        return (!item.requiredSkill || state.purchasedSkills[item.requiredSkill]) &&
-                               (!item.firstPlaythroughLocked || !state.isFirstPlaythrough) &&
-                               (item.baseIngotType === 'basic' || item.baseIngotType === 'uncommon' && (item.baseIngot === 'copperIngots' || item.baseIngot === 'bronzeIngots' || item.baseIngot === 'sparksteelIngots')) &&
-                               !item.isQuestRecipe;
-                    });
-
-                    if (availableItemsForApprentice.length > 0) {
-                        const randomItemKey = availableItemsForApprentice[Math.floor(Math.random() * availableItemsForApprentice.length)];
-                        const itemDef = definitions.items[randomItemKey];
-                        const totalProgress = itemDef.components.reduce((sum, c) => sum + c.progress, 0);
-
-                        const apprenticeOrderRewards = {
-                            sparks: Math.max(1, Math.round(totalProgress * 1.0)), // Базовые награды
-                            matter: Math.max(1, Math.round(totalProgress / 10))
-                        };
-
-                        state.apprenticeOrderQueue.push({
-                            id: `apprentice_order_${Date.now()}_${Math.random()}`,
-                            itemKey: randomItemKey,
-                            rewards: apprenticeOrderRewards,
-                            componentProgress: {},
-                            activeComponentId: itemDef.components.find(c => !c.requires)?.id || itemDef.components[0].id,
-                            isApprenticeOrder: true,
-                        });
-                        apprenticeOrderGenerationTimer = APPRENTICE_ORDER_GENERATION_INTERVAL; // Сброс таймера
-                    }
-                }
-
-                // Логика подмастерья по работе над заказом
-                if (!state.apprenticeOrder) {
-                    if (state.apprenticeOrderQueue.length > 0) {
-                        const nextOrder = state.apprenticeOrderQueue.shift(); // Берем первый заказ из очереди
-                        state.apprenticeOrder = { ...nextOrder, startTime: Date.now() }; // Копируем и добавляем startTime
-                        showToast(`Подмастерье-кузнец начал работу над заказом: "${definitions.items[nextOrder.itemKey].name}"`, "info");
-                    } else if ((Date.now() - apprenticeToastTimer > APPRENTICE_TOAST_INTERVAL)) {
-                        showToast("Подмастерье-кузнец бездельничает: нет заказов в очереди.", "info");
-                        apprenticeToastTimer = Date.now();
-                    }
-                }
-
-                if (state.apprenticeOrder) {
-                    const apprenticeProject = state.apprenticeOrder;
-                    const itemDef = definitions.items[apprenticeProject.itemKey];
-                    let activeComponent = itemDef.components.find(c => c.id === apprenticeProject.activeComponentId);
-
-                    // Автоматическое переключение компонентов
-                    if (!activeComponent || (apprenticeProject.componentProgress[activeComponent.id] || 0) >= activeComponent.progress) {
-                        const nextComponent = itemDef.components.find(c =>
-                            (apprenticeProject.componentProgress[c.id] || 0) < c.progress &&
-                            (!c.requires || c.requires.every(reqId => 
-                                (apprenticeProject.componentProgress[reqId] || 0) >= definitions.items[apprenticeProject.itemKey].components.find(comp => comp.id === reqId).progress
-                            ))
-                        );
-                        if (nextComponent) {
-                            apprenticeProject.activeComponentId = nextComponent.id;
-                            activeComponent = nextComponent;
-                        } else {
-                            // Все компоненты завершены, заказ выполнен
-                            handleOrderCompletion(state, apprenticeProject, showToast, handlers.setCompletedOrderInfo);
-                            state.apprenticeOrder = null; // Сбрасываем активный заказ подмастерья
-                            return state; // Завершаем текущий тик, так как заказ завершен
-                        }
-                    }
-
-                    if (activeComponent) {
-                        const progressAmount = state.passiveGeneration.forgeProgress * modifier * deltaTime;
-
-                        // Расход ресурсов подмастерьем
-                        if ((apprenticeProject.componentProgress[activeComponent.id] || 0) === 0 && activeComponent.cost) {
-                            let canAfford = true;
-                            let missingResource = null;
-                            for (const resource in activeComponent.cost) {
-                                const cost = activeComponent.cost[resource];
-                                const resourceStorage = resource in state.specialItems ? 'specialItems' : 'main';
-                                const currentAmount = resourceStorage === 'main' ? state[resource] : state.specialItems[resource];
-                                if (currentAmount < cost) {
-                                    canAfford = false;
-                                    missingResource = resource;
-                                    break;
-                                }
-                            }
-
-                            if (!canAfford) {
-                                if (Date.now() - apprenticeToastTimer > APPRENTICE_TOAST_INTERVAL) {
-                                    const resourceName = definitions.specialItems[missingResource]?.name || missingResource.replace('Ingots', ' слитков').replace('Ore', ' руды').replace('sparks',' искр').replace('matter',' материи');
-                                    showToast(`Подмастерье не может продолжить: недостаточно ${resourceName} для "${activeComponent.name}"!`, 'error');
-                                    apprenticeToastTimer = Date.now();
-                                }
-                                return state; // Подмастерье останавливается, если нет ресурсов
-                            }
-
-                            for (const resource in activeComponent.cost) {
-                                const cost = activeComponent.cost[resource];
-                                const resourceStorage = resource in state.specialItems ? 'specialItems' : 'main';
-                                if (resourceStorage === 'main') { state[resource] -= cost; }
-                                else { state.specialItems[resource] -= cost; }
-                            }
-                        }
-                        
-                        if (!apprenticeProject.componentProgress[activeComponent.id]) apprenticeProject.componentProgress[activeComponent.id] = 0;
-                        apprenticeProject.componentProgress[activeComponent.id] = Math.min(
-                            activeComponent.progress,
-                            apprenticeProject.componentProgress[activeComponent.id] + progressAmount
-                        );
-                    }
-                }
-            }
-            // --- КОНЕЦ ЛОГИКИ ПОДМАСТЕРЬЯ-КУЗНЕЦА ---
-
+            // --- УДАЛЕНА ВСЯ ЛОГИКА ПОДМАСТЕРЬЯ-КУЗНЕЦА ---
 
             // Логика мини-игры и пассивного крафта (для игрока)
             const activeProjectPlayer = state.activeOrder || state.activeFreeCraft || state.currentEpicOrder || state.activeReforge || state.activeInlay || state.activeGraving;
             
             if (activeProjectPlayer?.minigameState?.active) {
-                const component = definitions.items[activeProjectPlayer.itemKey].components.find(c => c.id === activeProjectPlayer.activeComponentId);
+                const component = definitions.items[activeProjectPlayer.itemKey].components.find(c => c.id === activeProjectPlayer.activeComponentId); //
                 const speed = component.minigame?.barSpeed || 1.0;
                 let newPos = activeProjectPlayer.minigameState.position + (activeProjectPlayer.minigameState.direction * speed);
                 if (newPos >= 100) { newPos = 100; activeProjectPlayer.minigameState.direction = -1; }
                 else if (newPos <= 0) { newPos = 0; activeProjectPlayer.minigameState.direction = 1; }
                 activeProjectPlayer.minigameState.position = newPos;
             } else if (activeProjectPlayer) {
-                     handlers.applyProgress(state, state.progressPerClick * deltaTime); // ИЗМЕНЕНО: Исправлен прогресс игрока (без modifier, без passiveGeneration.forgeProgress)
+                     handlers.applyProgress(state, state.progressPerClick * deltaTime);
             }
 
             // ... (остальные циклы: миссии, инвестиции, магазин, очередь заказов)
@@ -191,7 +72,7 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                     }
                 });
                 completedMissionIds.forEach(missionId => {
-                    handleCompleteMission(state, missionId, showToast);
+                    handleCompleteMission(state, missionId, showToast); //
                 });
             }
             if (state.investments.merchants) {
@@ -211,7 +92,7 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                 } else if (shelf.itemId) {
                     const arrivalChancePerTick = 0.005 * state.playerShopSalesSpeedModifier;
                     if (Math.random() < arrivalChancePerTick) {
-                        const client = definitions.clients[Math.floor(Math.random() * definitions.clients.length)];
+                        const client = definitions.clients[Math.floor(Math.random() * definitions.clients.length)]; //
                         shelf.customer = client;
                         shelf.saleTimer = 15 + Math.random() * 15;
                         showToast(`Новый клиент интересуется товаром на полке #${index + 1}!`, "info");
@@ -219,7 +100,7 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                 }
             });
             const now = Date.now();
-            const orderTTL = definitions.gameConfig?.orderTTL || 90;
+            const orderTTL = definitions.gameConfig?.orderTTL || 90; //
             state.orderQueue = state.orderQueue.filter(order => {
                 if (!order.spawnTime) {
                     order.spawnTime = now;
@@ -228,7 +109,7 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                     order.timeToLive = Math.max(0, orderTTL - Math.floor((now - order.spawnTime) / 1000));
                 }
                 if (order.timeToLive <= 0) {
-                    showToast(`Заказ от "${order.client.name}" на "${definitions.items[order.itemKey].name}" истек и исчез из очереди.`, 'error');
+                    showToast(`Заказ от "${order.client.name}" на "${definitions.items[order.itemKey].name}" истек и исчез из очереди.`, 'error'); //
                     return false;
                 }
                 return true;
@@ -238,20 +119,20 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
             achievementCheckTimer += deltaTime;
             if (achievementCheckTimer >= 1) { // Проверяем достижения каждую секунду
                 achievementCheckTimer = 0;
-                Object.values(definitions.achievements).forEach(achievementDef => {
-                    const achievementStatus = achievementDef.check(state, definitions);
+                Object.values(definitions.achievements).forEach(achievementDef => { //
+                    const achievementStatus = achievementDef.check(state, definitions); //
                     
                     // Если достижение одноуровневое
                     if (!achievementDef.levels) {
                         if (achievementStatus.isComplete && !state.completedAchievements.includes(achievementDef.id)) {
                             state.completedAchievements.push(achievementDef.id); // Помечаем как выполненное
-                            if (!state.appliedAchievementRewards.includes(achievementDef.id)) { // Проверяем, что награда ещё не применена
-                                achievementDef.apply(state); // Применяем эффект
+                            if (!state.appliedAchievementRewards.includes(achievementDef.id)) {
+                                achievementDef.apply(state); //
                                 state.appliedAchievementRewards.push(achievementDef.id); // Помечаем как примененное
                                 showToast(`Достижение выполнено: "${achievementDef.title}"!`, 'levelup');
-                                audioController.play('levelup', 'G6', '2n');
+                                audioController.play('levelup', 'G6', '2n'); //
                                 showAchievementRewardModal(achievementDef);
-                                recalculateAllModifiers(state); // Пересчитываем модификаторы, если они изменились
+                                recalculateAllModifiers(state); //
                             }
                         }
                     } 
@@ -260,8 +141,8 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                         const currentAchievedLevel = achievementStatus.currentLevel; // Это может быть 1, 2, ... или 0
                         
                         if (currentAchievedLevel > 0) { // Если хоть какой-то уровень достигнут
-                            achievementDef.levels.forEach((levelData, index) => {
-                                const levelId = `${achievementDef.id}_level_${index + 1}`; // ID для конкретного уровня
+                            achievementDef.levels.forEach((levelData, index) => { //
+                                const levelId = `${achievementDef.id}_level_${index + 1}`;
                                 if (achievementStatus.current >= levelData.target && !state.appliedAchievementRewards.includes(levelId)) {
                                     // Применяем только награду для этого конкретного уровня
                                     // Важно: здесь мы применяем эффект напрямую, а не через achievementDef.apply
@@ -310,9 +191,9 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                                     
                                     state.appliedAchievementRewards.push(levelId); // Помечаем этот конкретный уровень как примененный
                                     showToast(`Достижение выполнено: "${achievementDef.title}" (Ур. ${index + 1})!`, 'levelup');
-                                    audioController.play('levelup', 'G6', '2n');
-                                    showAchievementRewardModal(achievementDef); // Показываем модалку для общего достижения
-                                    recalculateAllModifiers(state); // Пересчитываем модификаторы
+                                    audioController.play('levelup', 'G6', '2n'); //
+                                    showAchievementRewardModal(achievementDef);
+                                    recalculateAllModifiers(state); //
                                 }
                             });
                         }
@@ -329,9 +210,9 @@ export function startMarketLoop(updateState, showToast) {
     return setInterval(() => {
         updateState(state => {
             if (state.market.nextEventIn <= 0) {
-                const eventIds = Object.keys(definitions.worldEvents);
+                const eventIds = Object.keys(definitions.worldEvents); //
                 const randomEventId = eventIds[Math.floor(Math.random() * eventIds.length)];
-                const newEvent = definitions.worldEvents[randomEventId];
+                const newEvent = definitions.worldEvents[randomEventId]; //
                 state.market.worldEvent = {
                     message: newEvent.message,
                     priceModifiers: newEvent.effects || {},

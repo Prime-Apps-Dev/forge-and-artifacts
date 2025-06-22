@@ -1,13 +1,13 @@
 // src/components/views/ForgeView.jsx
 import React, { useState, memo } from 'react';
-import { definitions } from '../../data/definitions';
-import { formatNumber } from '../../utils/helpers';
-import Tooltip from '../ui/Tooltip';
-import ComponentItem from '../ui/ComponentItem';
-import OrderTimer from '../ui/OrderTimer';
-import OrderQueueCard from '../ui/OrderQueueCard';
-import FreeCraftRecipeCard from '../ui/FreeCraftRecipeCard';
-import InventoryItemCard from '../ui/InventoryItemCard';
+import { definitions } from '../../data/definitions'; //
+import { formatNumber } from '../../utils/helpers'; //
+import Tooltip from '../ui/Tooltip'; //
+import ComponentItem from '../ui/ComponentItem'; //
+import OrderTimer from '../ui/OrderTimer'; //
+import OrderQueueCard from '../ui/OrderQueueCard'; //
+import FreeCraftRecipeCard from '../ui/FreeCraftRecipeCard'; //
+import InventoryItemCard from '../ui/InventoryItemCard'; //
 
 const QualityMinigameBar = ({ minigameState, componentDef }) => {
     if (!minigameState?.active || !componentDef?.minigame) return null;
@@ -43,14 +43,15 @@ const QualityMinigameBar = ({ minigameState, componentDef }) => {
 };
 
 const ActiveProjectDisplay = ({ gameState, handlers, projectType }) => {
-    const activeProject = projectType === 'player' ? (gameState.activeOrder || gameState.activeFreeCraft) : gameState.apprenticeOrder;
-    const isEpicCraft = !!gameState.currentEpicOrder && projectType === 'player';
-    const isReforging = !!gameState.activeReforge && projectType === 'player';
-    const isInlaying = !!gameState.activeInlay && projectType === 'player';
-    const isGraving = !!gameState.activeGraving && projectType === 'player';
+    // projectType всегда будет 'player', так как подмастерье удален.
+    const activeProject = gameState.activeOrder || gameState.activeFreeCraft;
+    const isEpicCraft = !!gameState.currentEpicOrder;
+    const isReforging = !!gameState.activeReforge;
+    const isInlaying = !!gameState.activeInlay;
+    const isGraving = !!gameState.activeGraving;
 
     if (isEpicCraft) {
-        const artifactDef = definitions.greatArtifacts[gameState.currentEpicOrder.artifactId];
+        const artifactDef = definitions.greatArtifacts[gameState.currentEpicOrder.artifactId]; //
         const epicStageDef = artifactDef.epicOrder.find(s => s.stage === gameState.currentEpicOrder.currentStage);
 
         const progressBarInnerStyle = {
@@ -79,7 +80,7 @@ const ActiveProjectDisplay = ({ gameState, handlers, projectType }) => {
         const itemToReforge = gameState.inventory.find(item => item.uniqueId === gameState.activeReforge.itemUniqueId);
         if (!itemToReforge) return null;
 
-        const itemDef = definitions.items[itemToReforge.itemKey];
+        const itemDef = definitions.items[itemToReforge.itemKey]; //
         const reforgeProgress = gameState.activeReforge.progress;
         const reforgeRequiredProgress = gameState.activeReforge.requiredProgress;
 
@@ -110,7 +111,7 @@ const ActiveProjectDisplay = ({ gameState, handlers, projectType }) => {
         const itemToInlay = gameState.inventory.find(item => item.uniqueId === gameState.activeInlay.itemUniqueId);
         if (!itemToInlay) return null;
 
-        const itemDef = definitions.items[itemToInlay.itemKey];
+        const itemDef = definitions.items[itemToInlay.itemKey]; //
         const inlayProgress = gameState.activeInlay.progress;
         const inlayRequiredProgress = gameState.activeInlay.requiredProgress;
 
@@ -142,7 +143,7 @@ const ActiveProjectDisplay = ({ gameState, handlers, projectType }) => {
         const itemToGrave = gameState.inventory.find(item => item.uniqueId === gameState.activeGraving.itemUniqueId);
         if (!itemToGrave) return null;
 
-        const itemDef = definitions.items[itemToGrave.itemKey];
+        const itemDef = definitions.items[itemToGrave.itemKey]; //
         const gravingProgress = gameState.activeGraving.progress;
         const gravingRequiredProgress = gameState.activeGraving.requiredProgress;
 
@@ -170,10 +171,10 @@ const ActiveProjectDisplay = ({ gameState, handlers, projectType }) => {
     }
 
     if (activeProject) {
-        const itemDef = definitions.items[activeProject.itemKey];
+        const itemDef = definitions.items[activeProject.itemKey]; //
         return (
              <>
-                {projectType === 'player' && gameState.activeOrder && (
+                {gameState.activeOrder && (
                      <div className="flex items-start gap-4 mb-2">
                         <img src={gameState.activeOrder.client.faceImg} alt="Лицо клиента" className="w-16 h-16 rounded-full border-2 border-gray-600" />
                         <div className="grow">
@@ -187,26 +188,12 @@ const ActiveProjectDisplay = ({ gameState, handlers, projectType }) => {
                         </div>
                     </div>
                 )}
-                {projectType === 'player' && gameState.activeFreeCraft && (
+                {gameState.activeFreeCraft && (
                     <h3 className="font-cinzel text-lg text-center">Свободное создание: {itemDef?.name}</h3>
                 )}
-                {projectType === 'apprentice' && (
-                     <div className="flex items-start gap-4 mb-2">
-                        <img src="/img/avatars/default_male.webp" alt="Аватар Подмастерья" className="w-16 h-16 rounded-full border-2 border-gray-600" />
-                        <div className="grow">
-                            <h3 className="font-cinzel text-lg text-green-300">{itemDef?.name || 'Загрузка...'}</h3>
-                            <p className="text-sm text-gray-400">Подмастерье-кузнец</p>
-                            <div className="text-xs text-gray-500 flex items-center gap-4 mt-1">
-                                <span>Награда:</span>
-                                <div className="flex items-center gap-1"><span className="material-icons-outlined text-yellow-400 text-sm">bolt</span><span className="font-bold text-gray-300">{formatNumber(activeProject.rewards.sparks)}</span></div>
-                                <div className="flex items-center gap-1"><span className="material-icons-outlined text-purple-400 text-sm">bubble_chart</span><span className="font-bold text-gray-300">{formatNumber(activeProject.rewards.matter)}</span></div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-                {projectType === 'player' && gameState.activeOrder && <OrderTimer key={gameState.activeOrder.id} order={gameState.activeOrder} />}
+                {gameState.activeOrder && <OrderTimer key={gameState.activeOrder.id} order={gameState.activeOrder} />}
                 <div className="flex flex-col gap-2 mt-2">
-                     {itemDef?.components.map(comp => <ComponentItem key={comp.id} component={comp} orderState={activeProject} gameState={gameState} onSelectComponent={projectType === 'player' ? handlers.handleSelectComponent : null} />)}
+                     {itemDef?.components.map(comp => <ComponentItem key={comp.id} component={comp} orderState={activeProject} gameState={gameState} onSelectComponent={handlers.handleSelectComponent} />)}
                 </div>
             </>
         )
@@ -217,7 +204,7 @@ const ActiveProjectDisplay = ({ gameState, handlers, projectType }) => {
 
 
 const WorkstationSelector = memo(({ activeWorkstationId, handlers, purchasedSkills, activeProject, isEpicCraft, isReforging, isInlaying, isGraving }) => {
-    if (!purchasedSkills.divisionOfLabor) return null;
+    if (!purchasedSkills.divisionOfLabor) return null; //
 
     let requiredWorkstation = null;
     if (isReforging) {
@@ -228,11 +215,11 @@ const WorkstationSelector = memo(({ activeWorkstationId, handlers, purchasedSkil
         requiredWorkstation = 'workbench';
     }
     else if (activeProject) {
-        const itemDef = definitions.items[activeProject.itemKey];
+        const itemDef = definitions.items[activeProject.itemKey]; //
         const activeComponent = itemDef.components.find(c => c.id === activeProject.activeComponentId);
         if (activeComponent) requiredWorkstation = activeComponent.workstation;
     } else if (isEpicCraft) {
-        const artifactDef = definitions.greatArtifacts[isEpicCraft.artifactId];
+        const artifactDef = definitions.greatArtifacts[isEpicCraft.artifactId]; //
         const epicStageDef = artifactDef.epicOrder.find(s => s.stage === isEpicCraft.currentStage);
         if (epicStageDef) requiredWorkstation = epicStageDef.workstation;
     }
@@ -240,7 +227,7 @@ const WorkstationSelector = memo(({ activeWorkstationId, handlers, purchasedSkil
 
     return (
         <div className="flex justify-center gap-4 my-4 p-2 bg-black/20 rounded-lg">
-            {Object.entries(definitions.workstations).map(([id, station]) => (
+            {Object.entries(definitions.workstations).map(([id, station]) => ( //
                 <Tooltip key={id} text={station.name}>
                     <button
                         onClick={() => handlers.handleSelectWorkstation(id)}
@@ -259,7 +246,7 @@ const WorkstationSelector = memo(({ activeWorkstationId, handlers, purchasedSkil
 
 
 const ForgeView = ({ gameState, isWorking, handlers }) => {
-    const [mode, setMode] = useState('orders');
+    const [mode, setMode] = useState('orders'); //
 
     const activePlayerProject = gameState.activeOrder || gameState.activeFreeCraft;
     const isEpicCraft = !!gameState.currentEpicOrder;
@@ -267,18 +254,16 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
     const isInlaying = !!gameState.activeInlay;
     const isGraving = !!gameState.activeGraving;
 
-    const playerItemDef = activePlayerProject ? definitions.items[activePlayerProject.itemKey] : null;
+    const playerItemDef = activePlayerProject ? definitions.items[activePlayerProject.itemKey] : null; //
     const activePlayerComponent = activePlayerProject && playerItemDef ? playerItemDef.components.find(c => c.id === activePlayerProject.activeComponentId) : null;
 
-    const epicStageDef = isEpicCraft ? definitions.greatArtifacts[gameState.currentEpicOrder.artifactId].epicOrder.find(s => s.stage === gameState.currentEpicOrder.currentStage) : null;
+    const epicStageDef = isEpicCraft ? definitions.greatArtifacts[gameState.currentEpicOrder.artifactId].epicOrder.find(s => s.stage === gameState.currentEpicOrder.currentStage) : null; //
 
-    // isWorkButtonDisabled теперь будет зависеть от активного проекта, а не от того, кликабельна ли наковальня.
-    // Наковальня будет кликабельна всегда, но с проверками внутри handleStrikeAnvil.
-    const isWorkButtonDisabled = false; // Теперь наковальня всегда "включена", но с внутренними проверками
+    const isWorkButtonDisabled = false; //
 
-    const canReforge = gameState.purchasedSkills.masterReforging;
-    const canInlay = gameState.specialItems.gem > 0;
-    const canGrave = gameState.purchasedSkills.masterGraving;
+    const canReforge = gameState.purchasedSkills.masterReforging; //
+    const canInlay = gameState.specialItems.gem > 0; //
+    const canGrave = gameState.purchasedSkills.masterGraving; //
 
 
     return (
@@ -298,7 +283,10 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
                 >
                     Свободная ковка
                 </button>
-                {/* ИЗМЕНЕНИЕ: Условный рендеринг кнопок Перековка/Инкрустация/Гравировка */}
+                {/* УДАЛЕНА ВКЛАДКА ДЛЯ ПОДМАСТЕРЬЯ-КУЗНЕЦА */}
+                
+                {/* Кнопки Перековка/Инкрустация/Гравировка для игрока */}
+                {/* Перековка */}
                 {!gameState.isFirstPlaythrough && canReforge && (
                     <button
                         onClick={() => setMode('reforge')}
@@ -308,6 +296,7 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
                         Перековка
                     </button>
                 )}
+                {/* Инкрустация */}
                 {!gameState.isFirstPlaythrough && canInlay && (
                     <button
                         onClick={() => setMode('inlay')}
@@ -317,6 +306,7 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
                         Инкрустация
                     </button>
                 )}
+                {/* Гравировка - отображается только если навык изучен И не первое прохождение */}
                 {!gameState.isFirstPlaythrough && canGrave && (
                     <button
                         onClick={() => setMode('graving')}
@@ -326,7 +316,8 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
                         Гравировка
                     </button>
                 )}
-                {/* ИЗМЕНЕНИЕ: Сообщения о недоступности в первом прохождении, если соответствующие навыки изучены */}
+
+                {/* Заглушки для первого прохождения (если навыки изучены) */}
                 {gameState.isFirstPlaythrough && (
                     <>
                         {canReforge && (
@@ -343,29 +334,28 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
                                 </button>
                             </Tooltip>
                         )}
-                        canGrave && (
+                        {canGrave && (
                             <Tooltip text="Доступно после первого Переселения.">
                                 <button disabled className="flex-1 p-2 rounded-md font-bold text-sm opacity-50 cursor-not-allowed bg-gray-700/50">
                                     Гравировка
                                 </button>
                             </Tooltip>
-                        )
+                        )}
                     </>
                 )}
             </div>
 
-            <div id="player-project-area" className="p-4 bg-black/20 rounded-lg border border-gray-700 mb-6 min-h-[250px]">
-                {(activePlayerProject || isEpicCraft || isReforging || isInlaying || isGraving) &&
+            <div id="forge-content-area" className="p-4 bg-black/20 rounded-lg border border-gray-700 mb-6 min-h-[250px]">
+                {/* ОТОБРАЖЕНИЕ ПРОЕКТОВ ИГРОКА И ИХ СПИСКОВ */}
+                {(activePlayerProject || isEpicCraft || isReforging || isInlaying || isGraving) ? (
                     <ActiveProjectDisplay gameState={gameState} handlers={handlers} projectType="player" />
-                }
-
-                {!activePlayerProject && !isEpicCraft && !isReforging && !isInlaying && !isGraving && (
+                ) : ( // Отображаем списки заказов/рецептов игрока, если нет активного проекта
                     mode === 'orders' ? (
                         <div>
                             <h3 className="font-cinzel text-lg text-center mb-3">Доступные заказы</h3>
                             {gameState.orderQueue.length > 0 ? (
                                 <div className="space-y-3">
-                                    {gameState.orderQueue.map(order => <OrderQueueCard key={order.id} order={order} onAccept={handlers.handleAcceptOrder} isDisabled={!!activePlayerProject || isEpicCraft || isReforging || isInlaying || isGraving} />)} {/* ИЗМЕНЕНО: isDisabled проверяет только активные проекты игрока */}
+                                    {gameState.orderQueue.map(order => <OrderQueueCard key={order.id} order={order} onAccept={handlers.handleAcceptOrder} isDisabled={!!activePlayerProject || isEpicCraft || isReforging || isInlaying || isGraving} />)}
                                 </div>
                             ) : (
                                 <p className="text-center text-gray-500 italic py-8">Новых заказов пока нет. Они появятся со временем.</p>
@@ -375,7 +365,7 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
                         <div>
                             <h3 className="font-cinzel text-lg text-center mb-3">Свободное ремесло</h3>
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                                {Object.entries(definitions.items).filter(([key, item]) => 
+                                {Object.entries(definitions.items).filter(([key, item]) => //
                                     !item.isQuestRecipe && 
                                     (!item.requiredSkill || gameState.purchasedSkills[item.requiredSkill]) &&
                                     (!item.firstPlaythroughLocked || !gameState.isFirstPlaythrough)
@@ -390,13 +380,13 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
                             {canReforge && !gameState.isFirstPlaythrough ? (
                                 gameState.inventory.filter(item =>
                                     item.location === 'inventory' &&
-                                    definitions.items[item.itemKey].hasInlaySlots &&
+                                    definitions.items[item.itemKey].hasInlaySlots && //
                                     item.quality < 10.0
                                 ).length > 0 ? (
                                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                                         {gameState.inventory.filter(item =>
                                             item.location === 'inventory' &&
-                                            definitions.items[item.itemKey].hasInlaySlots &&
+                                            definitions.items[item.itemKey].hasInlaySlots && //
                                             item.quality < 10.0
                                         ).map(item => (
                                             <InventoryItemCard
@@ -424,7 +414,7 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
                             <h3 className="font-cinzel text-lg text-center mb-3">Выберите предмет для инкрустации</h3>
                             {canInlay && !gameState.isFirstPlaythrough ? (
                                 gameState.inventory.filter(item => {
-                                    const itemDef = definitions.items[item.itemKey];
+                                    const itemDef = definitions.items[item.itemKey]; //
                                     if (!itemDef.hasInlaySlots) return false;
 
                                     const maxSlots =
@@ -436,7 +426,7 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
                                 }).length > 0 ? (
                                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                                         {gameState.inventory.filter(item => {
-                                            const itemDef = definitions.items[item.itemKey];
+                                            const itemDef = definitions.items[item.itemKey]; //
                                             if (!itemDef.hasInlaySlots) return false;
 
                                             const maxSlots =
@@ -472,12 +462,12 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
                             {canGrave && !gameState.isFirstPlaythrough ? (
                                 gameState.inventory.filter(item =>
                                     item.location === 'inventory' &&
-                                    (definitions.items[item.itemKey].hasInlaySlots || definitions.items[item.itemKey].gravingAvailable)
+                                    (definitions.items[item.itemKey].hasInlaySlots || definitions.items[item.itemKey].gravingAvailable) //
                                 ).length > 0 ? (
                                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                                         {gameState.inventory.filter(item =>
                                             item.location === 'inventory' &&
-                                            (definitions.items[item.itemKey].hasInlaySlots || definitions.items[item.itemKey].gravingAvailable)
+                                            (definitions.items[item.itemKey].hasInlaySlots || definitions.items[item.itemKey].gravingAvailable) //
                                         ).map(item => (
                                             <InventoryItemCard
                                                 key={item.uniqueId}
@@ -503,30 +493,6 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
                 )}
             </div>
 
-            {/* --- БЛОК АКТИВНОГО ЗАКАЗА ПОДМАСТЕРЬЯ --- */}
-            {gameState.passiveGeneration.forgeProgress > 0 && (
-                <div id="apprentice-project-area" className="p-4 bg-black/20 rounded-lg border border-green-700 mb-6 min-h-[150px]">
-                    <h3 className="font-cinzel text-lg text-center text-green-400 mb-3">
-                        Активный заказ Подмастерья
-                    </h3>
-                    {gameState.apprenticeOrder ? (
-                        <ActiveProjectDisplay gameState={gameState} projectType="apprentice" />
-                    ) : (
-                        <p className="text-center text-gray-500 italic py-4">Подмастерье ожидает нового заказа.</p>
-                    )}
-                    {gameState.apprenticeOrderQueue.length > 0 && (
-                        <div className="mt-4">
-                            <h4 className="font-cinzel text-md text-gray-400">Очередь Подмастерья:</h4>
-                            <ul className="text-sm text-gray-500">
-                                {gameState.apprenticeOrderQueue.map(order => (
-                                    <li key={order.id}>- {definitions.items[order.itemKey]?.name}</li>
-                                ))}
-                            </ul>
-                        </div>
-                    )}
-                </div>
-            )}
-
             <WorkstationSelector
                 activeWorkstationId={gameState.activeWorkstationId}
                 handlers={handlers}
@@ -541,7 +507,7 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
 
 
             <div id="forge-area" className="flex items-center justify-center">
-                <div onClick={handlers.handleStrikeAnvil} className={`interactive-element cursor-pointer rounded-full p-4 transition-transform ${isWorking ? 'anvil-working' : ''}`}> {/* Убрали isWorkButtonDisabled, анимация остается */}
+                <div onClick={handlers.handleStrikeAnvil} className={`interactive-element cursor-pointer rounded-full p-4 transition-transform ${isWorking ? 'anvil-working' : ''}`}>
                     <img src="/img/ui/anvil.webp" alt="Наковальня" className="w-48 h-48 drop-shadow-lg" />
                 </div>
             </div>

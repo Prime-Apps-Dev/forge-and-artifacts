@@ -5,7 +5,6 @@ import { formatNumber, hasReputation, getReputationLevel } from '../utils/helper
 import { audioController } from '../utils/audioController';
 import { recalculateAllModifiers } from '../utils/gameStateUtils';
 import {
-    handleSaleCompletion,
     handleFreeCraftCompletion,
     handleCompleteReforge,
     handleCompleteInlay,
@@ -18,7 +17,7 @@ import { checkForNewQuests } from '../utils/gameEventChecks';
 
 export function usePlayerActions(
     updateState, showToast, gameStateRef,
-    setIsWorking, workTimeoutRef, setCompletedOrderInfo, // setCompletedOrderInfo нужен здесь
+    setIsWorking, workTimeoutRef, setCompletedOrderInfo,
     setIsSpecializationModalOpen,
     setIsWorldMapModalOpen,
     setIsAchievementRewardModalOpen,
@@ -29,8 +28,8 @@ export function usePlayerActions(
     const clickData = useRef({ count: 0, lastTime: 0 });
 
     const coreHandlers = useMemo(() => createCoreHandlers({
-        showToast, setIsWorking, workTimeoutRef, setCompletedOrderInfo // setCompletedOrderInfo передаем в coreHandlers
-    }), [showToast, setIsWorking, workTimeoutRef, setCompletedOrderInfo]); // и как зависимость
+        showToast, setIsWorking, workTimeoutRef, setCompletedOrderInfo
+    }), [showToast, setIsWorking, workTimeoutRef, setCompletedOrderInfo]);
 
     const canAffordAndPay = useCallback((state, costs, showToastFunc) => {
         for (const resourceType in costs) {
@@ -82,7 +81,7 @@ export function usePlayerActions(
             const saleProgressPerClick = 5 * clientSaleModifier;
             shelf.saleProgress += saleProgressPerClick;
             const item = state.inventory.find(i => i.uniqueId === shelf.itemId);
-            if (!item) { showToast("Ошибка: проданный предмет не найден в инвентаре!", "error"); state.shopShelves[shelfIndex] = { id: `${Date.now()}_${Math.random()}`, itemId: null, customer: null, saleProgress: 0, saleTimer: 0 }; return state; } // Добавил id
+            if (!item) { showToast("Ошибка: проданный предмет не найден в инвентаре!", "error"); state.shopShelves[shelfIndex] = { id: `${Date.now()}_${Math.random()}`, itemId: null, customer: null, saleProgress: 0, saleTimer: 0 }; return state; }
             const itemDef = definitions.items[item.itemKey];
             const baseValue = itemDef.components.reduce((sum, c) => sum + c.progress, 0);
             const requiredProgress = (baseValue * item.quality) / 2;
@@ -735,7 +734,7 @@ export function usePlayerActions(
     const handleStrikeAnvil = useCallback(() => {
         const currentState = gameStateRef.current; 
 
-        // ИЗМЕНЕНО: Наковальня теперь всегда активна, но удар влияет только на активный проект игрока
+        // Наковальня всегда активна, удар влияет только на активный проект игрока
         const activePlayerProject = currentState.activeOrder || currentState.activeFreeCraft || currentState.currentEpicOrder || currentState.activeReforge || currentState.activeInlay || currentState.activeGraving || currentState.activeSale;
 
         if (!activePlayerProject) {
@@ -743,7 +742,7 @@ export function usePlayerActions(
             return;
         }
 
-        if ((currentState.activeOrder || currentState.activeFreeCraft) && !currentState.activeReforge && !currentState.activeInlay && !currentState.activeGraving && !currentState.activeSale && !activePlayerProject.activeComponentId) { // ИЗМЕНЕНО: Проверка только для проектов игрока
+        if ((currentState.activeOrder || currentState.activeFreeCraft) && !currentState.activeReforge && !currentState.activeInlay && !currentState.activeGraving && !currentState.activeSale && !activePlayerProject.activeComponentId) {
              showToast("Выберите компонент для работы, кликнув на него!", "error");
              return;
         }
