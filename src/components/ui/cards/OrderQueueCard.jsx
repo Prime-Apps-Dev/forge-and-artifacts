@@ -1,6 +1,6 @@
 import React, { useState, useEffect, memo } from 'react';
-import { definitions } from '../../data/definitions';
-import { formatNumber } from '../../utils/helpers';
+import { definitions } from '../../../data/definitions';
+import { formatNumber } from '../../../utils/formatters';
 
 const OrderQueueCard = memo(({ order, onAccept, isDisabled }) => {
     const itemDef = definitions.items[order.itemKey];
@@ -30,9 +30,6 @@ const OrderQueueCard = memo(({ order, onAccept, isDisabled }) => {
 
     const timerColorClass = timeLeft <= 10 ? 'text-red-400' : 'text-gray-400';
     const timerBorderClass = timeLeft <= 10 ? 'border-red-600' : 'border-gray-600';
-
-    // DEBUG LOG
-    console.log(`[OrderQueueCard] Order ID: ${order.id}, Item: ${itemDef.name}, isDisabled prop: ${isDisabled}, TimeLeft: ${timeLeft}`);
 
     return (
         <div className={`p-3 bg-black/30 rounded-lg border ${isDisabled || timeLeft <= 0 ? 'border-gray-700 opacity-60' : timerBorderClass}`}>

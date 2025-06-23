@@ -1,15 +1,17 @@
 // src/data/definitions/items.js
+import { IMAGE_PATHS } from '../../constants/paths';
+
 export const items = {
       nail: {
-          name: 'Простой Гвоздь', icon: '/img/items/nail.webp', requiredSkill: null, baseIngot: 'ironIngots', baseIngotType: 'basic', hasInlaySlots: false,
+          name: 'Простой Гвоздь', icon: IMAGE_PATHS.ITEMS.NAIL, requiredSkill: null, baseIngot: 'ironIngots', baseIngotType: 'basic', hasInlaySlots: false,
           components: [{ id: 'forging', name: "Ковка", progress: 10, cost: { ironIngots: 1 }, workstation: 'anvil' }]
       },
       horseshoe: {
-          name: 'Подкова', icon: '/img/items/horseshoe.webp', requiredSkill: null, baseIngot: 'ironIngots', baseIngotType: 'basic', hasInlaySlots: false,
+          name: 'Подкова', icon: IMAGE_PATHS.ITEMS.HORSESHOE, requiredSkill: null, baseIngot: 'ironIngots', baseIngotType: 'basic', hasInlaySlots: false,
           components: [{ id: "shaping", name: "Формовка", progress: 25, cost: { ironIngots: 2 }, workstation: 'anvil' }]
       },
       dagger: {
-          name: 'Простой Кинжал', icon: '/img/items/dagger.webp', requiredSkill: null, baseIngot: 'ironIngots', baseIngotType: 'basic', hasInlaySlots: false,
+          name: 'Простой Кинжал', icon: IMAGE_PATHS.ITEMS.DAGGER, requiredSkill: null, baseIngot: 'ironIngots', baseIngotType: 'basic', hasInlaySlots: false,
           components: [
               {
                   id: "blade", name: "Лезвие", progress: 40, cost: { ironIngots: 3 }, workstation: 'anvil',
@@ -27,7 +29,7 @@ export const items = {
           ]
       },
       ironHelmet: {
-          name: "Железный шлем", icon: '/img/items/iron_helmet.webp', requiredSkill: 'blueprint_basicArmor', baseIngot: 'ironIngots', baseIngotType: 'basic', hasInlaySlots: true,
+          name: "Железный шлем", icon: IMAGE_PATHS.ITEMS.IRON_HELMET, requiredSkill: 'blueprint_basicArmor', baseIngot: 'ironIngots', baseIngotType: 'basic', hasInlaySlots: true,
           components: [
               {
                   id: "dome", name: "Купол", progress: 60, cost: { ironIngots: 5 }, workstation: 'anvil',
@@ -46,7 +48,7 @@ export const items = {
           ]
       },
       ironGreaves: {
-          name: "Железные поножи", icon: '/img/items/iron_greaves.webp', requiredSkill: 'blueprint_basicArmor', baseIngot: 'ironIngots', baseIngotType: 'basic', hasInlaySlots: true,
+          name: "Железные поножи", icon: IMAGE_PATHS.ITEMS.IRON_GREAVES, requiredSkill: 'blueprint_basicArmor', baseIngot: 'ironIngots', baseIngotType: 'basic', hasInlaySlots: true,
           components: [
               {
                   id: "plates", name: "Пластины", progress: 80, cost: { ironIngots: 7 }, workstation: 'anvil',
@@ -64,7 +66,7 @@ export const items = {
           ]
       },
       twoHandedAxe: {
-          name: "Двуручный топор", icon: '/img/items/two_handed_axe.webp', requiredSkill: 'blueprint_advancedTools', baseIngot: 'ironIngots', baseIngotType: 'basic', hasInlaySlots: true,
+          name: "Двуручный топор", icon: IMAGE_PATHS.ITEMS.TWO_HANDED_AXE, requiredSkill: 'blueprint_advancedTools', baseIngot: 'ironIngots', baseIngotType: 'basic', hasInlaySlots: true,
           components: [
               {
                   id: "axehead", name: "Лезвие топора", progress: 120, cost: { ironIngots: 10 }, workstation: 'anvil',
@@ -83,7 +85,7 @@ export const items = {
           ]
       },
       reinforcedShield: {
-          name: "Усиленный щит", icon: '/img/items/reinforced_shield.webp', requiredSkill: 'blueprint_advancedTools', baseIngot: 'ironIngots', baseIngotType: 'basic', hasInlaySlots: true,
+          name: "Усиленный щит", icon: IMAGE_PATHS.ITEMS.REINFORCED_SHIELD, requiredSkill: 'blueprint_advancedTools', baseIngot: 'ironIngots', baseIngotType: 'basic', hasInlaySlots: true,
           components: [
               {
                   id: "base", name: "Основа", progress: 90, cost: { ironIngots: 8 }, workstation: 'anvil',
@@ -102,7 +104,7 @@ export const items = {
           ]
       },
       copperBracelet: {
-          name: 'Медный браслет', icon: '/img/items/copper_bracelet.webp', requiredSkill: 'jewelryCrafting', baseIngot: 'copperIngots', baseIngotType: 'basic', hasInlaySlots: true,
+          name: 'Медный браслет', icon: IMAGE_PATHS.ITEMS.COPPER_BRACELET, requiredSkill: 'jewelryCrafting', baseIngot: 'copperIngots', baseIngotType: 'basic', hasInlaySlots: true,
           components: [
                { id: "shaping", name: "Формовка", progress: 50, cost: { copperIngots: 4 }, workstation: 'anvil' },
                {
@@ -119,7 +121,7 @@ export const items = {
           ]
       },
       copperAmulet: {
-          name: "Медный амулет", icon: '/img/items/copper_amulet.webp', requiredSkill: 'jewelryCrafting', baseIngot: 'copperIngots', baseIngotType: 'basic', hasInlaySlots: true,
+          name: "Медный амулет", icon: IMAGE_PATHS.ITEMS.COPPER_AMULET, requiredSkill: 'jewelryCrafting', baseIngot: 'copperIngots', baseIngotType: 'basic', hasInlaySlots: true,
           components: [
               {
                   id: "pendant", name: "Подвеска", progress: 70, cost: { copperIngots: 6 }, workstation: 'anvil',
@@ -136,7 +138,7 @@ export const items = {
           ]
       },
       bronzeShield: {
-          name: 'Бронзовый щит', icon: '/img/items/bronze_shield.webp', requiredSkill: 'artOfAlloys', baseIngot: 'bronzeIngots', baseIngotType: 'basic', hasInlaySlots: true,
+          name: 'Бронзовый щит', icon: IMAGE_PATHS.ITEMS.BRONZE_SHIELD, requiredSkill: 'artOfAlloys', baseIngot: 'bronzeIngots', baseIngotType: 'basic', hasInlaySlots: true,
           components: [
               {
                   id: 'base', name: 'Основа щита', progress: 100, cost: { bronzeIngots: 3 }, workstation: 'anvil',
@@ -155,7 +157,7 @@ export const items = {
           ]
       },
       bronzeSword: {
-          name: "Бронзовый меч", icon: '/img/items/bronze_sword.webp', requiredSkill: 'artOfAlloys', baseIngot: 'bronzeIngots', baseIngotType: 'basic', hasInlaySlots: true,
+          name: "Бронзовый меч", icon: IMAGE_PATHS.ITEMS.BRONZE_SWORD, requiredSkill: 'artOfAlloys', baseIngot: 'bronzeIngots', baseIngotType: 'basic', hasInlaySlots: true,
            components: [
               {
                   id: "blade", name: "Клинок", progress: 150, cost: { bronzeIngots: 8 }, workstation: 'anvil',
@@ -174,7 +176,7 @@ export const items = {
           ]
       },
       bronzeCuirass: {
-          name: "Бронзовая кираса", icon: '/img/items/bronze_cuirass.webp', requiredSkill: 'blueprint_eliteArmor', baseIngot: 'bronzeIngots', baseIngotType: 'basic', hasInlaySlots: true,
+          name: "Бронзовая кираса", icon: IMAGE_PATHS.ITEMS.BRONZE_CUIRASS, requiredSkill: 'blueprint_eliteArmor', baseIngot: 'bronzeIngots', baseIngotType: 'basic', hasInlaySlots: true,
           components: [
               {
                   id: 'breastplate', name: "Нагрудник", progress: 250, cost: { bronzeIngots: 12 }, workstation: 'anvil',
@@ -193,7 +195,7 @@ export const items = {
           ]
       },
       bronzeGauntlets: {
-          name: "Бронзовые перчатки", icon: '/img/items/bronze_gauntlets.webp', requiredSkill: 'blueprint_eliteArmor', baseIngot: 'bronzeIngots', baseIngotType: 'basic', hasInlaySlots: true,
+          name: "Бронзовые перчатки", icon: IMAGE_PATHS.ITEMS.BRONZE_GAUNTLETS, requiredSkill: 'blueprint_eliteArmor', baseIngot: 'bronzeIngots', baseIngotType: 'basic', hasInlaySlots: true,
            components: [
               {
                   id: 'plates', name: "Пластины", progress: 120, cost: { bronzeIngots: 6 }, workstation: 'anvil',
@@ -212,7 +214,7 @@ export const items = {
           ]
       },
       bronzeHelmet: {
-          name: "Бронзовый шлем", icon: '/img/items/bronze_helmet.webp', requiredSkill: 'blueprint_eliteArmor', baseIngot: 'bronzeIngots', baseIngotType: 'basic', hasInlaySlots: true,
+          name: "Бронзовый шлем", icon: IMAGE_PATHS.ITEMS.BRONZE_HELMET, requiredSkill: 'blueprint_eliteArmor', baseIngot: 'bronzeIngots', baseIngotType: 'basic', hasInlaySlots: true,
           components: [
               {
                   id: "dome", name: "Купол", progress: 200, cost: { bronzeIngots: 8 }, workstation: 'anvil',
@@ -231,7 +233,7 @@ export const items = {
           ]
       },
       bronzeGreaves: {
-        name: "Бронзовые поножи", icon: '/img/items/bronze_greaves.webp', requiredSkill: 'blueprint_eliteArmor', baseIngot: 'bronzeIngots', baseIngotType: 'basic', hasInlaySlots: true,
+        name: "Бронзовые поножи", icon: IMAGE_PATHS.ITEMS.BRONZE_GREAVES, requiredSkill: 'blueprint_eliteArmor', baseIngot: 'bronzeIngots', baseIngotType: 'basic', hasInlaySlots: true,
         components: [
             { id: "plates", name: "Фигурные пластины", progress: 220, cost: { bronzeIngots: 10 }, workstation: 'anvil', minigame: { triggerChance: 0.06, barSpeed: 2.0, zones: [ { from: 44, to: 56, quality: 'perfect', qualityBonus: 2.2, progressBonus: 10 }, { from: 34, to: 66, quality: 'good', qualityBonus: 1.4, progressBonus: 5 } ] } },
             { id: "straps", name: "Кожаные ремни", progress: 60, cost: { sparks: 250 }, workstation: 'workbench', requires: ["plates"] },
@@ -241,7 +243,7 @@ export const items = {
 
     sparksteelMace: {
         name: "Булава из Искростали",
-        icon: '/img/items/sparksteel_mace.webp',
+        icon: IMAGE_PATHS.ITEMS.SPARKSTEEL_MACE,
         requiredSkill: 'artOfAlloys',
         baseIngot: 'sparksteelIngots',
         baseIngotType: 'uncommon',
@@ -254,7 +256,7 @@ export const items = {
         ]
     },
        ornateGreatsword: {
-          name: "Богато украшенный меч", icon: '/img/items/ornate_greatsword.webp', requiredSkill: 'blueprint_masterwork', baseIngot: 'bronzeIngots', baseIngotType: 'basic', hasInlaySlots: true, firstPlaythroughLocked: true,
+          name: "Богато украшенный меч", icon: IMAGE_PATHS.ITEMS.ORNATE_GREATSWORD, requiredSkill: 'blueprint_masterwork', baseIngot: 'bronzeIngots', baseIngotType: 'basic', hasInlaySlots: true, firstPlaythroughLocked: true,
               components: [
               {
                   id: "blade", name: "Дамасский клинок", progress: 400, cost: { bronzeIngots: 15, ironIngots: 10 }, workstation: 'anvil',
@@ -274,7 +276,7 @@ export const items = {
           ]
        },
        royalCrown: {
-            name: "Королевская корона", icon: '/img/items/royal_crown.webp', requiredSkill: 'blueprint_masterwork', baseIngot: 'copperIngots', baseIngotType: 'basic', hasInlaySlots: true, firstPlaythroughLocked: true,
+            name: "Королевская корона", icon: IMAGE_PATHS.ITEMS.ROYAL_CROWN, requiredSkill: 'blueprint_masterwork', baseIngot: 'copperIngots', baseIngotType: 'basic', hasInlaySlots: true, firstPlaythroughLocked: true,
             components: [
               {
                   id: 'frame', name: "Золотая основа", progress: 300, cost: { copperIngots: 20, sparks: 2000 }, workstation: 'anvil',
@@ -293,7 +295,7 @@ export const items = {
             ]
        },
        mithrilDagger: {
-           name: "Мифриловый кинжал", icon: '/img/items/mithril_dagger.webp', requiredSkill: 'blueprint_mithrilCrafting', baseIngot: 'mithrilIngots', baseIngotType: 'uncommon', hasInlaySlots: true, firstPlaythroughLocked: true,
+           name: "Мифриловый кинжал", icon: IMAGE_PATHS.ITEMS.MITHRIL_DAGGER, requiredSkill: 'blueprint_mithrilCrafting', baseIngot: 'mithrilIngots', baseIngotType: 'uncommon', hasInlaySlots: true, firstPlaythroughLocked: true,
            components: [
                {
                    id: 'blade', name: 'Мифриловый клинок', progress: 500, cost: { mithrilIngots: 5 }, workstation: 'anvil',
@@ -312,7 +314,7 @@ export const items = {
            ]
        },
        mithrilShield: {
-           name: "Мифриловый щит", icon: '/img/items/mithril_shield.webp', requiredSkill: 'blueprint_mithrilCrafting', baseIngot: 'mithrilIngots', baseIngotType: 'uncommon', hasInlaySlots: true, firstPlaythroughLocked: true,
+           name: "Мифриловый щит", icon: IMAGE_PATHS.ITEMS.MITHRIL_SHIELD, requiredSkill: 'blueprint_mithrilCrafting', baseIngot: 'mithrilIngots', baseIngotType: 'uncommon', hasInlaySlots: true, firstPlaythroughLocked: true,
            components: [
               {
                 id: 'base', name: 'Мифриловая основа', progress: 800, cost: { mithrilIngots: 8 }, workstation: 'anvil',
@@ -331,7 +333,7 @@ export const items = {
            ]
        },
        mithrilLongsword: {
-           name: "Мифриловый длинный меч", icon: '/img/items/mithril_longsword.webp', requiredSkill: 'blueprint_mithrilCrafting', baseIngot: 'mithrilIngots', baseIngotType: 'uncommon', hasInlaySlots: true, firstPlaythroughLocked: true,
+           name: "Мифриловый длинный меч", icon: IMAGE_PATHS.ITEMS.MITHRIL_LONGSWORD, requiredSkill: 'blueprint_mithrilCrafting', baseIngot: 'mithrilIngots', baseIngotType: 'uncommon', hasInlaySlots: true, firstPlaythroughLocked: true,
            components: [
                {
                    id: "blade", name: "Длинный клинок", progress: 900, cost: { mithrilIngots: 10 }, workstation: 'anvil',
@@ -351,7 +353,7 @@ export const items = {
            ]
        },
        mithrilChainmail: {
-           name: "Мифриловая кольчуга", icon: '/img/items/mithril_chainmail.webp', requiredSkill: 'blueprint_mithrilCrafting', baseIngot: 'mithrilIngots', baseIngotType: 'uncommon', hasInlaySlots: true, firstPlaythroughLocked: true,
+           name: "Мифриловая кольчуга", icon: IMAGE_PATHS.ITEMS.MITHRIL_CHAINMAIL, requiredSkill: 'blueprint_mithrilCrafting', baseIngot: 'mithrilIngots', baseIngotType: 'uncommon', hasInlaySlots: true, firstPlaythroughLocked: true,
            components: [
                {
                    id: "rings", name: "Плетение колец", progress: 1500, cost: { mithrilIngots: 15 }, workstation: 'workbench',
@@ -369,7 +371,7 @@ export const items = {
            ]
        },
        adamantitePlatebody: {
-           name: "Адамантитовый нагрудник", icon: '/img/items/adamantite_platebody.webp', requiredSkill: "blueprint_adamantiteForging", baseIngot: 'adamantiteIngots', baseIngotType: 'uncommon', hasInlaySlots: true, firstPlaythroughLocked: true,
+           name: "Адамантитовый нагрудник", icon: IMAGE_PATHS.ITEMS.ADAMANTITE_PLATEBODY, requiredSkill: "blueprint_adamantiteForging", baseIngot: 'adamantiteIngots', baseIngotType: 'uncommon', hasInlaySlots: true, firstPlaythroughLocked: true,
            components: [
                {
                    id: 'main_plate', name: 'Цельная пластина', progress: 2000, cost: { adamantiteIngots: 10 }, workstation: 'anvil',
@@ -388,7 +390,7 @@ export const items = {
            ]
        },
        arcaniteSpellblade: {
-           name: "Арканитовый чародейский клинок", icon: '/img/items/arcanite_spellblade.webp', requiredSkill: "blueprint_arcaniteMastery", baseIngot: 'arcaniteIngots', baseIngotType: 'uncommon', hasInlaySlots: true, firstPlaythroughLocked: true,
+           name: "Арканитовый чародейский клинок", icon: IMAGE_PATHS.ITEMS.ARCANITE_SPELLBLADE, requiredSkill: "blueprint_arcaniteMastery", baseIngot: 'arcaniteIngots', baseIngotType: 'uncommon', hasInlaySlots: true, firstPlaythroughLocked: true,
            components: [
                {
                    id: 'core', name: 'Ядро из арканита', progress: 3000, cost: { arcaniteIngots: 5 }, workstation: 'anvil',
@@ -410,7 +412,7 @@ export const items = {
             name: "Адамантитовое ядро",
             isQuestRecipe: true,
             isArtifactComponent: true,
-            icon: '/img/items/adamantite_core.webp',
+            icon: IMAGE_PATHS.ITEMS.CRAFTABLE_ADAMANTITE_CORE,
             firstPlaythroughLocked: true,
             components: [
                 {id: 'molding', name: "Отливка формы", progress: 2500, cost: {adamantiteIngots: 15}, workstation: 'anvil'},
@@ -422,7 +424,7 @@ export const items = {
             name: "Руна Стойкости",
             isQuestRecipe: true,
             isArtifactComponent: true,
-            icon: '/img/items/stabilizing_gyroscope.webp',
+            icon: IMAGE_PATHS.ITEMS.CRAFTABLE_RUNE_OF_FORTITUDE,
             firstPlaythroughLocked: true,
             components: [
                 {id: 'carving', name: "Вырезание на арканите", progress: 4000, cost: {arcaniteIngots: 3}, workstation: 'grindstone'},
@@ -433,7 +435,7 @@ export const items = {
             name: "Очищенный Мифрил",
             isQuestRecipe: true,
             isArtifactComponent: true,
-            icon: '/img/items/purified_mithril.webp',
+            icon: IMAGE_PATHS.ITEMS.CRAFTABLE_PURIFIED_MITHRIL,
             firstPlaythroughLocked: true,
             components: [
                 {id: 'remelting', name: "Многократная переплавка", progress: 3000, cost: {mithrilIngots: 20}, workstation: 'anvil'},
@@ -444,7 +446,7 @@ export const items = {
             name: "Фокусирующая Линза",
             isQuestRecipe: true,
             isArtifactComponent: true,
-            icon: '/img/items/focusing_lens.webp',
+            icon: IMAGE_PATHS.ITEMS.CRAFTABLE_FOCUSING_LENS,
             firstPlaythroughLocked: true,
             components: [
                 {id: 'casting', name: "Отливка основы линзы", progress: 3500, cost: {arcaniteIngots: 2}, workstation: 'anvil'},
@@ -452,16 +454,16 @@ export const items = {
             ]
         },
         ironCrowbar: {
-            name: 'Железный Лом', icon: '/img/items/iron_crowbar.webp', requiredSkill: null, baseIngot: 'ironIngots', baseIngotType: 'basic', hasInlaySlots: false,
+            name: 'Железный Лом', icon: IMAGE_PATHS.ITEMS.IRON_CROWBAR, requiredSkill: null, baseIngot: 'ironIngots', baseIngotType: 'basic', hasInlaySlots: false,
             components: [
                 { id: 'shaping', name: "Формовка", progress: 30, cost: { ironIngots: 2 }, workstation: 'anvil' },
                 { id: 'handle', name: "Рукоять", progress: 15, cost: { ironIngots: 1 }, workstation: 'workbench', requires: ["shaping"] }
             ]
         },
         copperCauldron: {
-            name: 'Медный Котелок', icon: '/img/items/copper_cauldron.webp', requiredSkill: 'findCopper', baseIngot: 'copperIngots', baseIngotType: 'basic', hasInlaySlots: false,
+            name: 'Медный Котелок', icon: IMAGE_PATHS.ITEMS.COPPER_CAULDRON, requiredSkill: 'findCopper', baseIngot: 'copperIngots', baseIngotType: 'basic', hasInlaySlots: false,
             components: [
-                { 
+                {
                     id: 'body', name: "Корпус", progress: 80, cost: { copperIngots: 6 }, workstation: 'anvil',
                     minigame: {
                         triggerChance: 0.1,
@@ -476,9 +478,9 @@ export const items = {
             ]
         },
         bronzeGreataxe: {
-            name: 'Бронзовая Секира', icon: '/img/items/bronze_greataxe.webp', requiredSkill: 'blueprint_fineWeapons', baseIngot: 'bronzeIngots', baseIngotType: 'basic', hasInlaySlots: true,
+            name: 'Бронзовая Секира', icon: IMAGE_PATHS.ITEMS.BRONZE_GREATAXE, requiredSkill: 'blueprint_fineWeapons', baseIngot: 'bronzeIngots', baseIngotType: 'basic', hasInlaySlots: true,
             components: [
-                { 
+                {
                     id: 'axehead', name: "Лезвие секиры", progress: 180, cost: { bronzeIngots: 10 }, workstation: 'anvil',
                     minigame: {
                         triggerChance: 0.08,
@@ -495,7 +497,7 @@ export const items = {
             ]
         },
         sparksteelToolset: {
-            name: 'Комплект инструментов из Искростали', icon: '/img/items/sparksteel_toolset.webp', requiredSkill: 'optimizedSmelting', baseIngot: 'sparksteelIngots', baseIngotType: 'uncommon', hasInlaySlots: true,
+            name: 'Комплект инструментов из Искростали', icon: IMAGE_PATHS.ITEMS.SPARKSTEEL_TOOLSET, requiredSkill: 'optimizedSmelting', baseIngot: 'sparksteelIngots', baseIngotType: 'uncommon', hasInlaySlots: true,
             components: [
                 { id: 'hammer_head', name: "Боек молота", progress: 150, cost: { sparksteelIngots: 2 }, workstation: 'anvil' },
                 { id: 'chisel_blade', name: "Лезвие зубила", progress: 120, cost: { sparksteelIngots: 1 }, workstation: 'grindstone' },
@@ -505,7 +507,7 @@ export const items = {
             ]
         },
         ironVice: {
-            name: 'Железные Тиски', icon: '/img/items/iron_vice.webp', requiredSkill: 'divisionOfLabor', baseIngot: 'ironIngots', baseIngotType: 'basic', hasInlaySlots: false,
+            name: 'Железные Тиски', icon: IMAGE_PATHS.ITEMS.IRON_VICE, requiredSkill: 'divisionOfLabor', baseIngot: 'ironIngots', baseIngotType: 'basic', hasInlaySlots: false,
             components: [
                 { id: 'frame', name: "Основа", progress: 100, cost: { ironIngots: 8 }, workstation: 'anvil' },
                 { id: 'screw', name: "Винтовой механизм", progress: 50, cost: { ironIngots: 4 }, workstation: 'workbench', requires: ["frame"] },
@@ -513,16 +515,16 @@ export const items = {
             ]
         },
         copperChain: {
-            name: 'Медная Цепь', icon: '/img/items/copper_chain.webp', requiredSkill: 'findCopper', baseIngot: 'copperIngots', baseIngotType: 'basic', hasInlaySlots: false,
+            name: 'Медная Цепь', icon: IMAGE_PATHS.ITEMS.COPPER_CHAIN, requiredSkill: 'findCopper', baseIngot: 'copperIngots', baseIngotType: 'basic', hasInlaySlots: false,
             components: [
                 { id: 'links', name: "Плетение звеньев", progress: 60, cost: { copperIngots: 5 }, workstation: 'workbench' },
                 { id: 'fastener', name: "Застежка", progress: 20, cost: { copperIngots: 1 }, workstation: 'anvil', requires: ["links"] }
             ]
         },
         bronzeHammer: {
-            name: 'Бронзовый Молот', icon: '/img/items/bronze_hammer.webp', requiredSkill: 'artOfAlloys', baseIngot: 'bronzeIngots', baseIngotType: 'basic', hasInlaySlots: true,
+            name: 'Бронзовый Молот', icon: IMAGE_PATHS.ITEMS.BRONZE_HAMMER, requiredSkill: 'artOfAlloys', baseIngot: 'bronzeIngots', baseIngotType: 'basic', hasInlaySlots: true,
             components: [
-                { 
+                {
                     id: 'head', name: "Боек", progress: 100, cost: { bronzeIngots: 5 }, workstation: 'anvil',
                     minigame: {
                         triggerChance: 0.1,
@@ -538,7 +540,7 @@ export const items = {
             ]
         },
         armorRepairKit: {
-            name: 'Комплект для Ремонта Брони', icon: '/img/items/armor_repair_kit.webp', requiredSkill: 'blueprint_eliteArmor', baseIngot: 'ironIngots', baseIngotType: 'basic', hasInlaySlots: false,
+            name: 'Комплект для Ремонта Брони', icon: IMAGE_PATHS.ITEMS.ARMOR_REPAIR_KIT, requiredSkill: 'blueprint_eliteArmor', baseIngot: 'ironIngots', baseIngotType: 'basic', hasInlaySlots: false,
             components: [
                 { id: 'plates', name: "Ремкомплектные пластины", progress: 80, cost: { ironIngots: 5, copperIngots: 3 }, workstation: 'anvil' },
                 { id: 'tools', name: "Специальные инструменты", progress: 60, cost: { sparks: 200 }, workstation: 'grindstone' },
@@ -547,9 +549,9 @@ export const items = {
             ]
         },
         mithrilBow: {
-            name: 'Мифриловый Лук', icon: '/img/items/mithril_bow.webp', requiredSkill: 'blueprint_mithrilCrafting', baseIngot: 'mithrilIngots', baseIngotType: 'uncommon', hasInlaySlots: true, firstPlaythroughLocked: true,
+            name: 'Мифриловый Лук', icon: IMAGE_PATHS.ITEMS.MITHRIL_BOW, requiredSkill: 'blueprint_mithrilCrafting', baseIngot: 'mithrilIngots', baseIngotType: 'uncommon', hasInlaySlots: true, firstPlaythroughLocked: true,
             components: [
-                { 
+                {
                     id: 'limb_core', name: "Основа плеч", progress: 600, cost: { mithrilIngots: 7 }, workstation: 'anvil',
                     minigame: {
                         triggerChance: 0.04,
@@ -566,9 +568,9 @@ export const items = {
             ]
         },
         adamantiteHelmet: {
-            name: 'Адамантитовый Шлем', icon: '/img/items/adamantite_helmet.webp', requiredSkill: 'blueprint_adamantiteForging', baseIngot: 'adamantiteIngots', baseIngotType: 'uncommon', hasInlaySlots: true, firstPlaythroughLocked: true,
+            name: 'Адамантитовый Шлем', icon: IMAGE_PATHS.ITEMS.ADAMANTITE_HELMET, requiredSkill: 'blueprint_adamantiteForging', baseIngot: 'adamantiteIngots', baseIngotType: 'uncommon', hasInlaySlots: true, firstPlaythroughLocked: true,
             components: [
-                { 
+                {
                     id: 'main_shell', name: "Основная оболочка", progress: 1500, cost: { adamantiteIngots: 8 }, workstation: 'anvil',
                     minigame: {
                         triggerChance: 0.03,
@@ -585,9 +587,9 @@ export const items = {
             ]
         },
         arcaniteAmulet: {
-            name: 'Арканитовый Амулет', icon: '/img/items/arcanite_amulet.webp', requiredSkill: 'blueprint_arcaniteMastery', baseIngot: 'arcaniteIngots', baseIngotType: 'uncommon', hasInlaySlots: true, firstPlaythroughLocked: true,
+            name: 'Арканитовый Амулет', icon: IMAGE_PATHS.ITEMS.ARCANITE_AMULET, requiredSkill: 'blueprint_arcaniteMastery', baseIngot: 'arcaniteIngots', baseIngotType: 'uncommon', hasInlaySlots: true, firstPlaythroughLocked: true,
             components: [
-                { 
+                {
                     id: 'pendant_base', name: "Основа подвески", progress: 2000, cost: { arcaniteIngots: 3 }, workstation: 'anvil',
                     minigame: {
                         triggerChance: 0.02,
@@ -602,9 +604,8 @@ export const items = {
                 { id: 'enchantment', name: "Наложение чар", progress: 1500, cost: { matter: 8000 }, workstation: 'workbench', requires: ["pendant_base", "gem_setting"] }
             ]
         },
-        // НОВЫЕ ПРЕДМЕТЫ ИЗ ИСКРОСТАЛИ
         sparksteelJewelersKit: {
-            name: 'Набор ювелирных инструментов из Искростали', icon: '/img/items/sparksteel_jewelers_kit.webp', requiredSkill: 'jewelryCrafting', baseIngot: 'sparksteelIngots', baseIngotType: 'uncommon', hasInlaySlots: false,
+            name: 'Набор ювелирных инструментов из Искростали', icon: IMAGE_PATHS.ITEMS.SPARKSTEEL_JEWELERS_KIT, requiredSkill: 'jewelryCrafting', baseIngot: 'sparksteelIngots', baseIngotType: 'uncommon', hasInlaySlots: false,
             components: [
                 { id: 'mini_anvil', name: "Мини-наковальня", progress: 100, cost: { sparksteelIngots: 1 }, workstation: 'anvil' },
                 { id: 'precision_pliers', name: "Прецизионные клещи", progress: 80, cost: { sparksteelIngots: 1 }, workstation: 'workbench' },
@@ -613,9 +614,9 @@ export const items = {
             ]
         },
         sparksteelCrossbow: {
-            name: 'Арбалет из Искростали', icon: '/img/items/sparksteel_crossbow.webp', requiredSkill: 'blueprint_fineWeapons', baseIngot: 'sparksteelIngots', baseIngotType: 'uncommon', hasInlaySlots: true,
+            name: 'Арбалет из Искростали', icon: IMAGE_PATHS.ITEMS.SPARKSTEEL_CROSSBOW, requiredSkill: 'blueprint_fineWeapons', baseIngot: 'sparksteelIngots', baseIngotType: 'uncommon', hasInlaySlots: true,
             components: [
-                { 
+                {
                     id: 'limb_core', name: "Плечи арбалета", progress: 400, cost: { sparksteelIngots: 5 }, workstation: 'anvil',
                     minigame: {
                         triggerChance: 0.07,
@@ -632,7 +633,7 @@ export const items = {
             ]
         },
         sparksteelPincers: {
-            name: 'Клещи из Искростали', icon: '/img/items/sparksteel_pincers.webp', requiredSkill: 'artOfAlloys', baseIngot: 'sparksteelIngots', baseIngotType: 'uncommon', hasInlaySlots: false,
+            name: 'Клещи из Искростали', icon: IMAGE_PATHS.ITEMS.SPARKSTEEL_PINCERS, requiredSkill: 'artOfAlloys', baseIngot: 'sparksteelIngots', baseIngotType: 'uncommon', hasInlaySlots: false,
             components: [
                 { id: 'jaws', name: "Губки", progress: 100, cost: { sparksteelIngots: 2 }, workstation: 'anvil' },
                 { id: 'pivot', name: "Шарнир", progress: 40, cost: { ironIngots: 3 }, workstation: 'workbench' },
@@ -641,9 +642,9 @@ export const items = {
             ]
         },
         sparksteelArmorPlates: {
-            name: 'Бронепластины из Искростали', icon: '/img/items/sparksteel_armor_plates.webp', requiredSkill: 'blueprint_eliteArmor', baseIngot: 'sparksteelIngots', baseIngotType: 'uncommon', hasInlaySlots: true,
+            name: 'Бронепластины из Искростали', icon: IMAGE_PATHS.ITEMS.SPARKSTEEL_ARMOR_PLATES, requiredSkill: 'blueprint_eliteArmor', baseIngot: 'sparksteelIngots', baseIngotType: 'uncommon', hasInlaySlots: true,
             components: [
-                { 
+                {
                     id: 'molding', name: "Формовка", progress: 300, cost: { sparksteelIngots: 4 }, workstation: 'anvil',
                     minigame: {
                         triggerChance: 0.06,
@@ -659,7 +660,7 @@ export const items = {
             ]
         },
         sparksteelWatch: {
-            name: 'Часы из Искростали', icon: '/img/items/sparksteel_watch.webp', requiredSkill: 'legendaryClients', baseIngot: 'sparksteelIngots', baseIngotType: 'uncommon', hasInlaySlots: true,
+            name: 'Часы из Искростали', icon: IMAGE_PATHS.ITEMS.SPARKSTEEL_WATCH, requiredSkill: 'legendaryClients', baseIngot: 'sparksteelIngots', baseIngotType: 'uncommon', hasInlaySlots: true,
             components: [
                 { id: 'gear_assembly', name: "Сборка шестеренок", progress: 200, cost: { sparksteelIngots: 2 }, workstation: 'workbench' },
                 { id: 'casing', name: "Корпус", progress: 180, cost: { copperIngots: 10, sparks: 500 }, workstation: 'anvil' },

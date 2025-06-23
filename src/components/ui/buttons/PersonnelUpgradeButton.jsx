@@ -1,8 +1,8 @@
 // src/components/ui/PersonnelUpgradeButton.jsx
 import React from 'react';
-import { definitions } from '../../data/definitions';
-import { formatCosts, formatNumber } from '../../utils/helpers';
-import Tooltip from './Tooltip'; // ИЗМЕНЕНО: Исправлен путь к Tooltip
+import { definitions } from '../../../data/definitions';
+import { formatCosts, formatNumber } from '../../../utils/formatters';
+import Tooltip from '../display/Tooltip';
 
 const PersonnelUpgradeButton = React.memo(({ upgradeId, gameState, onBuyUpgrade }) => {
     const upgrade = definitions.personnel[upgradeId];

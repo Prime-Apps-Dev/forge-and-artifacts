@@ -1,14 +1,11 @@
 // src/components/modals/AchievementRewardModal.jsx
 import React from 'react';
-import Tooltip from '../ui/Tooltip'; // ИЗМЕНЕНО: Исправлен путь к Tooltip
-// import { getItemImageSrc } from '../../utils/helpers'; // Больше не нужен, т.к. icon - прямой путь
-// import AchievementCard from '../ui/AchievementCard'; // Не нужен здесь, т.к. стили скопированы
+import Tooltip from '../ui/display/Tooltip'; // Обновленный путь
 
 const AchievementRewardModal = ({ isOpen, onClose, achievement, onClaimReward }) => {
     if (!isOpen || !achievement) return null;
 
-    // Используем achievement.icon напрямую
-    const achievementImgSrc = achievement.icon || 'https://placehold.co/128x128/333/FFF?text=ACHIEVEMENT';
+    const achievementImgSrc = achievement.icon;
 
     let rewardDescriptionText = "Вы получили неизвестную награду.";
     if (achievement.effectName) {
@@ -27,17 +24,16 @@ const AchievementRewardModal = ({ isOpen, onClose, achievement, onClaimReward })
                 <p className="text-gray-300 mb-6">Поздравляем, Мастер! Вы достигли нового рубежа!</p>
 
                 <div className="flex flex-col items-center justify-center mb-6">
-                    {/* Используем стили AchievementCard для отображения самой карточки достижения */}
                     <div className={`
                         relative flex flex-col items-center justify-between
-                        w-48 h-48 /* Фиксированный размер для модалки */
+                        w-48 h-48
                         bg-black/40 rounded-lg p-2
                         border-2 border-green-500 shadow-md shadow-green-500/20
                         overflow-hidden
                     `}>
                          <div className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-md flex-shrink-0">
                             <img
-                                src={achievementImgSrc} // ИСПОЛЬЗУЕМ achievementImgSrc
+                                src={achievementImgSrc}
                                 alt={achievement.title}
                                 className={`object-cover w-full h-full img-rounded-corners grayscale-0`}
                             />

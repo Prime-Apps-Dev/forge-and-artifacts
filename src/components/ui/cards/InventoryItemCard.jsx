@@ -1,8 +1,8 @@
 // src/components/ui/InventoryItemCard.jsx
 import React from 'react';
-import { definitions } from '../../data/definitions';
-import Tooltip from './Tooltip';
-import { getItemImageSrc } from '../../utils/helpers';
+import { definitions } from '../../../data/definitions';
+import Tooltip from '../display/Tooltip';
+import { getItemImageSrc } from '../../../utils/helpers';
 
 const InventoryItemCard = ({ item, onAction, actionLabel, onReforge, showReforgeButton, onInlay, showInlayButton, onGraving, showGravingButton, isAnyActiveProject }) => {
     const itemDef = definitions.items?.[item.itemKey];
@@ -36,7 +36,7 @@ const InventoryItemCard = ({ item, onAction, actionLabel, onReforge, showReforge
                 <img
                     src={getItemImageSrc(item.itemKey, 64)}
                     alt={itemDef.name}
-                    className="w-16 h-16 object-contain mt-2 img-rounded-corners" // ИЗМЕНЕНО: Добавлен img-rounded-corners
+                    className="w-16 h-16 object-contain mt-2 img-rounded-corners"
                 />
                 <p className="text-sm font-bold mt-1 text-white text-center">{itemDef.name}</p>
                 <p className="text-xs text-yellow-400">Качество: {item.quality.toFixed(2)}</p>

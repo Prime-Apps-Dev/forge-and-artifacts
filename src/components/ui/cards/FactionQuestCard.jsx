@@ -1,8 +1,8 @@
 import React from 'react';
-import { definitions } from '../../data/definitions'; // Импортируем definitions
-import { hasReputation } from '../../utils/helpers'; // Импортируем hasReputation
+import { definitions } from '../../../data/definitions';
+import { hasReputation } from '../../../utils/helpers';
 
-const FactionQuestCard = React.memo(({ factionId, gameState, onStartQuest }) => { // Добавляем gameState и onStartQuest
+const FactionQuestCard = React.memo(({ factionId, gameState, onStartQuest }) => {
     const faction = definitions.factions[factionId];
     const hasQuest = gameState.journal.activeQuests.some(q => q.factionId === factionId);
     const canTakeQuest = hasReputation(gameState.reputation, factionId, 'honor');

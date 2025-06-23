@@ -1,7 +1,6 @@
 /* src/index.css */
 @import 'tailwindcss';
 
-/* Общие стили для фона страницы и базового текста */
 body {
     font-family: 'Roboto', sans-serif !important;
     background-color: #1c1c1e !important;
@@ -12,7 +11,7 @@ body {
     -ms-user-select: none;
     user-select: none;
 }
-@import url('https://fonts.googleapis.com/css2?family=Yeseva+One&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Dela+Gothic+One&display=swap');
 
 .font-cinzel {
     font-family: "Dela Gothic One", sans-serif !important;
@@ -25,8 +24,8 @@ body {
 .accent-glow-color { color: var(--accent-glow-color, #e67e22) !important; }
 
 .tabs, .left-panel, .right-panel, .overflow-y-auto {
-    -ms-overflow-style: none; /* Скрывает скроллбар для IE/Edge */
-    scrollbar-width: none; /* Скрывает скроллбар для Firefox */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
 .tabs::-webkit-scrollbar,
 .left-panel::-webkit-scrollbar,
@@ -34,7 +33,6 @@ body {
 .overflow-y-auto::-webkit-scrollbar {
     display: none;
 }
-
 
 @keyframes toast-fade-in-up {
     from { opacity: 0; transform: translateY(20px); }
@@ -49,7 +47,6 @@ body {
 .animate-fade-out {
     animation: toast-fade-out 0.4s ease-out forwards !important;
 }
-
 
 .interactive-element { transition: transform 0.1s ease, box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease !important; }
 .interactive-element:not(:disabled):active {
@@ -105,7 +102,6 @@ body {
     .right-panel { width: 40%; min-width: 40%; overflow-x: hidden; }
 }
 
-/* Обновленные стили для контейнера тостов */
 .toast-container {
     position: fixed !important;
     bottom: calc(16px + 64px + 8px) !important;
@@ -119,10 +115,6 @@ body {
     pointer-events: none !important;
 }
 
-/* НОВОЕ: Класс для скругления углов у изображений */
 .img-rounded-corners {
-    border-radius: 0.5rem; /* Соответствует rounded-md в Tailwind CSS */
+    border-radius: 0.5rem;
 }
-
-/* УДАЛЕНО: Возможно, здесь была ссылка на vite.svg */
-/* Например: background-image: url('/vite.svg'); */

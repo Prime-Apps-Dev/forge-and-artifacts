@@ -1,12 +1,11 @@
 // src/components/panels/PlayerShopPanel.jsx
 import React from 'react';
 import { definitions } from '../../data/definitions';
-import { formatNumber } from '../../utils/helpers';
-import ShopUpgradeButton from '../ui/ShopUpgradeButton';
-import Tooltip from '../ui/Tooltip';
-import { getItemImageSrc } from '../../utils/helpers'; // Импортируем новую функцию
+import { formatNumber } from '../../utils/formatters';
+import ShopUpgradeButton from '../ui/buttons/ShopUpgradeButton'; // Обновленный путь
+import Tooltip from '../ui/display/Tooltip'; // Обновленный путь
+import { getItemImageSrc } from '../../utils/helpers';
 
-// Компонент для одной полки с новой логикой
 const ShopShelf = ({ shelf, index, gameState, handlers }) => {
     const item = shelf.itemId ? gameState.inventory.find(item => item.uniqueId === shelf.itemId) : null;
     
@@ -14,8 +13,8 @@ const ShopShelf = ({ shelf, index, gameState, handlers }) => {
         return <div className="h-full bg-black/20 border-2 border-dashed border-gray-700 rounded-lg flex items-center justify-center"><p className="text-gray-600 text-sm">Пустая полка</p></div>;
     }
 
-    const itemDef = definitions.items?.[item.itemKey]; // Безопасный доступ
-    if (!itemDef) return null; // Если itemDef не найден, ничего не рендерим
+    const itemDef = definitions.items?.[item.itemKey];
+    if (!itemDef) return null;
 
     const isCustomerWaiting = !!shelf.customer;
     const baseValue = itemDef.components.reduce((sum, c) => sum + c.progress, 0);
@@ -24,7 +23,7 @@ const ShopShelf = ({ shelf, index, gameState, handlers }) => {
     return (
         <div className={`bg-black/40 border rounded-lg p-3 flex flex-col text-center items-center transition-all duration-300 ${isCustomerWaiting ? 'border-yellow-500 shadow-lg shadow-yellow-500/10' : 'border-gray-700'}`}>
             <img
-                src={getItemImageSrc(item.itemKey, 64)} // Используем новую функцию
+                src={getItemImageSrc(item.itemKey, 64)}
                 alt={itemDef.name}
                 className="w-16 h-16 object-contain"
             />
@@ -64,7 +63,6 @@ const ShopShelf = ({ shelf, index, gameState, handlers }) => {
     );
 };
 
-// Основной компонент панели
 const PlayerShopPanel = ({ gameState, handlers }) => {
     const availableShopUpgrades = Object.keys(definitions.shopUpgrades).filter(id => {
         const upgrade = definitions.shopUpgrades[id];
@@ -97,7 +95,7 @@ const PlayerShopPanel = ({ gameState, handlers }) => {
                                 key={id}
                                 upgradeId={id}
                                 gameState={gameState}
-                                onBuyUpgrade={(...args) => handlers.handleBuyUpgrade(id, 'shopUpgrades', ...args)}
+                                onBuyUpgrade={(amount) => handlers.handleBuyUpgrade(id, 'shopUpgrades', amount)}
                                 upgradeType="shopUpgrades"
                             />
                         ))

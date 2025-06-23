@@ -22,49 +22,49 @@ const CreditsModal = ({ isOpen, onClose }) => {
                     <h3 className="font-cinzel text-xl text-yellow-400 mb-2">Музыкальные Треки (Pixabay Content License)</h3>
                     <ul className="list-disc list-inside ml-4 space-y-2 mb-6">
                         <li>
-                            **"Cithare Medieval 1"** by LioN_X (https://pixabay.com/music/acoustic-guitars-cithare-medieval-1-307558/)
+                            "Cithare Medieval 1" by LioN_X (https://pixabay.com/music/acoustic-guitars-cithare-medieval-1-307558/)
                         </li>
                         <li>
-                            **"Fantasy Medieval Ambient"** by Coma-Media (https://pixabay.com/music/ambient-fantasy-medieval-ambient-237371/)
+                            "Fantasy Medieval Ambient" by Coma-Media (https://pixabay.com/music/ambient-fantasy-medieval-ambient-237371/)
                         </li>
                         <li>
-                            **"Fantasy Medieval Mystery Ambient"** by Coma-Media (https://pixabay.com/music/ambient-fantasy-medieval-mystery-ambient-292418/)
+                            "Fantasy Medieval Mystery Ambient" by Coma-Media (https://pixabay.com/music/ambient-fantasy-medieval-mystery-ambient-292418/)
                         </li>
                         <li>
-                            **"Medieval Ambient"** by RomanBelov (https://pixabay.com/music/ambient-medieval-ambient-236809/)
+                            "Medieval Ambient" by RomanBelov (https://pixabay.com/music/ambient-medieval-ambient-236809/)
                         </li>
                         <li>
-                            **"Medieval Background"** by Music_Unlimited (https://pixabay.com/music/medieval-background-196571/)
+                            "Medieval Background" by Music_Unlimited (https://pixabay.com/music/medieval-background-196571/)
                         </li>
                         <li>
-                            **"Medieval Background"** by Coma-Media (https://pixabay.com/music/meditation-medieval-background-351307/)
+                            "Medieval Background" by Coma-Media (https://pixabay.com/music/meditation-medieval-background-351307/)
                         </li>
                         <li>
-                            **"Medieval City Tavern Ambient"** by Music_Unlimited (https://pixabay.com/music/city-medieval-citytavern-ambient-235876/)
+                            "Medieval City Tavern Ambient" by Music_Unlimited (https://pixabay.com/music/city-medieval-citytavern-ambient-235876/)
                         </li>
                         <li>
-                            **"Medieval Track"** by RomanBelov (https://pixabay.com/music/classical-medieval-track-161051/)
+                            "Medieval Track" by RomanBelov (https://pixabay.com/music/classical-medieval-track-161051/)
                         </li>
                         <li>
-                            **"The Ballad of My Sweet Fair Maiden (Medieval style music)"** by Lexin_Music (https://pixabay.com/music/country-folk-the-ballad-of-my-sweet-fair-maiden-medieval-style-music-358306/)
+                            "The Ballad of My Sweet Fair Maiden (Medieval style music)" by Lexin_Music (https://pixabay.com/music/country-folk-the-ballad-of-my-sweet-fair-maiden-medieval-style-music-358306/)
                         </li>
                     </ul>
 
                     <h3 className="font-cinzel text-xl text-yellow-400 mb-2">Иконки и Ассеты</h3>
                     <ul className="list-disc list-inside ml-4 space-y-2 mb-6">
                         <li>
-                            **Material Icons Outlined** by Google (https://fonts.google.com/icons)
+                            Material Icons Outlined by Google (https://fonts.google.com/icons)
                         </li>
                         <li>
-                            **Изображения-заглушки (Placeholders)** от Placehold.co (https://placehold.co)
+                            Изображения-заглушки (Placeholders) от Placehold.co (https://placehold.co)
                         </li>
                     </ul>
 
                     <h3 className="font-cinzel text-xl text-yellow-400 mb-2">Разработка</h3>
                     <ul className="list-disc list-inside ml-4 space-y-2 mb-6">
-                        <li>**Игра разработана:** [Ваше Имя / Название Студии]</li>
-                        <li>**Инструменты:** React, Vite, Tailwind CSS, Tone.js</li>
-                        <li>**Особая благодарность:** Модели Gemini за помощь в разработке.</li>
+                        <li>Игра разработана: [Ваше Имя / Название Студии]</li>
+                        <li>Инструменты: React, Vite, Tailwind CSS, Tone.js</li>
+                        <li>Особая благодарность: Модели Gemini за помощь в разработке.</li>
                     </ul>
 
                     <p className="text-gray-400 italic mt-6">

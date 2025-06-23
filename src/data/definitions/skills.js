@@ -1,10 +1,5 @@
 // src/data/definitions/skills.js
-
 export const skills = {
-    // ===========================================
-    // --- Железный Век (Iron Age) ---
-    // Требует: Искры, Материя, Железная Руда, Железные Слитки
-    // ===========================================
     basicForging: { name: "Основы ковки", description: "Каждый удар по наковальне становится на 1 ед. эффективнее.", icon: "hardware", cost: { matter: 20, sparks: 50 }, requires: [], apply: (state) => { state.progressPerClick += 1; } },
     sturdyPickaxe: { name: "Крепкая кирка", description: "Каждый удар по железной жиле приносит +1 дополнительную руду.", icon: "construction", cost: { matter: 40, ironOre: 20 }, requires: ["basicForging"], apply: (state) => { state.orePerClick += 1; } },
     apprenticeship: { name: "Наставничество", description: "Увеличивает эффективность работы подмастерьев на 10%.", icon: "engineering", cost: { matter: 50, sparks: 200 }, requires: ["basicForging"], apply: (state) => { state.passiveIncomeModifier += 0.1; } },
@@ -22,11 +17,6 @@ export const skills = {
     advancedForging: { name: "Продвинутая ковка", description: "Увеличивает базовый прогресс за удар еще на 2 ед.", icon: "whatshot", cost: { matter: 350, ironIngots: 60 }, requires: ["hammerStrength", "preciseTools", "perfectGrinding"], apply: (state) => { state.progressPerClick += 2; } },
     geologicalSurvey: { name: "Геологоразведка", description: "Изучение старых карт намекает на существование других металлов.", icon: "map", cost: { matter: 200, sparks: 2000 }, requires: ["sharpeningStone", "advancedForging"], apply: (state) => {} },
     sturdyVice: { name: "Прочные Тиски", description: "Позволяет создавать железные тиски, улучшающие работу на верстаке.", icon: "handyman", cost: { matter: 280, ironIngots: 60 }, requires: ["divisionOfLabor", "preciseTools"], apply: (state) => {}, relatedItem: 'ironVice' },
-
-    // ===========================================
-    // --- Медный Век (Copper Age) ---
-    // Требует: Медная Руда, Медные Слитки (помимо Железа, Искр, Материи)
-    // ===========================================
     findCopper: { name: "Поиски Меди", description: "Открывает возможность добывать Медную руду и плавить Медные слитки. После изучения этого навыка вам предстоит выбрать специализацию.", icon: "filter_alt", cost: { matter: 300, sparks: 2500, ironIngots: 100 }, requires: ["geologicalSurvey"], apply: (state) => {} },
     copperProspecting: { name: "Разведка меди", description: "Увеличивает добычу медной руды вручную на 1 ед.", icon: "search", cost: { matter: 350, copperOre: 50 }, requires: ["findCopper"], apply: (state) => { state.orePerClick += 1; } },
     crucibleRefinement: { name: "Очистка в тигле", description: "Снижает стоимость плавки медных слитков на 2 ед. руды.", icon: "thermostat", cost: { matter: 380, copperIngots: 25 }, requires: ["findCopper"], apply: (state) => {} },
@@ -38,35 +28,9 @@ export const skills = {
     guildContracts: { name: "Контракты Гильдии", description: "Ваша репутация растет! Увеличивает шанс получения фракционных и редких заказов.", icon: "request_quote", cost: { matter: 600, sparks: 5000, copperIngots: 80 }, requires: ["tradeRoutes"], apply: (state) => {} },
     masterworkHammers: { name: "Мастерские молоты", description: "Увеличивает бонус критического удара на 5 ед.", icon: "build_circle", cost: { matter: 700, copperIngots: 100 }, requires: ["advancedSmelting", "guildContracts"], apply: (state) => { state.critBonus += 5; } },
     chainWeaving: { name: "Цепевязание", description: "Позволяет создавать прочные медные цепи.", icon: "link", cost: { matter: 420, copperIngots: 40 }, requires: ["findCopper"], apply: (state) => {}, relatedItem: 'copperChain' },
-
-    // ===========================================
-    // --- Бронзовый Век (Bronze Age) ---
-    // Требует: Бронзовые Слитки, Слитки Искростали (помимо предыдущих)
-    // ===========================================
     artOfAlloys: { name: "Искусство Сплавов", description: "Открывает возможность создавать Бронзовые слитки и Слитки Искростали в Плавильне.", icon: "shield", cost: { matter: 800, sparks: 6000, copperIngots: 120 }, requires: ['masterworkHammers'], apply: (state) => {} },
-    
-    // --- НАВЫКИ УПРАВЛЕНИЯ РИСКОМ ---
-    riskAssessment: {
-        name: "Оценка Рисков",
-        description: "Ваш опытный глаз теперь может определить точный шанс неудачи при улучшении предметов.",
-        icon: "policy",
-        cost: { matter: 1200, sparks: 8000, bronzeIngots: 20 },
-        requires: ['masterReforging'],
-        firstPlaythroughLocked: true
-    },
-    steadyHand: {
-        name: "Твердая Рука",
-        description: "Снижает шанс неудачи при перековке, инкрустации и гравировке на 5% за уровень.",
-        icon: "pan_tool",
-        cost: { matter: 1500, bronzeIngots: 30, sparks: 10000 },
-        isMultiLevel: true,
-        maxLevel: 3,
-        baseCost: { matter: 1500, bronzeIngots: 30, sparks: 10000 },
-        costIncrease: 2.0,
-        requires: ['riskAssessment'],
-        firstPlaythroughLocked: true
-    },
-
+    riskAssessment: { name: "Оценка Рисков", description: "Ваш опытный глаз теперь может определить точный шанс неудачи при улучшении предметов.", icon: "policy", cost: { matter: 1200, sparks: 8000, bronzeIngots: 20 }, requires: ['masterReforging'], firstPlaythroughLocked: true },
+    steadyHand: { name: "Твердая Рука", description: "Снижает шанс неудачи при перековке, инкрустации и гравировке на 5% за уровень.", icon: "pan_tool", cost: { matter: 1500, bronzeIngots: 30, sparks: 10000 }, isMultiLevel: true, maxLevel: 3, baseCost: { matter: 1500, bronzeIngots: 30, sparks: 10000 }, costIncrease: 2.0, requires: ['riskAssessment'], firstPlaythroughLocked: true },
     masterReforging: { name: "Мастер Перековки", description: "Открывает возможность улучшать качество созданных предметов с помощью перековки.", icon: "colorize", cost: { matter: 1000, bronzeIngots: 50 }, requires: ['artOfAlloys'], apply: (state) => {}, firstPlaythroughLocked: true },
     blueprint_eliteArmor: { name: "Чертеж: Элитная броня", description: "Открывает рецепты бронзовой кирасы и перчаток.", icon: "menu_book", cost: { matter: 900, sparks: 7000, bronzeIngots: 60 }, requires: ["artOfAlloys"], apply: (state) => {}, requiredSpecialization: 'armorsmith' },
     blueprint_fineWeapons: { name: "Чертеж: Изящное оружие", description: "Открывает рецепты бронзовых мечей и топоров.", icon: 'gite', cost: { matter: 900, sparks: 7000, bronzeIngots: 60}, requires: ["artOfAlloys"], apply: (state) => {}, requiredSpecialization: 'armorer' },
@@ -76,14 +40,7 @@ export const skills = {
     gildingTechniques: { name: "Техники позолоты", description: "Увеличивает награды Искр и Материи еще на 15%.", icon: "attach_money", cost: { matter: 900, bronzeIngots: 40, sparks: 9500 }, requires: ["reinforcedStructure", "ancientKnowledge"], apply: (state) => { state.sparksModifier += 0.15; state.matterModifier += 0.15; } },
     legendaryClients: { name: "Легендарные клиенты", description: "Открывает доступ к самым прибыльным заказам и экзотическим материалам.", icon: "stars", cost: { matter: 1100, sparks: 12000, sparksteelIngots: 10 }, requires: ["expeditionPlanning"], apply: (state) => {} },
     optimizedSmelting: { name: "Оптимизированная плавка", description: "Ускоряет процесс плавки и ковки сплавов на 15%.", icon: "timer", cost: { matter: 1200, bronzeIngots: 90, sparks: 13000 }, requires: ["expeditionPlanning", "gildingTechniques"], apply: (state) => { state.smeltingSpeedModifier += 0.15; } },
-    efficientCrafting: {
-        name: "Эффективное ремесло",
-        description: "Малые заказы теперь дают больше искр. (+20% к искрам от заказов)",
-        icon: "local_gas_station",
-        cost: { matter: 1250, sparks: 15000, sparksteelIngots: 15 },
-        requires: ["gildingTechniques"],
-        apply: (state) => { state.sparksModifier += 0.2; }
-    },
+    efficientCrafting: { name: "Эффективное ремесло", description: "Малые заказы теперь дают больше искр. (+20% к искрам от заказов)", icon: "local_gas_station", cost: { matter: 1250, sparks: 15000, sparksteelIngots: 15 }, requires: ["gildingTechniques"], apply: (state) => { state.sparksModifier += 0.2; } },
     matterAlchemy: { name: "Катализ Материи", description: "Изучение химических реакций, позволяющее извлекать больше чистой материи из побочных продуктов ковки (+20%).", icon: "bubble_chart", cost: { matter: 1300, sparksteelIngots: 20, sparks: 16000 }, requires: ["legendaryClients"], apply: (state) => { state.matterModifier += 0.2; } },
     tradeNegotiation: { name: "Торговые переговоры", description: "Улучшает отношения с торговцами, снижая цены на покупку и увеличивая на продажу на 5%.", icon: "storefront", cost: { matter: 1400, sparks: 18000, sparksteelIngots: 25 }, requires: ["optimizedSmelting"], apply: (state) => {} },
     artisanMentor: { name: "Наставник-Ремесленник", description: "Значительно увеличивает эффективность работы подмастерьев на 20%.", icon: "school", cost: { matter: 1500, sparksteelIngots: 30, sparks: 19000 }, requires: ["efficientCrafting"], apply: (state) => { state.passiveIncomeModifier += 0.2; } },
@@ -97,45 +54,32 @@ export const skills = {
     armorPlating: { name: "Броневая Ковка", description: "Позволяет создавать улучшенные бронепластины из искростали.", icon: "shield", cost: { matter: 1400, sparks: 18000, sparksteelIngots: 25 }, requires: ["efficientCrafting", "blueprint_eliteArmor"], apply: (state) => {}, relatedItem: 'sparksteelArmorPlates' },
     precisionChronometry: { name: "Точное Хронометрирование", description: "Позволяет создавать часы из искростали, требующие высокой точности.", icon: "watch", cost: { matter: 1500, sparks: 20000, sparksteelIngots: 30 }, requires: ["artisanMentor"], apply: (state) => {}, relatedItem: 'sparksteelWatch' },
     jewelersKit: { name: "Набор Ювелирных Инструментов", description: "Позволяет создавать набор ювелирных инструментов из искростали.", icon: "diamond", cost: { matter: 1350, sparks: 17000, sparksteelIngots: 22 }, requires: ["jewelryCrafting", "optimizedSmelting"], apply: (state) => {}, relatedItem: 'sparksteelJewelersKit' },
-
-    // ===========================================
-    // --- Мифриловая Эпоха (Mithril Age) ---
-    // Требует: Мифрил (помимо предыдущих)
-    // ===========================================
     mithrilProspecting: { name: "Поиски мифрила", description: "Позволяет находить и добывать мифриловую руду и плавить ее в слитки.", icon: "ac_unit", cost: { matter: 2000, sparks: 25000, sparksteelIngots: 60 }, requires: ['truePotential'], apply: (state) => {}, firstPlaythroughLocked: true },
     blueprint_mithrilCrafting: { name: "Чертеж: Мифриловые изделия", description: "Открывает рецепты для создания мощных предметов из мифрила.", icon: "shield_moon", cost: { matter: 2500, mithrilIngots: 40, sparks: 30000 }, requires: ['mithrilProspecting'], apply: (state) => {}, firstPlaythroughLocked: true },
     archersMastery: { name: "Мастерство Лучника", description: "Позволяет создавать мифриловые луки.", icon: "sports_martial_arts", cost: { matter: 2800, sparks: 35000, mithrilIngots: 50 }, requires: ["blueprint_mithrilCrafting"], apply: (state) => {}, relatedItem: 'mithrilBow' },
-    // НОВЫЕ НАВЫКИ ДЛЯ МИФРИЛОВОЙ ЭПОХИ (10 штук)
     mithrilStrength: { name: "Сила Мифрила", description: "Увеличивает базовый прогресс за удар на 2 ед.", icon: "fitness_center", cost: { matter: 3000, mithrilIngots: 60, sparks: 40000 }, requires: ["blueprint_mithrilCrafting"], apply: (state) => { state.progressPerClick += 2; } },
     mithrilDefense: { name: "Защита Мифрила", description: "Снижает стоимость всех компонентов на 2 ед.", icon: "shield", cost: { matter: 3200, mithrilIngots: 70, sparks: 42000 }, requires: ["mithrilStrength"], apply: (state) => { state.componentCostReduction += 2; } },
     mithrilSpeed: { name: "Скорость Мифрила", description: "Увеличивает скорость плавки и ковки сплавов на 20%.", icon: "speed", cost: { matter: 3400, mithrilIngots: 80, sparks: 44000 }, requires: ["mithrilDefense"], apply: (state) => { state.smeltingSpeedModifier += 0.2; } },
     mithrilFortune: { name: "Удача Мифрила", description: "Увеличивает шанс критического удара на 7%.", icon: "auto_awesome", cost: { matter: 3600, mithrilIngots: 90, sparks: 46000 }, requires: ["mithrilSpeed"], apply: (state) => { state.critChance += 0.07; } },
     mithrilMagic: { name: "Магия Мифрила", description: "Увеличивает бонус критического удара на 7 ед.", icon: "auto_fix_high", cost: { matter: 3800, mithrilIngots: 100, sparks: 48000 }, requires: ["mithrilFortune"], apply: (state) => { state.critBonus += 7; } },
     mithrilRegeneration: { name: "Регенерация Мифрила", description: "Увеличивает пассивную генерацию материи на 0.05/сек.", icon: "bubble_chart", cost: { matter: 4000, mithrilIngots: 110, sparks: 50000 }, requires: ["mithrilMagic"], apply: (state) => { state.passiveGeneration.matter = (state.passiveGeneration.matter || 0) + 0.05; } },
-    mithrilCritStrike: { name: "Критический Удар Мифрила", description: "Ваши критические удары теперь дают шанс на дополнительный прогресс.", icon: "bolt", cost: { matter: 4200, mithrilIngots: 120, sparks: 52000 }, requires: ["mithrilRegeneration"], apply: (state) => { /* Потребуется изменение логики Crit в applyProgress */ } },
+    mithrilCritStrike: { name: "Критический Удар Мифрила", description: "Ваши критические удары теперь дают шанс на дополнительный прогресс.", icon: "bolt", cost: { matter: 4200, mithrilIngots: 120, sparks: 52000 }, requires: ["mithrilRegeneration"], apply: (state) => { state.critBonusModifier = (state.critBonusModifier || 1.0) + 0.5; } },
     mithrilEvasion: { name: "Уклонение Мифрила", description: "Снижает шанс неудачи при улучшении предметов на 7%.", icon: "policy", cost: { matter: 4400, mithrilIngots: 130, sparks: 54000 }, requires: ["mithrilCritStrike"], apply: (state) => { state.riskModifier = (state.riskModifier || 1.0) * 0.93; } },
     mithrilArmor: { name: "Броня Мифрила", description: "Увеличивает эффективность работы подмастерьев на 25%.", icon: "engineering", cost: { matter: 4600, mithrilIngots: 140, sparks: 56000 }, requires: ["mithrilEvasion"], apply: (state) => { state.passiveIncomeModifier += 0.25; } },
     mithrilAttack: { name: "Атака Мифрила", description: "Увеличивает награду в Искрах и Материи еще на 25%.", icon: "attach_money", cost: { matter: 4800, mithrilIngots: 150, sparks: 58000 }, requires: ["mithrilArmor"], apply: (state) => { state.sparksModifier += 0.25; state.matterModifier += 0.25; } },
-
-
-    // ===========================================
-    // --- Эпоха Легенд (Age of Legends) ---
-    // Требует: Адамантит, Арканит (помимо предыдущих)
-    // ===========================================
     adamantiteMining: { name: "Добыча Адамантита", description: "Техники, позволяющие вскрывать адамантитовые жилы и плавить эту прочнейшую руду.", icon: "diamond", cost: {matter: 5000, sparks: 50000, mithrilIngots: 50 }, requires: ['blueprint_mithrilCrafting'], apply: (state) => {}, firstPlaythroughLocked: true },
     blueprint_adamantiteForging: { name: "Чертеж: Адамантитовая ковка", description: "Древние схемы, описывающие работу с адамантитом для создания почти нерушимой брони.", icon: "castle", cost: {matter: 6000, adamantiteIngots: 20, sparks: 60000 }, requires: ['adamantiteMining'], apply: (state) => {}, firstPlaythroughLocked: true },
     arcaneMetallurgy: { name: "Тайная металлургия", description: "Позволяет сплавлять металлы с чистой материей, создавая магический Арканит.", icon: "auto_fix_high", cost: {matter: 10000, sparks: 100000, adamantiteIngots: 30 }, requires: ['blueprint_adamantiteForging'], apply: (state) => {}, firstPlaythroughLocked: true },
     blueprint_arcaniteMastery: { name: "Чертеж: Арканитовое мастерство", description: "Вершина кузнечного дела. Позволяет создавать легендарные арканитовые предметы.", icon: "star", cost: {matter: 15000, arcaniteIngots: 5, sparks: 150000 }, requires: ['arcaneMetallurgy'], apply: (state) => {}, firstPlaythroughLocked: true },
     adamantiteArmorCrafting: { name: "Адамантитовая Ковка Брони", description: "Позволяет ковать адамантитовые шлемы.", icon: "shield", cost: { matter: 7000, sparks: 70000, adamantiteIngots: 30 }, requires: ["blueprint_adamantiteForging"], apply: (state) => {}, relatedItem: 'adamantiteHelmet' },
     arcaniteJewelry: { name: "Арканитовое Ювелирное Дело", description: "Позволяет создавать арканитовые амулеты.", icon: "diamond", cost: { matter: 16000, sparks: 160000, arcaniteIngots: 8 }, requires: ["blueprint_arcaniteMastery", "jewelryCrafting"], apply: (state) => {}, relatedItem: 'arcaniteAmulet' },
-    // НОВЫЕ НАВЫКИ ДЛЯ ЭПОХИ ЛЕГЕНД (10 штук)
     legendaryStrength: { name: "Сила Легенды", description: "Увеличивает базовый прогресс за удар на 3 ед.", icon: "fitness_center", cost: { matter: 18000, arcaniteIngots: 10, sparks: 180000 }, requires: ["blueprint_arcaniteMastery"], apply: (state) => { state.progressPerClick += 3; } },
     legendaryDefense: { name: "Защита Легенды", description: "Снижает стоимость всех компонентов на 3 ед.", icon: "shield", cost: { matter: 19000, arcaniteIngots: 12, sparks: 190000 }, requires: ["legendaryStrength"], apply: (state) => { state.componentCostReduction += 3; } },
     legendarySpeed: { name: "Скорость Легенды", description: "Увеличивает скорость плавки и ковки сплавов на 30%.", icon: "speed", cost: { matter: 20000, arcaniteIngots: 14, sparks: 200000 }, requires: ["legendaryDefense"], apply: (state) => { state.smeltingSpeedModifier += 0.3; } },
     legendaryFortune: { name: "Удача Легенды", description: "Увеличивает шанс критического удара на 10%.", icon: "auto_awesome", cost: { matter: 21000, arcaniteIngots: 16, sparks: 210000 }, requires: ["legendarySpeed"], apply: (state) => { state.critChance += 0.10; } },
     legendaryMagic: { name: "Магия Легенды", description: "Увеличивает бонус критического удара на 10 ед.", icon: "auto_fix_high", cost: { matter: 22000, arcaniteIngots: 18, sparks: 220000 }, requires: ["legendaryFortune"], apply: (state) => { state.critBonus += 10; } },
     legendaryRegeneration: { name: "Регенерация Легенды", description: "Увеличивает пассивную генерацию материи на 0.1/сек.", icon: "bubble_chart", cost: { matter: 23000, arcaniteIngots: 20, sparks: 230000 }, requires: ["legendaryMagic"], apply: (state) => { state.passiveGeneration.matter = (state.passiveGeneration.matter || 0) + 0.1; } },
-    legendaryCritStrike: { name: "Критический Удар Легенды", description: "Ваши критические удары теперь дают шанс на значительно больший дополнительный прогресс.", icon: "bolt", cost: { matter: 24000, arcaniteIngots: 22, sparks: 240000 }, requires: ["legendaryRegeneration"], apply: (state) => { /* Потребуется изменение логики Crit в applyProgress */ } },
+    legendaryCritStrike: { name: "Критический Удар Легенды", description: "Ваши критические удары теперь дают шанс на значительно больший дополнительный прогресс.", icon: "bolt", cost: { matter: 24000, arcaniteIngots: 22, sparks: 240000 }, requires: ["legendaryRegeneration"], apply: (state) => { state.critBonusModifier = (state.critBonusModifier || 1.0) + 1.0; } },
     legendaryEvasion: { name: "Уклонение Легенды", description: "Снижает шанс неудачи при улучшении предметов на 10%.", icon: "policy", cost: { matter: 25000, arcaniteIngots: 24, sparks: 250000 }, requires: ["legendaryCritStrike"], apply: (state) => { state.riskModifier = (state.riskModifier || 1.0) * 0.90; } },
     legendaryArmor: { name: "Броня Легенды", description: "Увеличивает эффективность работы подмастерьев на 30%.", icon: "engineering", cost: { matter: 26000, arcaniteIngots: 26, sparks: 260000 }, requires: ["legendaryEvasion"], apply: (state) => { state.passiveIncomeModifier += 0.30; } },
     legendaryAttack: { name: "Атака Легенды", description: "Увеличивает награду в Искрах и Материи еще на 30%.", icon: "attach_money", cost: { matter: 27000, arcaniteIngots: 28, sparks: 270000 }, requires: ["legendaryArmor"], apply: (state) => { state.sparksModifier += 0.30; state.matterModifier += 0.30; } },

@@ -1,10 +1,6 @@
 // src/data/definitions/eternalSkills.js
 
 export const eternalSkills = {
-    // ===========================================
-    // --- Ветка: Торговая Империя ---
-    // Фокус: Экономика, торговля, доход, скорость продажи.
-    // ===========================================
     eternal_merchant_insight: {
         id: 'eternal_merchant_insight',
         name: "Вечный Торговый Инсайт",
@@ -30,7 +26,7 @@ export const eternalSkills = {
         icon: "storefront",
         cost: { prestigePoints: 25 },
         requires: ['eternal_logistics'],
-        apply: (state) => { state.marketBuyModifier -= 0.05; } // Пример, если модификатор работает как 1 - X%
+        apply: (state) => { state.marketBuyModifier -= 0.05; }
     },
     eternal_caravans: {
         id: 'eternal_caravans',
@@ -39,13 +35,9 @@ export const eternalSkills = {
         icon: "train",
         cost: { prestigePoints: 40 },
         requires: ['eternal_market_dominance'],
-        apply: (state) => { state.passiveGeneration.sparks += 1; } // Пример, если passiveGeneration может включать искры
+        apply: (state) => { state.passiveGeneration.sparks += 1; }
     },
 
-    // ===========================================
-    // --- Ветка: Технологическое Превосходство ---
-    // Фокус: Эффективность крафта, качество, снижение затрат.
-    // ===========================================
     eternal_precision_crafting: {
         id: 'eternal_precision_crafting',
         name: "Вечная Точность Крафта",
@@ -80,13 +72,9 @@ export const eternalSkills = {
         icon: "brush",
         cost: { prestigePoints: 40 },
         requires: ['eternal_crit_mastery'],
-        apply: (state) => { state.initialGravingLevel = (state.initialGravingLevel || 0) + 1; } // Новое поле для gameState
+        apply: (state) => { state.initialGravingLevel = (state.initialGravingLevel || 0) + 1; }
     },
 
-    // ===========================================
-    // --- Ветка: Геополитика и Влияние ---
-    // Фокус: Репутация, разблокировка регионов, особые квесты.
-    // ===========================================
     eternal_diplomacy: {
         id: 'eternal_diplomacy',
         name: "Вечная Дипломатия",
@@ -107,7 +95,7 @@ export const eternalSkills = {
         icon: "map",
         cost: { prestigePoints: 20 },
         requires: ['eternal_diplomacy'],
-        apply: (state) => { state.regionUnlockCostReduction = (state.regionUnlockCostReduction || 0) + 0.1; } // Новое поле для gameState
+        apply: (state) => { state.regionUnlockCostReduction = (state.regionUnlockCostReduction || 0) + 0.1; }
     },
     eternal_quest_master: {
         id: 'eternal_quest_master',

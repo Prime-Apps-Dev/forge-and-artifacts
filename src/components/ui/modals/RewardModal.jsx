@@ -1,13 +1,12 @@
 // src/components/modals/RewardModal.jsx
 import React from 'react';
-import { formatNumber } from '../../utils/helpers';
-import { definitions } from '../../data/definitions';
-import { getArtifactImageSrc } from '../../utils/helpers';
+import { formatNumber } from '../../../utils/formatters'; // Теперь formatNumber из formatters
+import { definitions } from '../../../data/definitions';
+import { getArtifactImageSrc } from '../../../utils/helpers';
 
 const RewardModal = ({ orderInfo, onClose }) => {
     if (!orderInfo) return null;
 
-    // Проверяем, является ли это наградой за артефакт
     if (orderInfo.isArtifact) {
         const artifact = definitions.greatArtifacts[orderInfo.artifactId];
         const artifactImgSrc = getArtifactImageSrc(orderInfo.artifactId, 80);
@@ -19,7 +18,7 @@ const RewardModal = ({ orderInfo, onClose }) => {
                     </h2>
                     <p className="text-gray-300 mb-4">Вы выковали легендарный предмет:</p>
                     <div className="my-6 flex flex-col items-center gap-4">
-                        <img src={artifactImgSrc} alt={artifact.name} className="w-20 h-20 object-contain img-rounded-corners" /> {/* ИЗМЕНЕНО: Добавлен img-rounded-corners */}
+                        <img src={artifactImgSrc} alt={artifact.name} className="w-20 h-20 object-contain img-rounded-corners" />
                         <h3 className="font-cinzel text-2xl font-bold text-white">{artifact.name}</h3>
                     </div>
                     <div className="bg-black/30 rounded-lg p-4 space-y-2">
@@ -35,7 +34,6 @@ const RewardModal = ({ orderInfo, onClose }) => {
         )
     }
 
-    // Стандартное модальное окно для обычных заказов
     const { item, sparks, matter, tier, reputationChange } = orderInfo;
     const tierInfo = {
         gold: { text: "Золотое время!", color: "text-yellow-400", icon: "emoji_events" },

@@ -1,6 +1,6 @@
 // src/components/modals/SettingsModal.jsx
 import React from 'react';
-import Tooltip from '../ui/Tooltip'; // ИЗМЕНЕНО: Исправлен путь к Tooltip
+import Tooltip from '../ui/display/Tooltip';
 
 const SettingsModal = ({ settings, onClose, onVolumeChange, onResetGame, onOpenCredits }) => (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 modal-backdrop" onClick={onClose}>

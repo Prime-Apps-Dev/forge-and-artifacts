@@ -1,14 +1,14 @@
 // src/data/definitions/achievements.js
+import { IMAGE_PATHS } from '../../constants/paths';
 
 export const achievements = {
-    // --- Главная цель ---
     main_goal: {
         id: 'main_goal',
         category: 'Главная Цель',
         title: 'Эхо Древних Мастеров',
         description: 'Мастер, создавший все Великие Артефакты, получает небывалое вдохновение, увеличивающее базовый доход в Искрах и Материи на 5%.',
         effectName: 'Вдохновение Мастера',
-        icon: '/img/achievements/main_goal.webp',
+        icon: IMAGE_PATHS.ACHIEVEMENTS.MAIN_GOAL,
         check: (state, defs) => {
             const completed = Object.values(state.artifacts).filter(a => a.status === 'completed').length;
             const total = Object.keys(defs.greatArtifacts).length;
@@ -20,14 +20,13 @@ export const achievements = {
             console.log("Достижение 'Создать все Великие Артефакты' применено: +5% к Искрам и Материи.");
         }
     },
-    // --- Цели по фракциям ---
     faction_merchants: {
         id: 'faction_merchants',
         category: 'Репутация',
         title: 'Золотые Нити Доверия',
         description: 'Ваша безупречная репутация с Торговой Гильдией делает вас желанным партнером, ускоряя продажу товаров в вашем магазине на 5%.',
         effectName: 'Признание Гильдии',
-        icon: '/img/achievements/faction_merchants.webp',
+        icon: IMAGE_PATHS.ACHIEVEMENTS.FACTION_MERCHANTS,
         check: (state, defs) => {
             const exaltedThreshold = defs.reputationLevels.find(l => l.id === 'exalted').threshold;
             const currentRep = state.reputation.merchants || 0;
@@ -44,7 +43,7 @@ export const achievements = {
         title: 'Путь Неустрашимого',
         description: 'Ваш авторитет среди Авантюристов вдохновляет вас на более смелые удары, увеличивая прогресс за клик на 2.',
         effectName: 'Смелость Авантюриста',
-        icon: '/img/achievements/faction_adventurers.webp',
+        icon: IMAGE_PATHS.ACHIEVEMENTS.FACTION_ADVENTURERS,
         check: (state, defs) => {
             const exaltedThreshold = defs.reputationLevels.find(l => l.id === 'exalted').threshold;
             const currentRep = state.reputation.adventurers || 0;
@@ -61,7 +60,7 @@ export const achievements = {
         title: 'Корона Благосклонности',
         description: 'Благосклонность Королевского Двора открывает вам доступ к редким материалам, снижая стоимость Материи для навыков на 10%.',
         effectName: 'Благословение Короны',
-        icon: '/img/achievements/faction_court.webp',
+        icon: IMAGE_PATHS.ACHIEVEMENTS.FACTION_COURT,
         check: (state, defs) => {
             const exaltedThreshold = defs.reputationLevels.find(l => l.id === 'exalted').threshold;
             const currentRep = state.reputation.court || 0;
@@ -72,14 +71,13 @@ export const achievements = {
             console.log("Достижение 'Превознесение у Королевского Двора' применено: -10% к стоимости Материи.");
         }
     },
-    // --- Цели мастерства ---
     mastery_skills: {
         id: 'mastery_skills',
         category: 'Мастерство',
         title: 'Энциклопедия Знаний',
         description: 'Изучение всех доступных навыков делает вас настоящим полиматом, значительно повышая эффективность ваших подмастерьев на 10%.',
         effectName: 'Мудрость Полимата',
-        icon: '/img/achievements/mastery_skills.webp',
+        icon: IMAGE_PATHS.ACHIEVEMENTS.MASTERY_SKILLS,
         check: (state, defs) => {
             const completed = Object.keys(state.purchasedSkills).length;
             const availableSkillsInCurrentPlaythrough = Object.values(defs.skills).filter(skill =>
@@ -99,7 +97,7 @@ export const achievements = {
         title: 'Хранитель Легенд',
         description: 'Выполнение всех особых заданий доказывает вашу универсальность и увеличивает награды в Искрах и Материи от квестов на 10%.',
         effectName: 'Заслуги Искателя',
-        icon: '/img/achievements/mastery_quests.webp',
+        icon: IMAGE_PATHS.ACHIEVEMENTS.MASTERY_QUESTS,
         check: (state, defs) => {
             const completed = state.journal.completedQuests.length;
             const total = Object.keys(defs.quests).length;
@@ -116,7 +114,7 @@ export const achievements = {
         title: 'Легион Помощников',
         description: 'Максимальное развитие вашего персонала приводит к открытию новых, более эффективных методов добычи, увеличивая пассивную генерацию всей руды на 0.2/сек.',
         effectName: 'Армия Подмастерьев',
-        icon: '/img/achievements/mastery_personnel.webp',
+        icon: IMAGE_PATHS.ACHIEVEMENTS.MASTERY_PERSONNEL,
         check: (state, defs) => {
             let completed = 0;
             const total = Object.keys(defs.personnel).length;
@@ -142,7 +140,7 @@ export const achievements = {
         title: 'Первые Искры',
         description: 'Вы выковали свой первый предмет. Получите скромное вознаграждение, чтобы продолжить свой путь.',
         effectName: '+500 Искр',
-        icon: '/img/achievements/first_forge.webp',
+        icon: IMAGE_PATHS.ACHIEVEMENTS.FIRST_FORGE,
         check: (state, defs) => {
             return { current: state.totalItemsCrafted, target: 1, isComplete: state.totalItemsCrafted >= 1 };
         },
@@ -157,7 +155,7 @@ export const achievements = {
         title: 'Плавильный Тигель',
         description: 'Вы переплавили 100 слитков. Ваши знания о металлах углубляются, увеличивая скорость плавки на 5%.',
         effectName: '+5% к скорости плавки',
-        icon: '/img/achievements/master_smelter.webp',
+        icon: IMAGE_PATHS.ACHIEVEMENTS.MASTER_SMELTER,
         check: (state, defs) => {
             return { current: state.totalIngotsSmelted || 0, target: 100, isComplete: (state.totalIngotsSmelted || 0) >= 100 };
         },
@@ -172,7 +170,7 @@ export const achievements = {
         title: 'Первый Ученик',
         description: 'Вы наняли своего первого подмастерья. Он приносит вам вдохновение, увеличивая пассивную добычу железной руды на 0.1/сек.',
         effectName: '+0.1/сек Железной Руды',
-        icon: '/img/achievements/first_apprentice_hire.webp',
+        icon: IMAGE_PATHS.ACHIEVEMENTS.FIRST_APPRENTICE_HIRE,
         check: (state, defs) => {
             const hasApprentice = Object.values(defs.personnel).some(p => (state.upgradeLevels[p.id] || 0) > 0);
             return { current: hasApprentice ? 1 : 0, target: 1, isComplete: hasApprentice };
@@ -188,7 +186,7 @@ export const achievements = {
         title: 'Магазинное Пространство',
         description: 'Вы продали 5 предметов в вашем магазине. Ваше дело расширяется, и вы открываете новую торговую полку.',
         effectName: '+1 Торговая Полка',
-        icon: '/img/achievements/shop_expansion.webp',
+        icon: IMAGE_PATHS.ACHIEVEMENTS.SHOP_EXPANSION,
         check: (state, defs) => {
             return { current: state.shopReputation, target: 500, isComplete: state.shopReputation >= 500 };
         },
@@ -206,7 +204,7 @@ export const achievements = {
         title: 'Начинающий Коллекционер',
         description: 'Соберите различные предметы и станьте признанным ценителем редкостей.',
         effectName: '+1% к шансу крит. удара',
-        icon: '/img/achievements/novice_collector.webp',
+        icon: IMAGE_PATHS.ACHIEVEMENTS.NOVICE_COLLECTOR,
         levels: [
             { target: 5, reward: { critChance: 0.01 } },
             { target: 15, reward: { critChance: 0.02 } }
@@ -252,7 +250,7 @@ export const achievements = {
         title: 'Магнат Ресурсов',
         description: 'Накопите огромные запасы сырья.',
         effectName: '+1 к добыче руды за клик',
-        icon: '/img/achievements/resource_tycoon.webp',
+        icon: IMAGE_PATHS.ACHIEVEMENTS.RESOURCE_TYCOON,
         levels: [
             { target: 1000, reward: { orePerClick: 1 } },
             { target: 10000, reward: { orePerClick: 1 } }
@@ -298,7 +296,7 @@ export const achievements = {
         title: 'Мастер Инкрустации',
         description: 'Ваши навыки инкрустации поражают. Каждый инкрустированный предмет улучшает ваши общие способности.',
         effectName: '+5% к бонусной Материи от заказов',
-        icon: '/img/achievements/inlay_master.webp',
+        icon: IMAGE_PATHS.ACHIEVEMENTS.INLAY_MASTER,
         levels: [
             { target: 1, reward: { matterModifier: 0.05 } },
             { target: 5, reward: { matterModifier: 0.05 } }
@@ -344,7 +342,7 @@ export const achievements = {
         title: 'Гравировщик Легенд',
         description: 'Ваша гравировка безупречна. Гравированные предметы приносят вам больше Искр.',
         effectName: '+5% к бонусным Искрам от заказов',
-        icon: '/img/achievements/graving_legend.webp',
+        icon: IMAGE_PATHS.ACHIEVEMENTS.GRAVING_LEGEND,
         levels: [
             { target: 1, reward: { sparksModifier: 0.05 } },
             { target: 5, reward: { sparksModifier: 0.05 } }
@@ -390,7 +388,7 @@ export const achievements = {
         title: 'Кузнец-Ветеран',
         description: 'Вы стали опытным ремесленником, создав множество предметов.',
         effectName: '+1 к прогрессу за клик',
-        icon: '/img/achievements/veteran_crafter.webp',
+        icon: IMAGE_PATHS.ACHIEVEMENTS.VETERAN_CRAFTER,
         levels: [
             { target: 10, reward: { progressPerClick: 1 } },
             { target: 50, reward: { progressPerClick: 1 } }
@@ -436,7 +434,7 @@ export const achievements = {
         title: 'Усердный Плавильщик',
         description: 'Ваши знания о металлах углубляются с каждой переплавленной партией.',
         effectName: '+5% к скорости плавки',
-        icon: '/img/achievements/diligent_smelter.webp',
+        icon: IMAGE_PATHS.ACHIEVEMENTS.DILIGENT_SMELTER,
         levels: [
             { target: 500, reward: { smeltingSpeedModifier: 0.05 } },
             { target: 2500, reward: { smeltingSpeedModifier: 0.05 } }
@@ -482,7 +480,7 @@ export const achievements = {
         title: 'Казначей',
         description: 'Вы накопили значительное состояние, управляя финансами мастерской.',
         effectName: '+5% к Искрам от заказов',
-        icon: '/img/achievements/treasurer.webp',
+        icon: IMAGE_PATHS.ACHIEVEMENTS.TREASURER,
         levels: [
             { target: 10000, reward: { sparksModifier: 0.05 } },
             { target: 100000, reward: { sparksModifier: 0.05 } }
@@ -528,7 +526,7 @@ export const achievements = {
         title: 'Мастер Сущности',
         description: 'Вы научились эффективно использовать Материю, превращая её в новые возможности.',
         effectName: '-5% к стоимости Материи для навыков',
-        icon: '/img/achievements/matter_essence_master.webp',
+        icon: IMAGE_PATHS.ACHIEVEMENTS.MATTER_ESSENCE_MASTER,
         levels: [
             { target: 500, reward: { matterCostReduction: 0.05 } },
             { target: 5000, reward: { matterCostReduction: 0.05 } }
@@ -574,7 +572,7 @@ export const achievements = {
         title: 'Первое Переселение',
         description: 'Вы начали новую жизнь в новом регионе, сохранив накопленные знания.',
         effectName: '+1 Осколок Памяти за каждый уровень Мастерства',
-        icon: '/img/achievements/first_resettlement.webp',
+        icon: IMAGE_PATHS.ACHIEVEMENTS.FIRST_RESETTLEMENT,
         check: (state, defs) => {
             return { current: state.isFirstPlaythrough ? 0 : 1, target: 1, isComplete: !state.isFirstPlaythrough };
         },
@@ -588,7 +586,7 @@ export const achievements = {
         title: 'Исследователь Мира',
         description: 'Вы открыли новые земли и расширили свои горизонты.',
         effectName: '-10% к стоимости разблокировки регионов',
-        icon: '/img/achievements/world_explorer.webp',
+        icon: IMAGE_PATHS.ACHIEVEMENTS.WORLD_EXPLORER,
         levels: [
             { target: 2, reward: { regionUnlockCostReduction: 0.10 } },
             { target: 3, reward: { regionUnlockCostReduction: 0.10 } }
@@ -634,7 +632,7 @@ export const achievements = {
         title: 'Высшее Мастерство',
         description: 'Вы достигли вершин своего ремесла, значительно превзойдя обычных кузнецов.',
         effectName: '+10% к XP за все действия',
-        icon: '/img/achievements/peak_mastery.webp',
+        icon: IMAGE_PATHS.ACHIEVEMENTS.PEAK_MASTERY,
         levels: [
             { target: 5, reward: { masteryXpModifier: 0.10 } },
             { target: 10, reward: { masteryXpModifier: 0.10 } }
@@ -679,7 +677,7 @@ export const achievements = {
         title: 'Усиленный Кликер',
         description: 'Ваши руки стали невероятно быстрыми и сильными.',
         effectName: '+1 к прогрессу за клик',
-        icon: '/img/achievements/enhanced_clicker.webp',
+        icon: IMAGE_PATHS.ACHIEVEMENTS.ENHANCED_CLICKER,
         levels: [
             { target: 10000, reward: { progressPerClick: 1 } },
             { target: 100000, reward: { progressPerClick: 1 } }
@@ -725,7 +723,7 @@ export const achievements = {
         title: 'Начало Пути',
         description: 'Вы выбрали свою специализацию, определив свой уникальный путь мастера.',
         effectName: '+5% к эффективности подмастерьев',
-        icon: '/img/achievements/pathfinders_first_step.webp',
+        icon: IMAGE_PATHS.ACHIEVEMENTS.PATHFINDERS_FIRST_STEP,
         check: (state, defs) => {
             return { current: state.specialization ? 1 : 0, target: 1, isComplete: !!state.specialization };
         },
@@ -740,7 +738,7 @@ export const achievements = {
         title: 'Королевский Кузнец',
         description: 'Ваше мастерство признано самим Королевским Двором.',
         effectName: '+5% к репутации с Двором',
-        icon: '/img/achievements/royal_forger.webp',
+        icon: IMAGE_PATHS.ACHIEVEMENTS.ROYAL_FORGER,
         check: (state, defs) => {
             return { current: state.totalCourtOrdersCompleted || 0, target: 5, isComplete: (state.totalCourtOrdersCompleted || 0) >= 5 };
         },
@@ -755,7 +753,7 @@ export const achievements = {
         title: 'Тайный Агент',
         description: 'Вы успешно справлялись с опасными и скрытными заказами.',
         effectName: '-5% к риску перековки/инкрустации/гравировки',
-        icon: '/img/achievements/secret_agent.webp',
+        icon: IMAGE_PATHS.ACHIEVEMENTS.SECRET_AGENT,
         check: (state, defs) => {
             return { current: state.totalRiskyOrdersCompleted || 0, target: 15, isComplete: (state.totalRiskyOrdersCompleted || 0) >= 15 };
         },
@@ -770,7 +768,7 @@ export const achievements = {
         title: 'Картограф Авантюриста',
         description: 'Вы снабжаете Лигу Авантюристов самыми точными картами.',
         effectName: '-10% к стоимости Карт Вылазок',
-        icon: '/img/achievements/adventurers_cartographer.webp',
+        icon: IMAGE_PATHS.ACHIEVEMENTS.ADVENTURERS_CARTOGRAPHER,
         check: (state, defs) => {
             return { current: state.totalExpeditionMapsBought || 0, target: 5, isComplete: (state.totalExpeditionMapsBought || 0) >= 5 };
         },

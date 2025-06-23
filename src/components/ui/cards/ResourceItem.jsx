@@ -1,9 +1,8 @@
 // src/components/ui/ResourceItem.jsx
 import React from 'react';
-import SvgIcon from './SvgIcon'; // Возможно, понадобится, если SvgIcon где-то ещё используется
-import { formatNumber } from '../../utils/helpers';
+import SvgIcon from '../display/SvgIcon';
+import { formatNumber } from '../../../utils/formatters';
 
-// ResourceItem теперь принимает iconType ('icon' или 'img') и iconSrc (для img)
 const ResourceItem = React.memo(({ icon, name, initialValue, resourceKey, iconClass, iconType = 'icon', iconSrc }) => {
     return (
         <li className="bg-gray-800/50 border border-gray-700 rounded-md p-2 flex items-center justify-between">

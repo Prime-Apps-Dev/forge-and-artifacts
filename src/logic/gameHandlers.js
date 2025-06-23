@@ -1,23 +1,19 @@
 import { definitions } from '../data/definitions';
 import { audioController } from '../utils/audioController';
 
-// handleFreeCraftCompletion, handleCompleteReforge, handleCompleteInlay, handleCompleteGraving, applyProgress
-// теперь будут переданы в эту функцию из useCraftingActions (временно из useGameState),
-// так как они являются вспомогательными для handleStrikeAnvil и завершения проектов.
-
 export function createGameHandlers({
     updateState,
     showToast,
     handleOrderCompletion,
-    checkForNewQuests, // Передаем для использования в handleOrderCompletion
+    checkForNewQuests,
     setIsWorking,
     workTimeoutRef,
     setCompletedOrderInfo,
-    handleFreeCraftCompletion, // Вспомогательная функция для завершения FreeCraft
-    handleCompleteReforge, // Вспомогательная функция для завершения перековки
-    handleCompleteInlay, // Вспомогательная функция для завершения инкрустации
-    handleCompleteGraving, // Вспомогательная функция для завершения гравировки
-    applyProgress // Вспомогательная функция для применения прогресса
+    handleFreeCraftCompletion,
+    handleCompleteReforge,
+    handleCompleteInlay,
+    handleCompleteGraving,
+    applyProgress
 }) {
     const triggerWorkAnimation = () => {
         setIsWorking(true);
@@ -100,7 +96,7 @@ export function createGameHandlers({
                 return state;
             });
         },
-        handleCloseRewardModal: () => setCompletedOrderInfo(null), // Эта функция также может остаться здесь
-        applyProgress // applyProgress теперь возвращается из createGameHandlers
+        handleCloseRewardModal: () => setCompletedOrderInfo(null),
+        applyProgress
     };
 }

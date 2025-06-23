@@ -1,7 +1,7 @@
 // src/components/ui/AchievementCard.jsx
 import React, { memo } from 'react';
-import { formatNumber } from '../../utils/helpers';
-import Tooltip from './Tooltip';
+import { formatNumber } from '../../../utils/formatters';
+import Tooltip from '../display/Tooltip';
 
 const AchievementCard = memo(({ achievement, status, index }) => {
     const progressPercentage = status.target > 0 ? (status.current / status.target) * 100 : 0;
@@ -36,7 +36,7 @@ const AchievementCard = memo(({ achievement, status, index }) => {
                         src={imgSrc || defaultImgSrc}
                         alt={achievement.title}
                         className={`
-                            object-cover w-full h-full img-rounded-corners /* ИЗМЕНЕНО: Добавлен img-rounded-corners */
+                            object-cover w-full h-full img-rounded-corners
                             ${isComplete ? 'grayscale-0' : 'grayscale'}
                             transition-all duration-300
                         `}

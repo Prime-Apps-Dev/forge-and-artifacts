@@ -1,40 +1,45 @@
 // src/logic/gameLogic.js
-import { definitions } from "../data/definitions.js"; //
-import { audioController } from '../utils/audioController.js'; //
-import { handleCompleteMission, handleOrderCompletion } from './gameCompletions.js'; //
-import { formatNumber } from '../utils/helpers.js'; //
-import { recalculateAllModifiers } from '../utils/gameStateUtils.js'; //
+import { definitions } from "../data/definitions";
+import { audioController } from '../utils/audioController';
+import { handleCompleteMission, handleOrderCompletion, handleSaleCompletion } from './gameCompletions';
+import { formatNumber } from '../utils/formatters';
+import { recalculateAllModifiers } from '../utils/gameStateUtils';
+import { gameConfig as GAME_CONFIG } from '../constants/gameConfig.js';
 
 let achievementCheckTimer = 0;
-// Удалены apprenticeToastTimer, APPRENTICE_TOAST_INTERVAL, APPRENTICE_ORDER_GENERATION_INTERVAL, apprenticeOrderGenerationTimer
 
 export function startGameLoop(updateState, handlers, showToast, showAchievementRewardModal) {
     return setInterval(() => {
         updateState(state => {
             const deltaTime = 0.1;
             const modifier = state.passiveIncomeModifier;
-            const currentRegion = definitions.regions[state.currentRegion]; //
+            const currentRegion = definitions.regions[state.currentRegion];
 
             if (state.passiveGeneration.ironOre > 0) {
                 const regionMod = currentRegion?.modifiers?.miningSpeed?.ironOre || 1.0;
                 state.ironOre += state.passiveGeneration.ironOre * modifier * regionMod * deltaTime;
             }
-            if (state.purchasedSkills.findCopper && state.passiveGeneration.copperOre > 0) { //
+            if (state.purchasedSkills.findCopper && state.passiveGeneration.copperOre > 0) {
                 const regionMod = currentRegion?.modifiers?.miningSpeed?.copperOre || 1.0;
                 state.copperOre += state.passiveGeneration.copperOre * modifier * regionMod * deltaTime;
             }
-            if (state.passiveGeneration.ironIngots > 0) {
-                const smeltAmount = state.passiveGeneration.ironIngots * modifier * deltaTime;
-                const requiredOre = smeltAmount * 10;
-                if (state.ironOre >= requiredOre) {
-                    state.ironOre -= requiredOre;
-                    state.ironIngots += smeltAmount;
-                    state.totalIngotsSmelted = (state.totalIngotsSmelted || 0) + smeltAmount;
-                }
+            if (state.passiveGeneration.mithrilOre > 0) {
+                const regionMod = currentRegion?.modifiers?.miningSpeed?.mithrilOre || 1.0;
+                state.mithrilOre += state.passiveGeneration.mithrilOre * modifier * regionMod * deltaTime;
+            }
+            if (state.passiveGeneration.adamantiteOre > 0) {
+                const regionMod = currentRegion?.modifiers?.miningSpeed?.adamantiteOre || 1.0;
+                state.adamantiteOre += state.passiveGeneration.adamantiteOre * modifier * regionMod * deltaTime;
+            }
+            if (state.passiveGeneration.sparks > 0) {
+                state.sparks += state.passiveGeneration.sparks * modifier * deltaTime;
+            }
+            if (state.passiveGeneration.matter > 0) {
+                state.matter += state.passiveGeneration.matter * modifier * deltaTime;
             }
 
             if (state.smeltingProcess) {
-                const recipe = definitions.recipes[state.smeltingProcess.recipeId]; //
+                const recipe = definitions.recipes[state.smeltingProcess.recipeId];
                 state.smeltingProcess.progress += deltaTime * 10 * state.smeltingSpeedModifier;
                 if (state.smeltingProcess.progress >= recipe.requiredProgress) {
                     const outputResource = Object.keys(recipe.output)[0];
@@ -46,23 +51,21 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                 }
             }
 
-            // --- УДАЛЕНА ВСЯ ЛОГИКА ПОДМАСТЕРЬЯ-КУЗНЕЦА ---
-
-            // Логика мини-игры и пассивного крафта (для игрока)
             const activeProjectPlayer = state.activeOrder || state.activeFreeCraft || state.currentEpicOrder || state.activeReforge || state.activeInlay || state.activeGraving;
-            
+
             if (activeProjectPlayer?.minigameState?.active) {
-                const component = definitions.items[activeProjectPlayer.itemKey].components.find(c => c.id === activeProjectPlayer.activeComponentId); //
-                const speed = component.minigame?.barSpeed || 1.0;
+                const component = definitions.items[activeProjectPlayer.itemKey]?.components?.find(c => c.id === activeProjectPlayer.activeComponentId);
+                const speed = component?.minigame?.barSpeed || 1.0;
                 let newPos = activeProjectPlayer.minigameState.position + (activeProjectPlayer.minigameState.direction * speed);
                 if (newPos >= 100) { newPos = 100; activeProjectPlayer.minigameState.direction = -1; }
                 else if (newPos <= 0) { newPos = 0; activeProjectPlayer.minigameState.direction = 1; }
                 activeProjectPlayer.minigameState.position = newPos;
-            } else if (activeProjectPlayer) {
-                     handlers.applyProgress(state, state.progressPerClick * deltaTime);
             }
+            // УДАЛЕНА ЛОГИКА АВТОМАТИЧЕСКОГО ЗАПОЛНЕНИЯ ПРОГРЕССА
+            // else if (activeProjectPlayer && !state.activeSale) {
+            //     handlers.applyProgress(state, state.progressPerClick * deltaTime);
+            // }
 
-            // ... (остальные циклы: миссии, инвестиции, магазин, очередь заказов)
             if (state.activeMissions && state.activeMissions.length > 0) {
                 const now = Date.now();
                 const completedMissionIds = [];
@@ -72,12 +75,12 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                     }
                 });
                 completedMissionIds.forEach(missionId => {
-                    handleCompleteMission(state, missionId, showToast); //
+                    handleCompleteMission(state, missionId, showToast);
                 });
             }
             if (state.investments.merchants) {
-                state.specialItems.gem = (state.specialItems.gem || 0) + (1 / 60) * deltaTime;
-                if (Math.random() < (0.005 / 60) * deltaTime * 100) {
+                state.specialItems.gem = (state.specialItems.gem || 0) + (GAME_CONFIG.PASSIVE_GEM_GENERATION_PER_MINUTE / 60) * deltaTime;
+                if (Math.random() < (GAME_CONFIG.PASSIVE_ARTIFACT_COMPONENT_CHANCE_PER_MINUTE / 60) * deltaTime * 100) {
                     state.specialItems.material_adamantFrame = (state.specialItems.material_adamantFrame || 0) + 1;
                 }
             }
@@ -92,7 +95,7 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                 } else if (shelf.itemId) {
                     const arrivalChancePerTick = 0.005 * state.playerShopSalesSpeedModifier;
                     if (Math.random() < arrivalChancePerTick) {
-                        const client = definitions.clients[Math.floor(Math.random() * definitions.clients.length)]; //
+                        const client = definitions.clients[Math.floor(Math.random() * definitions.clients.length)];
                         shelf.customer = client;
                         shelf.saleTimer = 15 + Math.random() * 15;
                         showToast(`Новый клиент интересуется товаром на полке #${index + 1}!`, "info");
@@ -100,7 +103,7 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                 }
             });
             const now = Date.now();
-            const orderTTL = definitions.gameConfig?.orderTTL || 90; //
+            const orderTTL = definitions.gameConfig.orderTTL;
             state.orderQueue = state.orderQueue.filter(order => {
                 if (!order.spawnTime) {
                     order.spawnTime = now;
@@ -109,63 +112,35 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                     order.timeToLive = Math.max(0, orderTTL - Math.floor((now - order.spawnTime) / 1000));
                 }
                 if (order.timeToLive <= 0) {
-                    showToast(`Заказ от "${order.client.name}" на "${definitions.items[order.itemKey].name}" истек и исчез из очереди.`, 'error'); //
+                    showToast(`Заказ от "${order.client.name}" на "${definitions.items[order.itemKey].name}" истек и исчез из очереди.`, 'error');
                     return false;
                 }
                 return true;
             });
 
-            // === ЛОГИКА ПРОВЕРКИ И ПРИМЕНЕНИЯ ДОСТИЖЕНИЙ (ОДИН РАЗ) ===
             achievementCheckTimer += deltaTime;
-            if (achievementCheckTimer >= 1) { // Проверяем достижения каждую секунду
+            if (achievementCheckTimer >= 1) {
                 achievementCheckTimer = 0;
-                Object.values(definitions.achievements).forEach(achievementDef => { //
-                    const achievementStatus = achievementDef.check(state, definitions); //
-                    
-                    // Если достижение одноуровневое
+                Object.values(definitions.achievements).forEach(achievementDef => {
+                    const achievementStatus = achievementDef.check(state, definitions);
+
                     if (!achievementDef.levels) {
                         if (achievementStatus.isComplete && !state.completedAchievements.includes(achievementDef.id)) {
-                            state.completedAchievements.push(achievementDef.id); // Помечаем как выполненное
+                            state.completedAchievements.push(achievementDef.id);
                             if (!state.appliedAchievementRewards.includes(achievementDef.id)) {
-                                achievementDef.apply(state); //
-                                state.appliedAchievementRewards.push(achievementDef.id); // Помечаем как примененное
+                                achievementDef.apply(state);
+                                state.appliedAchievementRewards.push(achievementDef.id);
                                 showToast(`Достижение выполнено: "${achievementDef.title}"!`, 'levelup');
-                                audioController.play('levelup', 'G6', '2n'); //
+                                audioController.play('levelup', 'G6', '2n');
                                 showAchievementRewardModal(achievementDef);
-                                recalculateAllModifiers(state); //
+                                recalculateAllModifiers(state);
                             }
                         }
-                    } 
-                    // Если достижение многоуровневое
-                    else {
-                        const currentAchievedLevel = achievementStatus.currentLevel; // Это может быть 1, 2, ... или 0
-                        
-                        if (currentAchievedLevel > 0) { // Если хоть какой-то уровень достигнут
-                            achievementDef.levels.forEach((levelData, index) => { //
+                    } else {
+                        if (achievementStatus.currentLevel > 0) {
+                            achievementDef.levels.forEach((levelData, index) => {
                                 const levelId = `${achievementDef.id}_level_${index + 1}`;
                                 if (achievementStatus.current >= levelData.target && !state.appliedAchievementRewards.includes(levelId)) {
-                                    // Применяем только награду для этого конкретного уровня
-                                    // Важно: здесь мы применяем эффект напрямую, а не через achievementDef.apply
-                                    // так как achievementDef.apply для многоуровневых достижений уже обрабатывает все уровни.
-                                    // Если же achievementDef.apply ожидает только один уровень, то логику надо скорректировать.
-                                    // Текущая achievementDef.apply для многоуровневых итерирует по всем уровням и применяет их.
-                                    // Поэтому мы просто вызовем ее и пометим примененные уровни.
-                                    // ЭТОТ МОМЕНТ НУЖНО ПРОРАБОТАТЬ ТЩАТЕЛЬНЕЕ!
-
-                                    // ДЛЯ ТЕКУЩЕЙ СТРУКТУРЫ:
-                                    // achievementDef.apply(state) уже итерирует по уровням и применяет их.
-                                    // Нам просто нужно гарантировать, что этот вызов происходит,
-                                    // когда новый уровень достигнут и НЕ БЫЛ ПРИМЕНЕН.
-                                    // Поэтому логика ниже будет более общей:
-
-                                    // Проверяем, есть ли уже полная отметка о завершении достижения
-                                    if (!state.completedAchievements.includes(achievementDef.id)) {
-                                        state.completedAchievements.push(achievementDef.id); // Помечаем достижение как выполненное
-                                    }
-
-                                    // Применяем эффекты конкретного уровня и помечаем его как примененный
-                                    // Это часть, которую я должен был сделать более детально в apply.
-                                    // Для упрощения: мы будем использовать reward-объект из уровня для применения.
                                     const reward = levelData.reward;
                                     if (reward.sparksModifier) state.sparksModifier += reward.sparksModifier;
                                     if (reward.matterModifier) state.matterModifier += reward.matterModifier;
@@ -182,18 +157,22 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                                     if (reward.riskModifier) state.riskModifier = (state.riskModifier || 1.0) * (1 - reward.riskModifier);
                                     if (reward.expeditionMapCostReduction) state.expeditionMapCostModifier = (state.expeditionMapCostModifier || 1.0) * (1 - reward.expeditionMapCostReduction);
                                     if (reward.passiveIncomeModifier) state.passiveIncomeModifier = (state.passiveIncomeModifier || 1.0) + reward.passiveIncomeModifier;
-                                    if (reward.masteryXpModifier) state.masteryXpModifier = (state.masteryXpModifier || 1.0) + level.reward.masteryXpModifier;
+                                    if (reward.masteryXpModifier) state.masteryXpModifier = (state.masteryXpModifier || 1.0) + levelData.reward.masteryXpModifier;
                                     if (reward.regionUnlockCostReduction) state.regionUnlockCostReduction = (state.regionUnlockCostReduction || 0) + reward.regionUnlockCostReduction;
                                     if (reward.questRewardModifier) state.questRewardModifier = (state.questRewardModifier || 1.0) + reward.questRewardModifier;
 
-                                    if (reward.item) { /* сложная логика, пока пропускаем, если нет в ТЗ */ }
-                                    if (reward.shopShelf) { /* сложная логика, пока пропускаем, если нет в ТЗ */ }
-                                    
-                                    state.appliedAchievementRewards.push(levelId); // Помечаем этот конкретный уровень как примененный
+                                    if (reward.item) {
+                                        state.specialItems[reward.item.id] = (state.specialItems[reward.item.id] || 0) + reward.item.amount;
+                                    }
+                                    if (reward.shopShelf) {
+                                        state.shopShelves.push({ id: `shelf_${state.shopShelves.length}`, itemId: null, customer: null, saleProgress: 0, saleTimer: 0 });
+                                    }
+
+                                    state.appliedAchievementRewards.push(levelId);
                                     showToast(`Достижение выполнено: "${achievementDef.title}" (Ур. ${index + 1})!`, 'levelup');
-                                    audioController.play('levelup', 'G6', '2n'); //
+                                    audioController.play('levelup', 'G6', '2n');
                                     showAchievementRewardModal(achievementDef);
-                                    recalculateAllModifiers(state); //
+                                    recalculateAllModifiers(state);
                                 }
                             });
                         }
@@ -210,9 +189,9 @@ export function startMarketLoop(updateState, showToast) {
     return setInterval(() => {
         updateState(state => {
             if (state.market.nextEventIn <= 0) {
-                const eventIds = Object.keys(definitions.worldEvents); //
+                const eventIds = Object.keys(definitions.worldEvents);
                 const randomEventId = eventIds[Math.floor(Math.random() * eventIds.length)];
-                const newEvent = definitions.worldEvents[randomEventId]; //
+                const newEvent = definitions.worldEvents[randomEventId];
                 state.market.worldEvent = {
                     message: newEvent.message,
                     priceModifiers: newEvent.effects || {},

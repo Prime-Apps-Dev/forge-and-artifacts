@@ -2,9 +2,9 @@
 
 import React, { useRef } from 'react';
 import { definitions } from '../../data/definitions';
-import { formatNumber } from '../../utils/helpers'; // Для отображения prestigePoints
-import Tooltip from '../ui/Tooltip'; // Предполагаем, что Tooltip уже есть
-import EternalSkillNode from '../ui/EternalSkillNode'; // Будет создан далее
+import { formatNumber } from '../../utils/formatters';
+import Tooltip from '../ui/display/Tooltip'; // Обновленный путь
+import EternalSkillNode from '../ui/cards/EternalSkillNode'; // Обновленный путь
 
 const EternalSkillsView = ({ gameState, handlers }) => {
     const scrollContainerRef = useRef(null);
@@ -16,7 +16,6 @@ const EternalSkillsView = ({ gameState, handlers }) => {
     );
     const Connector = () => <div className="h-8 w-px bg-gray-600 my-2"></div>;
 
-    // Структура дерева вечных навыков
     const eternalSkillTreeStructure = [
         {
             branch: "Торговая Империя",
@@ -46,12 +45,10 @@ const EternalSkillsView = ({ gameState, handlers }) => {
         }
     ];
 
-    // Функция для рендеринга ряда навыков, включая соединители
     const renderSkillRow = (row, previousRow = null) => {
         return (
             <div key={row.id} className="skills-row flex justify-center gap-12 flex-wrap">
                 {row.skills.map((skillId, index) => {
-                    // Логика разблокировки EternalSkillNode будет реализована внутри EternalSkillNode.jsx
                     return (
                         <EternalSkillNode
                             key={skillId}
@@ -66,7 +63,7 @@ const EternalSkillsView = ({ gameState, handlers }) => {
     };
 
 
-    let previousRow = null; // Для отслеживания предыдущего ряда
+    let previousRow = null;
 
     return (
         <div ref={scrollContainerRef} className="skills-tree-container relative h-full w-full overflow-y-auto p-4">
@@ -87,20 +84,19 @@ const EternalSkillsView = ({ gameState, handlers }) => {
                     <React.Fragment key={branchGroup.branch}>
                         <BranchHeader title={branchGroup.branch} />
                         {branchGroup.rows.map((row, rowIndex) => {
-                            const renderedRow = renderSkillRow(row, previousRow); // previousRow здесь пока не используется для логики, а только для рендера соединителей
-                            previousRow = row; // Обновляем previousRow для следующей итерации
+                            const renderedRow = renderSkillRow(row, previousRow);
+                            previousRow = row;
                             return (
                                 <React.Fragment key={row.id}>
                                     {renderedRow}
-                                    {rowIndex < branchGroup.rows.length - 1 && <Connector />} {/* Разделитель между рядами в одной ветке */}
+                                    {rowIndex < branchGroup.rows.length - 1 && <Connector />}
                                 </React.Fragment>
                             );
                         })}
-                        {/* Разделитель между ветками, если это не последняя ветка */}
                         {branchGroup.branch !== eternalSkillTreeStructure[eternalSkillTreeStructure.length - 1].branch && <Connector />}
                     </React.Fragment>
                 ))}
-                <div className="h-20 w-full"></div> {/* Отступ снизу для прокрутки */}
+                <div className="h-20 w-full"></div>
             </div>
         </div>
     );

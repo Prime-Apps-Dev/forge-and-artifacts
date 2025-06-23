@@ -1,6 +1,6 @@
 import React from 'react';
-import { definitions } from '../../data/definitions';
-import InventoryItemCard from './InventoryItemCard';
+import { definitions } from '../../../data/definitions';
+import InventoryItemCard from '../cards/InventoryItemCard';
 
 const InventoryModal = ({ isOpen, onClose, gameState, handlers }) => {
     if (!isOpen) return null;

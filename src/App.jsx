@@ -2,12 +2,11 @@
 import React, { useState, memo, useRef, useEffect } from 'react';
 import { useGameState } from './hooks/useGameState';
 import { audioController } from './utils/audioController';
-import { definitions } from './data/definitions';
 
 // Импорты компонентов
-import RewardModal from './components/ui/RewardModal';
-import Toast from './components/ui/Toast';
-import InventoryModal from './components/ui/InventoryModal';
+import RewardModal from './components/ui/modals/RewardModal';
+import Toast from './components/ui/display/Toast';
+import InventoryModal from './components/ui/modals/InventoryModal'; // Это модальное окно остаётся в modals
 import ForgeView from './components/views/ForgeView';
 import MineView from './components/views/MineView';
 import SmelterView from './components/views/SmelterView';
@@ -25,13 +24,13 @@ import BottomBar from './components/layout/BottomBar';
 import ProfileModal from './components/modals/ProfileModal';
 import InfoModal from './components/modals/InfoModal';
 import SettingsModal from './components/modals/SettingsModal';
-import SpecializationModal from './components/ui/SpecializationModal';
+import SpecializationModal from './components/ui/modals/SpecializationModal';
 import WorldMapModal from './components/modals/WorldMapModal';
 import EternalSkillsView from './components/views/EternalSkillsView';
 import AudioVisualizer from './components/effects/AudioVisualizer';
 import AchievementRewardModal from './components/modals/AchievementRewardModal';
 import AvatarSelectionModal from './components/modals/AvatarSelectionModal';
-import CreditsModal from './components/modals/CreditsModal'; // <-- ОБЯЗАТЕЛЬНЫЙ ИМПОРТ
+import CreditsModal from './components/modals/CreditsModal';
 
 const LeftPanelButton = memo(({ viewId, icon, label, onClick, activeView }) => (
     <button onClick={() => onClick(viewId)} className={`interactive-element h-full flex-shrink-0 min-w-max px-4 font-cinzel text-base flex items-center justify-center gap-2 border-b-4 ${activeView === viewId ? 'text-orange-400 border-orange-400 bg-black/20' : 'text-gray-500 border-transparent hover:text-orange-400/70'}`}>
@@ -56,7 +55,7 @@ export default function App() {
         isAchievementRewardModalOpen,
         achievementToDisplay,
         isAvatarSelectionModalOpen,
-        isCreditsModalOpen, // <-- СОСТОЯНИЕ ДЛЯ CREDITSMODAL
+        isCreditsModalOpen,
         handlers,
         removeToast,
         activeInfoModal,
@@ -111,7 +110,6 @@ export default function App() {
             <AudioVisualizer />
 
             {isSpecializationModalOpen && <SpecializationModal onSelectSpecialization={handlers.handleSelectSpecialization} />}
-            {/* Передаем onOpenCredits в SettingsModal */}
             {isSettingsOpen && <SettingsModal settings={displayedGameState.settings} onClose={() => setIsSettingsOpen(false)} onVolumeChange={handlers.handleVolumeChange} onResetGame={handlers.handleResetGame} onOpenCredits={handlers.handleOpenCreditsModal} />}
             {isInventoryOpen && <InventoryModal isOpen={isInventoryOpen} onClose={() => setIsInventoryOpen(false)} gameState={displayedGameState} handlers={handlers} />}
             {isProfileModalOpen && <ProfileModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} gameState={displayedGameState} handlers={handlers} />}
@@ -151,7 +149,6 @@ export default function App() {
                     onSelectAvatar={handlers.handleSelectAvatar}
                 />
             )}
-            {/* РЕНДЕРИНГ CREDITS MODAL */}
             {isCreditsModalOpen && (
                 <CreditsModal
                     isOpen={isCreditsModalOpen}

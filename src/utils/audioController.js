@@ -1,19 +1,7 @@
 // src/utils/audioController.js
 
 import * as Tone from 'tone';
-
-// ИЗМЕНЕНО: Исправлены пути к музыкальным трекам - теперь они абсолютные от корня сайта, БЕЗ 'public/'
-const musicTracks = [
-    '/audio/cithare-medieval-1-307558.mp3',
-    '/audio/fantasy-medieval-ambient-237371.mp3',
-    '/audio/fantasy-medieval-mystery-ambient-292418.mp3',
-    '/audio/medieval-ambient-236809.mp3',
-    '/audio/medieval-background-196571.mp3',
-    '/audio/medieval-background-351307.mp3',
-    '/audio/medieval-citytavern-ambient-235876.mp3',
-    '/audio/medieval-track-161051.mp3',
-    '/audio/the-ballad-of-my-sweet-fair-maiden-medieval-style-music-358306.mp3',
-];
+import { AUDIO_PATHS } from '../constants/paths';
 
 export const audioController = {
     isInitialized: false,
@@ -61,21 +49,21 @@ export const audioController = {
     },
 
     loadAndPlayNextTrack() {
-        if (musicTracks.length === 0) {
+        if (AUDIO_PATHS.MUSIC.length === 0) {
             console.warn("No music tracks defined.");
             return;
         }
 
         let nextTrackIndex;
-        if (musicTracks.length > 1) {
+        if (AUDIO_PATHS.MUSIC.length > 1) {
             do {
-                nextTrackIndex = Math.floor(Math.random() * musicTracks.length);
+                nextTrackIndex = Math.floor(Math.random() * AUDIO_PATHS.MUSIC.length);
             } while (nextTrackIndex === this.currentTrackIndex);
         } else {
             nextTrackIndex = 0;
         }
         this.currentTrackIndex = nextTrackIndex;
-        const nextTrackUrl = musicTracks[this.currentTrackIndex];
+        const nextTrackUrl = AUDIO_PATHS.MUSIC[this.currentTrackIndex];
 
         console.log(`Loading music track: ${nextTrackUrl}`);
 

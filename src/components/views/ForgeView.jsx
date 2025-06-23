@@ -1,13 +1,14 @@
 // src/components/views/ForgeView.jsx
 import React, { useState, memo } from 'react';
-import { definitions } from '../../data/definitions'; //
-import { formatNumber } from '../../utils/helpers'; //
-import Tooltip from '../ui/Tooltip'; //
-import ComponentItem from '../ui/ComponentItem'; //
-import OrderTimer from '../ui/OrderTimer'; //
-import OrderQueueCard from '../ui/OrderQueueCard'; //
-import FreeCraftRecipeCard from '../ui/FreeCraftRecipeCard'; //
-import InventoryItemCard from '../ui/InventoryItemCard'; //
+import { definitions } from '../../data/definitions';
+import { formatNumber } from '../../utils/formatters';
+import Tooltip from '../ui/display/Tooltip'; // Обновленный путь
+import ComponentItem from '../ui/cards/ComponentItem'; // Обновленный путь
+import OrderTimer from '../ui/display/OrderTimer'; // Обновленный путь
+import OrderQueueCard from '../ui/cards/OrderQueueCard'; // Обновленный путь
+import FreeCraftRecipeCard from '../ui/cards/FreeCraftRecipeCard'; // Обновленный путь
+import InventoryItemCard from '../ui/cards/InventoryItemCard'; // Обновленный путь
+import { IMAGE_PATHS } from '../../constants/paths';
 
 const QualityMinigameBar = ({ minigameState, componentDef }) => {
     if (!minigameState?.active || !componentDef?.minigame) return null;
@@ -43,7 +44,6 @@ const QualityMinigameBar = ({ minigameState, componentDef }) => {
 };
 
 const ActiveProjectDisplay = ({ gameState, handlers, projectType }) => {
-    // projectType всегда будет 'player', так как подмастерье удален.
     const activeProject = gameState.activeOrder || gameState.activeFreeCraft;
     const isEpicCraft = !!gameState.currentEpicOrder;
     const isReforging = !!gameState.activeReforge;
@@ -51,7 +51,7 @@ const ActiveProjectDisplay = ({ gameState, handlers, projectType }) => {
     const isGraving = !!gameState.activeGraving;
 
     if (isEpicCraft) {
-        const artifactDef = definitions.greatArtifacts[gameState.currentEpicOrder.artifactId]; //
+        const artifactDef = definitions.greatArtifacts[gameState.currentEpicOrder.artifactId];
         const epicStageDef = artifactDef.epicOrder.find(s => s.stage === gameState.currentEpicOrder.currentStage);
 
         const progressBarInnerStyle = {
@@ -80,7 +80,7 @@ const ActiveProjectDisplay = ({ gameState, handlers, projectType }) => {
         const itemToReforge = gameState.inventory.find(item => item.uniqueId === gameState.activeReforge.itemUniqueId);
         if (!itemToReforge) return null;
 
-        const itemDef = definitions.items[itemToReforge.itemKey]; //
+        const itemDef = definitions.items[itemToReforge.itemKey];
         const reforgeProgress = gameState.activeReforge.progress;
         const reforgeRequiredProgress = gameState.activeReforge.requiredProgress;
 
@@ -111,7 +111,7 @@ const ActiveProjectDisplay = ({ gameState, handlers, projectType }) => {
         const itemToInlay = gameState.inventory.find(item => item.uniqueId === gameState.activeInlay.itemUniqueId);
         if (!itemToInlay) return null;
 
-        const itemDef = definitions.items[itemToInlay.itemKey]; //
+        const itemDef = definitions.items[itemToInlay.itemKey];
         const inlayProgress = gameState.activeInlay.progress;
         const inlayRequiredProgress = gameState.activeInlay.requiredProgress;
 
@@ -143,7 +143,7 @@ const ActiveProjectDisplay = ({ gameState, handlers, projectType }) => {
         const itemToGrave = gameState.inventory.find(item => item.uniqueId === gameState.activeGraving.itemUniqueId);
         if (!itemToGrave) return null;
 
-        const itemDef = definitions.items[itemToGrave.itemKey]; //
+        const itemDef = definitions.items[itemToGrave.itemKey];
         const gravingProgress = gameState.activeGraving.progress;
         const gravingRequiredProgress = gameState.activeGraving.requiredProgress;
 
@@ -171,7 +171,7 @@ const ActiveProjectDisplay = ({ gameState, handlers, projectType }) => {
     }
 
     if (activeProject) {
-        const itemDef = definitions.items[activeProject.itemKey]; //
+        const itemDef = definitions.items[activeProject.itemKey];
         return (
              <>
                 {gameState.activeOrder && (
@@ -204,7 +204,7 @@ const ActiveProjectDisplay = ({ gameState, handlers, projectType }) => {
 
 
 const WorkstationSelector = memo(({ activeWorkstationId, handlers, purchasedSkills, activeProject, isEpicCraft, isReforging, isInlaying, isGraving }) => {
-    if (!purchasedSkills.divisionOfLabor) return null; //
+    if (!purchasedSkills.divisionOfLabor) return null;
 
     let requiredWorkstation = null;
     if (isReforging) {
@@ -215,11 +215,11 @@ const WorkstationSelector = memo(({ activeWorkstationId, handlers, purchasedSkil
         requiredWorkstation = 'workbench';
     }
     else if (activeProject) {
-        const itemDef = definitions.items[activeProject.itemKey]; //
+        const itemDef = definitions.items[activeProject.itemKey];
         const activeComponent = itemDef.components.find(c => c.id === activeProject.activeComponentId);
         if (activeComponent) requiredWorkstation = activeComponent.workstation;
     } else if (isEpicCraft) {
-        const artifactDef = definitions.greatArtifacts[isEpicCraft.artifactId]; //
+        const artifactDef = definitions.greatArtifacts[isEpicCraft.artifactId];
         const epicStageDef = artifactDef.epicOrder.find(s => s.stage === isEpicCraft.currentStage);
         if (epicStageDef) requiredWorkstation = epicStageDef.workstation;
     }
@@ -227,7 +227,7 @@ const WorkstationSelector = memo(({ activeWorkstationId, handlers, purchasedSkil
 
     return (
         <div className="flex justify-center gap-4 my-4 p-2 bg-black/20 rounded-lg">
-            {Object.entries(definitions.workstations).map(([id, station]) => ( //
+            {Object.entries(definitions.workstations).map(([id, station]) => (
                 <Tooltip key={id} text={station.name}>
                     <button
                         onClick={() => handlers.handleSelectWorkstation(id)}
@@ -246,7 +246,7 @@ const WorkstationSelector = memo(({ activeWorkstationId, handlers, purchasedSkil
 
 
 const ForgeView = ({ gameState, isWorking, handlers }) => {
-    const [mode, setMode] = useState('orders'); //
+    const [mode, setMode] = useState('orders');
 
     const activePlayerProject = gameState.activeOrder || gameState.activeFreeCraft;
     const isEpicCraft = !!gameState.currentEpicOrder;
@@ -254,16 +254,12 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
     const isInlaying = !!gameState.activeInlay;
     const isGraving = !!gameState.activeGraving;
 
-    const playerItemDef = activePlayerProject ? definitions.items[activePlayerProject.itemKey] : null; //
+    const playerItemDef = activePlayerProject ? definitions.items[activePlayerProject.itemKey] : null;
     const activePlayerComponent = activePlayerProject && playerItemDef ? playerItemDef.components.find(c => c.id === activePlayerProject.activeComponentId) : null;
 
-    const epicStageDef = isEpicCraft ? definitions.greatArtifacts[gameState.currentEpicOrder.artifactId].epicOrder.find(s => s.stage === gameState.currentEpicOrder.currentStage) : null; //
-
-    const isWorkButtonDisabled = false; //
-
-    const canReforge = gameState.purchasedSkills.masterReforging; //
-    const canInlay = gameState.specialItems.gem > 0; //
-    const canGrave = gameState.purchasedSkills.masterGraving; //
+    const canReforge = gameState.purchasedSkills.masterReforging;
+    const canInlay = gameState.specialItems.gem > 0;
+    const canGrave = gameState.purchasedSkills.masterGraving;
 
 
     return (
@@ -283,11 +279,9 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
                 >
                     Свободная ковка
                 </button>
-                {/* УДАЛЕНА ВКЛАДКА ДЛЯ ПОДМАСТЕРЬЯ-КУЗНЕЦА */}
                 
-                {/* Кнопки Перековка/Инкрустация/Гравировка для игрока */}
-                {/* Перековка */}
-                {!gameState.isFirstPlaythrough && canReforge && (
+                {
+                !gameState.isFirstPlaythrough && canReforge && (
                     <button
                         onClick={() => setMode('reforge')}
                         className={`flex-1 p-2 rounded-md font-bold text-sm transition-colors interactive-element
@@ -296,8 +290,8 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
                         Перековка
                     </button>
                 )}
-                {/* Инкрустация */}
-                {!gameState.isFirstPlaythrough && canInlay && (
+                {
+                !gameState.isFirstPlaythrough && canInlay && (
                     <button
                         onClick={() => setMode('inlay')}
                         className={`flex-1 p-2 rounded-md font-bold text-sm transition-colors interactive-element
@@ -306,8 +300,8 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
                         Инкрустация
                     </button>
                 )}
-                {/* Гравировка - отображается только если навык изучен И не первое прохождение */}
-                {!gameState.isFirstPlaythrough && canGrave && (
+                {
+                !gameState.isFirstPlaythrough && canGrave && (
                     <button
                         onClick={() => setMode('graving')}
                         className={`flex-1 p-2 rounded-md font-bold text-sm transition-colors interactive-element
@@ -317,7 +311,6 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
                     </button>
                 )}
 
-                {/* Заглушки для первого прохождения (если навыки изучены) */}
                 {gameState.isFirstPlaythrough && (
                     <>
                         {canReforge && (
@@ -346,10 +339,9 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
             </div>
 
             <div id="forge-content-area" className="p-4 bg-black/20 rounded-lg border border-gray-700 mb-6 min-h-[250px]">
-                {/* ОТОБРАЖЕНИЕ ПРОЕКТОВ ИГРОКА И ИХ СПИСКОВ */}
                 {(activePlayerProject || isEpicCraft || isReforging || isInlaying || isGraving) ? (
                     <ActiveProjectDisplay gameState={gameState} handlers={handlers} projectType="player" />
-                ) : ( // Отображаем списки заказов/рецептов игрока, если нет активного проекта
+                ) : (
                     mode === 'orders' ? (
                         <div>
                             <h3 className="font-cinzel text-lg text-center mb-3">Доступные заказы</h3>
@@ -365,8 +357,8 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
                         <div>
                             <h3 className="font-cinzel text-lg text-center mb-3">Свободное ремесло</h3>
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                                {Object.entries(definitions.items).filter(([key, item]) => //
-                                    !item.isQuestRecipe && 
+                                {Object.entries(definitions.items).filter(([key, item]) =>
+                                    !item.isQuestRecipe &&
                                     (!item.requiredSkill || gameState.purchasedSkills[item.requiredSkill]) &&
                                     (!item.firstPlaythroughLocked || !gameState.isFirstPlaythrough)
                                 ).map(([key, item]) => (
@@ -380,13 +372,13 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
                             {canReforge && !gameState.isFirstPlaythrough ? (
                                 gameState.inventory.filter(item =>
                                     item.location === 'inventory' &&
-                                    definitions.items[item.itemKey].hasInlaySlots && //
+                                    definitions.items[item.itemKey].hasInlaySlots &&
                                     item.quality < 10.0
                                 ).length > 0 ? (
                                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                                         {gameState.inventory.filter(item =>
                                             item.location === 'inventory' &&
-                                            definitions.items[item.itemKey].hasInlaySlots && //
+                                            definitions.items[item.itemKey].hasInlaySlots &&
                                             item.quality < 10.0
                                         ).map(item => (
                                             <InventoryItemCard
@@ -414,7 +406,7 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
                             <h3 className="font-cinzel text-lg text-center mb-3">Выберите предмет для инкрустации</h3>
                             {canInlay && !gameState.isFirstPlaythrough ? (
                                 gameState.inventory.filter(item => {
-                                    const itemDef = definitions.items[item.itemKey]; //
+                                    const itemDef = definitions.items[item.itemKey];
                                     if (!itemDef.hasInlaySlots) return false;
 
                                     const maxSlots =
@@ -426,7 +418,7 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
                                 }).length > 0 ? (
                                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                                         {gameState.inventory.filter(item => {
-                                            const itemDef = definitions.items[item.itemKey]; //
+                                            const itemDef = definitions.items[item.itemKey];
                                             if (!itemDef.hasInlaySlots) return false;
 
                                             const maxSlots =
@@ -462,12 +454,12 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
                             {canGrave && !gameState.isFirstPlaythrough ? (
                                 gameState.inventory.filter(item =>
                                     item.location === 'inventory' &&
-                                    (definitions.items[item.itemKey].hasInlaySlots || definitions.items[item.itemKey].gravingAvailable) //
+                                    (definitions.items[item.itemKey].hasInlaySlots || definitions.items[item.itemKey].gravingAvailable)
                                 ).length > 0 ? (
                                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                                         {gameState.inventory.filter(item =>
                                             item.location === 'inventory' &&
-                                            (definitions.items[item.itemKey].hasInlaySlots || definitions.items[item.itemKey].gravingAvailable) //
+                                            (definitions.items[item.itemKey].hasInlaySlots || definitions.items[item.itemKey].gravingAvailable)
                                         ).map(item => (
                                             <InventoryItemCard
                                                 key={item.uniqueId}
@@ -497,7 +489,7 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
                 activeWorkstationId={gameState.activeWorkstationId}
                 handlers={handlers}
                 purchasedSkills={gameState.purchasedSkills}
-                activeProject={activePlayerProject} // Только проект игрока влияет на выбор станка
+                activeProject={activePlayerProject}
                 isEpicCraft={isEpicCraft}
                 isReforging={isReforging}
                 isInlaying={isInlaying}
@@ -508,7 +500,7 @@ const ForgeView = ({ gameState, isWorking, handlers }) => {
 
             <div id="forge-area" className="flex items-center justify-center">
                 <div onClick={handlers.handleStrikeAnvil} className={`interactive-element cursor-pointer rounded-full p-4 transition-transform ${isWorking ? 'anvil-working' : ''}`}>
-                    <img src="/img/ui/anvil.webp" alt="Наковальня" className="w-48 h-48 drop-shadow-lg" />
+                    <img src={IMAGE_PATHS.UI.ANVIL} alt="Наковальня" className="w-48 h-48 drop-shadow-lg" />
                 </div>
             </div>
         </div>

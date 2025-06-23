@@ -41,11 +41,10 @@ export const quests = {
         title: "Символ Стойкости",
         description: "Чтобы получить последний секрет, вы должны доказать свое понимание рун. Создайте для Двора Королевскую Корону, и их рунмастеры поделятся с вами знаниями.",
         factionId: 'court',
-        trigger: { type: 'quest', questId: 'adamantiteCoreQuest' }, 
+        trigger: { type: 'quest', questId: 'adamantiteCoreQuest' },
         target: { type: 'craft', itemId: 'royalCrown', count: 1 },
         reward: { type: 'unlock_recipe', itemId: 'craftable_runeOfFortitude' }
     },
-    // НОВЫЕ КВЕСТЫ (5 штук из предыдущего запроса)
     architect_forger_quest: {
         id: 'architect_forger_quest',
         title: "Кузнец-Архитектор",
@@ -79,26 +78,25 @@ export const quests = {
         description: "Королевский Двор ценит изысканные украшения. Инкрустируйте 3 предмета для знати.",
         factionId: 'court',
         trigger: { type: 'skill', skillId: 'jewelryCrafting' },
-        target: { type: 'inlay', count: 3 }, // Новый тип цели: инкрустация
+        target: { type: 'inlay', count: 3 },
         reward: { type: 'item', itemId: 'gem', amount: 3, sparks: 2500 }
     },
     secret_courier_quest: {
         id: 'secret_courier_quest',
         title: "Тайный Посыльный",
         description: "Тайные заказчики предлагают вам работу повышенной опасности. Выполните 5 рискованных заказов.",
-        factionId: 'merchants', // Привязал к Торговцам, чтобы было реалистично
+        factionId: 'merchants',
         trigger: { type: 'skill', skillId: 'riskAssessment' },
-        target: { type: 'risky_order', count: 5 }, // Новый тип цели: рискованные заказы
-        reward: { type: 'sparks', amount: 10000, riskReduction: 0.02 } // Пример награды (риск-редукция)
+        target: { type: 'risky_order', count: 5 },
+        reward: { type: 'sparks', amount: 10000, riskReduction: 0.02 }
     },
-    // НОВЫЕ КВЕСТЫ (ЕЩЁ 5 штук)
     grand_collector_quest: {
         id: 'grand_collector_quest',
         title: "Великий Коллекционер",
         description: "Соберите обширную коллекцию уникальных предметов, чтобы продемонстрировать ваше мастерство и вкус.",
         factionId: 'merchants',
-        trigger: { type: 'achievement', achievementId: 'novice_collector', level: 2 }, // Зависит от 2 уровня достижения "Начинающий Коллекционер"
-        target: { type: 'unique_items', count: 30 }, // Новый тип цели: количество уникальных предметов
+        trigger: { type: 'achievement', achievementId: 'novice_collector', level: 2 },
+        target: { type: 'unique_items', count: 30 },
         reward: { type: 'item', itemId: 'expeditionMap', amount: 1, sparks: 15000 }
     },
     ore_flow_quest: {
@@ -107,8 +105,8 @@ export const quests = {
         description: "Вам требуется наладить бесперебойные поставки сырья. Накопите огромное количество руды на своем складе.",
         factionId: 'adventurers',
         trigger: { type: 'skill', skillId: 'mithrilProspecting' },
-        target: { type: 'totalOre', count: 25000 }, // Новый тип цели: общее количество руды
-        reward: { type: 'passiveGeneration', resourceType: 'allOre', amount: 0.05, sparks: 5000 } // +0.05/сек к пассивной добыче всей руды
+        target: { type: 'totalOre', count: 25000 },
+        reward: { type: 'passiveGeneration', resourceType: 'allOre', amount: 0.05, sparks: 5000 }
     },
     energy_master_quest: {
         id: 'energy_master_quest',
@@ -116,25 +114,25 @@ export const quests = {
         description: "Покажите свою эффективность в использовании Материи, потратив значительное количество этого редкого ресурса.",
         factionId: 'court',
         trigger: { type: 'skill', skillId: 'matterAlchemy' },
-        target: { type: 'totalMatterSpent', count: 10000 }, // Новый тип цели: потраченная материя
-        reward: { type: 'matterModifier', amount: 0.05, sparks: 8000 } // +5% к бонусу Материи от заказов
+        target: { type: 'totalMatterSpent', count: 10000 },
+        reward: { type: 'matterModifier', amount: 0.05, sparks: 8000 }
     },
     smelter_of_souls_quest: {
         id: 'smelter_of_souls_quest',
         title: "Тигель Душ",
         description: "Ваша плавильня должна работать без остановки. Переплавьте огромное количество слитков, доказав свою усердность.",
         factionId: 'merchants',
-        trigger: { type: 'achievement', achievementId: 'diligent_smelter', level: 2 }, // Зависит от 2 уровня достижения "Усердный Плавильщик"
-        target: { type: 'totalIngotsSmelted', count: 10000 }, // Новый тип цели: переплавленные слитки
-        reward: { type: 'smeltingSpeedModifier', amount: 0.05, sparks: 7500 } // +5% к скорости плавки
+        trigger: { type: 'achievement', achievementId: 'diligent_smelter', level: 2 },
+        target: { type: 'totalIngotsSmelted', count: 10000 },
+        reward: { type: 'smeltingSpeedModifier', amount: 0.05, sparks: 7500 }
     },
     tireless_forger_quest: {
         id: 'tireless_forger_quest',
         title: "Неутомимый Кузнец",
         description: "Покажите свою несгибаемую волю и невероятную скорость, нанося тысячи ударов по наковальне.",
         factionId: 'adventurers',
-        trigger: { type: 'achievement', achievementId: 'enhanced_clicker', level: 2 }, // Зависит от 2 уровня достижения "Усиленный Кликер"
-        target: { type: 'totalClicks', count: 200000 }, // Новый тип цели: количество кликов
-        reward: { type: 'progressPerClick', amount: 2, sparks: 12000 } // +2 к прогрессу за клик
+        trigger: { type: 'achievement', achievementId: 'enhanced_clicker', level: 2 },
+        target: { type: 'totalClicks', count: 200000 },
+        reward: { type: 'progressPerClick', amount: 2, sparks: 12000 }
     }
 };

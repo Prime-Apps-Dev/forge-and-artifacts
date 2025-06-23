@@ -1,13 +1,13 @@
 // src/components/ui/SpecializationModal.jsx
 import React from 'react';
-import { definitions } from '../../data/definitions';
+import { definitions } from '../../../data/definitions';
 
 const SpecializationCard = ({ spec, onSelect }) => (
     <div className="flex flex-col text-center p-4 border-2 border-gray-700 rounded-lg bg-black/20">
         <span className="material-icons-outlined text-5xl text-orange-400 mx-auto mb-3">{spec.icon}</span>
         <h3 className="font-cinzel text-xl mb-2">{spec.name}</h3>
         <p className="text-gray-400 text-sm grow mb-4">{spec.description}</p>
-        <button 
+        <button
             onClick={() => onSelect(spec.id)}
             className="interactive-element mt-auto w-full bg-orange-600 text-black font-bold py-2 px-4 rounded-lg hover:bg-orange-500"
         >

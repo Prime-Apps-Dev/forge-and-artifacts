@@ -1,7 +1,7 @@
 // src/components/ui/MineButton.jsx
 import React, { memo } from 'react';
-import Tooltip from './Tooltip';
-import { getResourceImageSrc } from '../../utils/helpers';
+import Tooltip from '../display/Tooltip';
+import { getResourceImageSrc } from '../../../utils/helpers';
 
 const MineButton = memo(({ oreType, name, onClick, isLocked, lockText }) => {
     const imgSrc = getResourceImageSrc(oreType, 128);
@@ -17,7 +17,7 @@ const MineButton = memo(({ oreType, name, onClick, isLocked, lockText }) => {
                 }
             }}
         >
-            <img src={imgSrc} alt={name} className="h-24 mb-2 drop-shadow-lg object-contain img-rounded-corners" /> {/* ИЗМЕНЕНО: Добавлен img-rounded-corners */}
+            <img src={imgSrc} alt={name} className="h-24 mb-2 drop-shadow-lg object-contain img-rounded-corners" />
             <h4 className="font-cinzel text-base font-bold leading-tight">{name}</h4>
         </div>
     );

@@ -1,6 +1,6 @@
 // src/components/ui/FreeCraftRecipeCard.jsx
 import React from 'react';
-import { getItemImageSrc } from '../../utils/helpers';
+import { getItemImageSrc } from '../../../utils/helpers';
 
 const FreeCraftRecipeCard = ({ itemDef, itemKey, onCraft, isDisabled }) => {
     return (
@@ -8,7 +8,7 @@ const FreeCraftRecipeCard = ({ itemDef, itemKey, onCraft, isDisabled }) => {
             <img
                 src={getItemImageSrc(itemKey, 64)}
                 alt={itemDef.name}
-                className="w-16 h-16 object-contain mb-2 img-rounded-corners" // ИЗМЕНЕНО: Добавлен img-rounded-corners
+                className="w-16 h-16 object-contain mb-2 img-rounded-corners"
             />
             <h4 className="font-bold text-base text-white mt-2 grow">{itemDef.name}</h4>
             <button

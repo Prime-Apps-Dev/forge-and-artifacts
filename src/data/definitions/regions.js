@@ -1,7 +1,6 @@
 // src/data/definitions/regions.js
 
 export const regions = {
-  // Стартовый регион, сбалансированный
   iron_hills: {
     id: 'iron_hills',
     name: 'Железные Холмы',
@@ -41,7 +40,6 @@ export const regions = {
     unlockConditions: []
   },
 
-  // Второй регион: Золотая Гавань
   golden_harbor: {
     id: 'golden_harbor',
     name: 'Золотая Гавань',
@@ -84,7 +82,6 @@ export const regions = {
     ]
   },
 
-  // Третий регион: Северные Пустоши (пример)
   northern_wastes: {
     id: 'northern_wastes',
     name: 'Северные Пустоши',

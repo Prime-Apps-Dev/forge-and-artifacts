@@ -8,24 +8,19 @@ import { factionUpgrades } from './definitions/factionUpgrades.js';
 import { regions } from './definitions/regions.js';
 import { eternalSkills } from './definitions/eternalSkills.js';
 import { avatars } from './definitions/avatars.js';
-import { personnel } from './definitions/personnel.js'; // ИЗМЕНЕНО: Правильный импорт personnel
-import {
-    factions,
-    reputationLevels,
-    greatArtifacts,
-    specialItems,
-    // personnel, // ИЗМЕНЕНО: Удалено personnel из деструктуризации main.js
-    workstations,
-    clients,
-    upgrades,
-    shopUpgrades,
-    recipes,
-    worldEvents,
-    gameConfig,
-    missions,
-    resourceIcons,
-    resources // Добавлено, если resources экспортируется из main.js
-} from './definitions/main.js';
+import { personnel } from './definitions/personnel.js';
+import { sharedDefinitions } from './definitions/shared.js';
+
+// Импортируем из отдельных файлов
+import { greatArtifacts } from './definitions/greatArtifacts.js';
+import { specialItems } from './definitions/specialItems.js';
+import { upgrades } from './definitions/upgrades.js';
+import { shopUpgrades } from './definitions/shopUpgrades.js';
+import { recipes } from './definitions/recipes.js';
+import { gameConfig } from '../constants/gameConfig.js'; // ИЗМЕНЕНО: Теперь импортируется как gameConfig
+
+// Вспомогательная константа для resourceIcons, т.к. она ссылается на пути, а не на объекты
+import { IMAGE_PATHS } from '../constants/paths.js';
 
 export const definitions = {
     items,
@@ -37,19 +32,28 @@ export const definitions = {
     regions,
     eternalSkills,
     avatars,
-    personnel, // Теперь personnel будет взят из правильного импорта
-    factions,
-    reputationLevels,
+    personnel,
+
+    // Получаем из импортированного объекта sharedDefinitions
+    factions: sharedDefinitions.factions,
+    reputationLevels: sharedDefinitions.reputationLevels,
+    workstations: sharedDefinitions.workstations,
+    clients: sharedDefinitions.clients,
+    worldEvents: sharedDefinitions.worldEvents,
+    missions: sharedDefinitions.missions,
+    resources: sharedDefinitions.resources,
+
     greatArtifacts,
     specialItems,
-    workstations,
-    clients,
     upgrades,
     shopUpgrades,
     recipes,
-    worldEvents,
-    gameConfig,
-    missions,
-    resourceIcons,
-    resources // Включено, если resources экспортируется из main.js
+    gameConfig, // Здесь используется как свойство объекта definitions
+
+    resourceIcons: {
+        ironOre: IMAGE_PATHS.ORES.IRON,
+        copperOre: IMAGE_PATHS.ORES.COPPER,
+        mithrilOre: IMAGE_PATHS.ORES.MITHRIL,
+        adamantiteOre: IMAGE_PATHS.ORES.ADAMANTITE,
+    },
 };

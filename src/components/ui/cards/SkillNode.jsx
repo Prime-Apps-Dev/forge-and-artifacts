@@ -1,8 +1,8 @@
 // src/components/ui/SkillNode.jsx
 import React, { memo } from 'react';
-import { definitions } from '../../data/definitions';
-import { formatCosts } from '../../utils/helpers';
-import Tooltip from './Tooltip'; // ИЗМЕНЕНО: Исправлен путь к Tooltip
+import { definitions } from '../../../data/definitions';
+import { formatCosts } from '../../../utils/formatters';
+import Tooltip from '../display/Tooltip';
 
 const SkillNode = memo(({ skillId, gameState, onBuySkill }) => {
     const skill = definitions.skills[skillId];

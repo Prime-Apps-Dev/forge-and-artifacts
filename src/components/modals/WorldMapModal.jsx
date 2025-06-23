@@ -2,8 +2,8 @@
 
 import React from 'react';
 import { definitions } from '../../data/definitions';
-import Tooltip from '../ui/Tooltip'; // ИЗМЕНЕНО: Исправлен путь к Tooltip
-import { formatNumber } from '../../utils/helpers';
+import Tooltip from '../ui/display/Tooltip';
+import { formatNumber } from '../../utils/formatters';
 
 const WorldMapModal = ({ isOpen, onClose, gameState, onSelectRegion }) => {
     if (!isOpen) return null;

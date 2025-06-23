@@ -1,10 +1,9 @@
 // src/components/panels/AchievementsPanel.jsx
 import React from 'react';
 import { definitions } from '../../data/definitions';
-import AchievementCard from '../ui/AchievementCard'; 
+import AchievementCard from '../ui/cards/AchievementCard';
 
 const AchievementsPanel = ({ gameState }) => {
-    // Группируем достижения по категориям
     const groupedAchievements = Object.values(definitions.achievements).reduce((acc, ach) => {
         const category = ach.category || 'Прочее';
         if (!acc[category]) {
@@ -22,19 +21,17 @@ const AchievementsPanel = ({ gameState }) => {
                 {Object.entries(groupedAchievements).map(([category, achievements]) => (
                     <div key={category}>
                         <h4 className="font-cinzel text-orange-400 text-lg mb-3">{category}</h4>
-                        {/* КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: Используем новую структуру с flexbox и отступами */}
-                        <div className="relative flex min-h-[150px] sm:min-h-[160px] lg:min-h-[170px] xl:min-h-[190px] /* Минимальная высота для карточек */
-                                    flex-wrap /* Позволяем карточкам переноситься на новую строку */
-                                    gap-4 /* Промежутки между карточками */
-                                    pb-4 /* Отступ снизу */
-                                    /* pl-4 и pr-4 здесь уже не нужны, так как они на родительском div в ProfileModal */
+                        <div className="relative flex min-h-[150px] sm:min-h-[160px] lg:min-h-[170px] xl:min-h-[190px]
+                                    flex-wrap
+                                    gap-4
+                                    pb-4
                                     ">
                             {achievements.map((ach, index) => (
-                                <AchievementCard // <-- ГЛАВНОЕ ИЗМЕНЕНИЕ: РЕНДЕРИМ AchievementCard
+                                <AchievementCard
                                     key={ach.id}
                                     achievement={ach}
                                     status={ach.check(gameState, definitions)}
-                                    index={index} // Индекс передаем, хотя для текущей логики смещения он не используется
+                                    index={index}
                                 />
                             ))}
                         </div>

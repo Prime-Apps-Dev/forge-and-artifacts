@@ -1,16 +1,27 @@
 // src/components/views/SmelterView.jsx
 import React from 'react';
 import { definitions } from '../../data/definitions';
-import SmeltButton from '../ui/SmeltButton';
-import Tooltip from '../ui/Tooltip';
+import SmeltButton from '../ui/buttons/SmeltButton'; // Обновленный путь
+import Tooltip from '../ui/display/Tooltip'; // Обновленный путь
 import { getResourceImageSrc } from '../../utils/helpers';
 
+const resourceNames = {
+    ironOre: 'железной руды',
+    copperOre: 'медной руды',
+    mithrilOre: 'мифриловой руды',
+    adamantiteOre: 'адамантитовой руды',
+    ironIngots: 'железных слитков',
+    copperIngots: 'медных слитков',
+    adamantiteIngots: 'адамантитовых слитков',
+    matter: 'материи',
+    sparks: 'искр'
+};
+
 const SmelterView = ({ gameState, handlers }) => {
-    const { purchasedSkills, smeltingProcess, ironOre, copperOre, mithrilOre, adamantiteOre, ironIngots, copperIngots, bronzeIngots, sparksteelIngots, adamantiteIngots, matter, isFirstPlaythrough, sparks } = gameState;
+    const { purchasedSkills, smeltingProcess, isFirstPlaythrough } = gameState;
 
     const smeltRecipe = smeltingProcess ? definitions.recipes[smeltingProcess.recipeId] : null;
 
-    // Функция для получения данных о рецепте слитка (для плавки руды)
     const getSmeltRecipeData = (recipeId, skillRequired = null, lockedByPlaythrough = false) => {
         const recipe = definitions.recipes[recipeId];
         if (!recipe) return null;
@@ -22,7 +33,6 @@ const SmelterView = ({ gameState, handlers }) => {
         let costResource = Object.keys(recipe.input)[0];
         let costAmount = recipe.input[costResource];
 
-        // Применяем скидки на стоимость руды
         if (recipeId === 'iron' && purchasedSkills.efficientBellows) {
             costAmount = Math.max(1, costAmount - 2);
         } else if (recipeId === 'copper' && purchasedSkills.crucibleRefinement) {
@@ -39,7 +49,7 @@ const SmelterView = ({ gameState, handlers }) => {
         } else if (isPlaythroughLocked) {
             lockText = "Доступно после первого Переселения.";
         } else if (!hasEnough) {
-            lockText = `Недостаточно ${definitions.resources?.[costResource]?.name || costResource} (${costAmount} требуется)!`;
+            lockText = `Недостаточно ${definitions.resources?.[costResource]?.name || resourceNames[costResource]} (${costAmount} требуется)!`;
         } else if (!!smeltingProcess) {
             lockText = "Плавильня занята.";
         }
@@ -57,7 +67,6 @@ const SmelterView = ({ gameState, handlers }) => {
         };
     };
 
-    // Функция для получения данных о рецепте сплава
     const getAlloyRecipeData = (recipeId, skillRequired, lockedByPlaythrough = false) => {
         const recipe = definitions.recipes[recipeId];
         if (!recipe) return null;
@@ -124,7 +133,7 @@ const SmelterView = ({ gameState, handlers }) => {
                             recipe && !recipe.isLocked ? (
                                 <div key={recipe.recipeId} className="flex flex-col items-center">
                                     <Tooltip text={recipe.lockText}>
-                                        <SmeltButton recipeId={recipe.recipeId} onClick={handlers.handleSmelt} disabled={recipe.isDisabled} gameState={gameState} /> {/* ИЗМЕНЕНО: Удалено children */}
+                                        <SmeltButton recipeId={recipe.recipeId} onClick={handlers.handleSmelt} disabled={recipe.isDisabled} gameState={gameState} />
                                     </Tooltip>
                                 </div>
                             ) : null
@@ -150,7 +159,7 @@ const SmelterView = ({ gameState, handlers }) => {
                             recipe && !recipe.isLocked ? (
                                 <div key={recipe.recipeId} className="flex flex-col items-center">
                                     <Tooltip text={recipe.lockText}>
-                                        <SmeltButton recipeId={recipe.recipeId} onClick={handlers.handleForgeAlloy} disabled={recipe.isDisabled} gameState={gameState} /> {/* ИЗМЕНЕНО: Удалено children */}
+                                        <SmeltButton recipeId={recipe.recipeId} onClick={handlers.handleForgeAlloy} disabled={recipe.isDisabled} gameState={gameState} />
                                     </Tooltip>
                                 </div>
                             ) : null

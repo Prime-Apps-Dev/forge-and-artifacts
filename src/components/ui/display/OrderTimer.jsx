@@ -1,5 +1,5 @@
 import React, { useState, useEffect, memo } from 'react';
-import { formatNumber } from '../../utils/helpers';
+import { formatNumber } from '../../../utils/formatters';
 
 const OrderTimer = memo(({ order }) => {
     const [time, setTime] = useState(0);
@@ -10,7 +10,7 @@ const OrderTimer = memo(({ order }) => {
             return;
         }
 
-        const initialStartTime = order.startTime || Date.now(); 
+        const initialStartTime = order.startTime || Date.now();
 
         const interval = setInterval(() => {
             const currentTime = Date.now();
@@ -21,7 +21,6 @@ const OrderTimer = memo(({ order }) => {
         return () => {
             clearInterval(interval);
         };
-        // ИЗМЕНЕНИЕ ЗДЕСЬ: Зависимость изменена на order.startTime
     }, [order?.startTime]);
 
     if (!order) {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { definitions } from '../../data/definitions';
-import FactionReputation from '../ui/FactionReputation';
-import FactionUpgradeButton from '../ui/FactionUpgradeButton';
+import FactionReputation from '../ui/cards/FactionReputation'; // Обновленный путь
+import FactionUpgradeButton from '../ui/buttons/FactionUpgradeButton'; // Обновленный путь
 
 const FactionsPanel = ({ gameState, onBuyFactionUpgrade }) => {
     const upgradesByFaction = Object.values(definitions.factionUpgrades).reduce((acc, upgrade) => {
@@ -12,7 +12,6 @@ const FactionsPanel = ({ gameState, onBuyFactionUpgrade }) => {
         return acc;
     }, {});
 
-    // Проверяем текущее мировое событие на конфликт
     const currentEvent = gameState.market.worldEvent;
     const isConflict = currentEvent.type === 'faction_conflict';
     const conflictingFactions = isConflict ? currentEvent.conflictingFactions : [];
@@ -32,7 +31,6 @@ const FactionsPanel = ({ gameState, onBuyFactionUpgrade }) => {
 
                             <div className="mt-4 pt-4 border-t border-gray-700 space-y-3">
                                 <h4 className="font-bold text-gray-300">Доступные улучшения:</h4>
-                                 {/* Если фракция в конфликте, показываем сообщение */}
                                 {isInConflict ? (
                                     <p className="text-sm text-red-400 italic">Улучшения временно недоступны из-за конфликта фракций.</p>
                                 ) : (

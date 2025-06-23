@@ -1,6 +1,6 @@
 import React from 'react';
 import { definitions } from '../../data/definitions';
-import ShopUpgradeButton from '../ui/ShopUpgradeButton';
+import ShopUpgradeButton from '../ui/buttons/ShopUpgradeButton'; // Обновленный путь
 
 const UpgradeShop = ({ gameState, handlers }) => {
     const availableUpgrades = Object.keys(definitions.upgrades).filter(id => {
@@ -29,7 +29,7 @@ const UpgradeShop = ({ gameState, handlers }) => {
                             key={id}
                             upgradeId={id}
                             gameState={gameState}
-                            onBuyUpgrade={(...args) => handlers.handleBuyUpgrade(id, 'upgrades', ...args)}
+                            onBuyUpgrade={(amount) => handlers.handleBuyUpgrade(id, 'upgrades', amount)}
                             upgradeType="upgrades"
                         />
                     ))

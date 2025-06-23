@@ -1,9 +1,85 @@
 // src/logic/gameCompletions.js
-import * as Tone from 'tone';
-import { definitions } from '../data/definitions.js'; // Используем .js
-import { audioController } from '../utils/audioController.js'; // Используем .js
-import { formatNumber, hasReputation, getReputationLevel } from '../utils/helpers.js'; // Используем .js
-import { checkForNewQuests } from '../utils/gameEventChecks.js'; // ИЗМЕНЕНО: Импорт из нового файла
+import { definitions } from '../data/definitions';
+import { audioController } from '../utils/audioController';
+import { formatNumber } from '../utils/formatters'; // ИЗМЕНЕНО: Импорт formatNumber отдельно
+import { getReputationLevel } from '../utils/helpers'; // ИЗМЕНЕНО: Импорт getReputationLevel из helpers
+import { checkForNewQuests } from '../utils/gameEventChecks';
+import { gameConfig as GAME_CONFIG } from '../constants/gameConfig.js';
+
+function updateMastery(state, xpEarned, showToast) {
+    state.masteryXP += xpEarned;
+    while (state.masteryXP >= state.masteryXPToNextLevel) {
+        state.masteryXP -= state.masteryXPToNextLevel;
+        state.masteryLevel += 1;
+        state.masteryXPToNextLevel = Math.floor(state.masteryXPToNextLevel * GAME_CONFIG.MASTERY_XP_LEVEL_MULTIPLIER);
+        showToast(`Уровень Мастерства повышен! Уровень ${state.masteryLevel}!`, 'levelup');
+        audioController.play('levelup', 'E5', '4n');
+    }
+}
+
+function handleQuestCompletion(state, questDef, showToast) {
+    state.journal.completedQuests.push(questDef.id);
+    state.journal.activeQuests = state.journal.activeQuests.filter(q => q.id !== questDef.id);
+    delete state.journal.questProgress[questDef.id];
+    showToast(`Задание "${questDef.title}" выполнено!`, 'levelup');
+    audioController.play('levelup', 'G5', '2n');
+
+    let xpEarnedForQuest = 0;
+
+    if (questDef.reward) {
+        if (questDef.reward.type === 'item') {
+            state.specialItems[questDef.reward.itemId] = (state.specialItems[questDef.reward.itemId] || 0) + questDef.reward.amount;
+            showToast(`Получено: ${questDef.reward.amount} x ${definitions.specialItems[questDef.reward.itemId].name}!`, 'success');
+            Object.keys(definitions.greatArtifacts).forEach(artId => {
+                const artifact = state.artifacts[artId];
+                const allObtained = Object.values(artifact.components).every(comp => state.specialItems[comp.itemId] > 0);
+                if (allObtained && artifact.status === 'locked') {
+                    artifact.status = 'available';
+                    showToast(`Все компоненты для артефакта "${definitions.greatArtifacts[artId].name}" собраны!`, 'levelup');
+                }
+            });
+        } else if (questDef.reward.type === 'unlock_recipe') {
+            showToast(`Разблокирован новый рецепт!`, 'success');
+        } else if (questDef.reward.type === 'sparks') {
+            const finalSparks = Math.floor(questDef.reward.amount * (state.questRewardModifier || 1.0));
+            state.sparks += finalSparks;
+            state.totalSparksEarned += finalSparks;
+            showToast(`Получено: +${formatNumber(finalSparks)} искр!`, 'success');
+            xpEarnedForQuest += finalSparks / GAME_CONFIG.QUEST_XP_SPARK_DIVIDER;
+        } else if (questDef.reward.type === 'matter') {
+            const finalMatter = Math.floor(questDef.reward.amount * (state.questRewardModifier || 1.0));
+            state.matter += finalMatter;
+            showToast(`Получено: +${formatNumber(finalMatter)} материи!`, 'success');
+        } else if (questDef.reward.type === 'reputation') {
+            state.reputation[questDef.reward.factionId] = (state.reputation[questDef.reward.factionId] || 0) + questDef.reward.amount;
+            showToast(`Получено: +${questDef.reward.amount} репутации с ${definitions.factions[questDef.reward.factionId].name}!`, 'success');
+        }
+        if (questDef.reward.riskReduction) {
+            state.riskModifier = (state.riskModifier || 1.0) * (1 - questDef.reward.riskReduction);
+        }
+        if (questDef.reward.passiveGeneration) {
+            if (questDef.reward.passiveGeneration.resourceType === 'allOre') {
+                state.passiveGeneration.ironOre += questDef.reward.passiveGeneration.amount;
+                state.passiveGeneration.copperOre += questDef.reward.passiveGeneration.amount;
+                state.passiveGeneration.mithrilOre = (state.passiveGeneration.mithrilOre || 0) + questDef.reward.passiveGeneration.amount;
+                state.passiveGeneration.adamantiteOre = (state.passiveGeneration.adamantiteOre || 0) + questDef.reward.passiveGeneration.amount;
+            } else {
+                state.passiveGeneration[questDef.reward.passiveGeneration.resourceType] = (state.passiveGeneration[questDef.reward.passiveGeneration.resourceType] || 0) + questDef.reward.passiveGeneration.amount;
+            }
+        }
+        if (questDef.reward.matterModifier) {
+            state.matterModifier += questDef.reward.matterModifier;
+        }
+        if (questDef.reward.smeltingSpeedModifier) {
+            state.smeltingSpeedModifier += questDef.reward.smeltingSpeedModifier;
+        }
+        if (questDef.reward.progressPerClick) {
+            state.progressPerClick += questDef.reward.progressPerClick;
+        }
+    }
+    xpEarnedForQuest = Math.floor(xpEarnedForQuest * (state.masteryXpModifier || 1.0));
+    updateMastery(state, xpEarnedForQuest, showToast);
+}
 
 export function handleCompleteMission(state, activeMissionId, showToast) {
     const missionIndex = state.activeMissions.findIndex(m => m.id === activeMissionId);
@@ -48,22 +124,14 @@ export function handleCompleteMission(state, activeMissionId, showToast) {
             rewardToast.push(`Бонус: +${formatNumber(bonusMatter)} материи`);
         }
     }
-    
-    let xpEarned = Math.max(1, Math.floor(missionDef.baseReward.sparks / 100));
-    xpEarned = Math.floor(xpEarned * (state.masteryXpModifier || 1.0));
-    state.masteryXP += xpEarned;
 
-    while (state.masteryXP >= state.masteryXPToNextLevel) {
-        state.masteryXP -= state.masteryXPToNextLevel;
-        state.masteryLevel += 1;
-        state.masteryXPToNextLevel = Math.floor(state.masteryXPToNextLevel * 1.5);
-        showToast(`Уровень Мастерства повышен! Уровень ${state.masteryLevel}!`, 'levelup');
-        audioController.play('levelup', 'A4', '4n');
-    }
+    let xpEarned = Math.max(1, Math.floor(missionDef.baseReward.sparks / GAME_CONFIG.QUEST_XP_SPARK_DIVIDER));
+    xpEarned = Math.floor(xpEarned * (state.masteryXpModifier || 1.0));
+    updateMastery(state, xpEarned, showToast);
 
     showToast(rewardToast.join(' '), 'success');
     audioController.play('levelup', 'A4', '4n');
-    checkForNewQuests(state, showToast); // Проверяем квесты после завершения миссии
+    checkForNewQuests(state, showToast);
 }
 
 export function handleSaleCompletion(state, shelfIndex, showToast) {
@@ -79,7 +147,7 @@ export function handleSaleCompletion(state, shelfIndex, showToast) {
 
     const itemDef = definitions.items[itemSold.itemKey];
     const baseValue = itemDef.components.reduce((sum, c) => sum + c.progress, 0);
-    const salePrice = Math.floor((baseValue * 1.2) * itemSold.quality);
+    const salePrice = Math.floor((baseValue * GAME_CONFIG.SALE_BASE_PRICE_MULTIPLIER) * itemSold.quality);
 
     state.sparks += salePrice;
     state.totalSparksEarned += salePrice;
@@ -93,26 +161,18 @@ export function handleSaleCompletion(state, shelfIndex, showToast) {
         showToast(`Клиент в восторге! Вы получили ${formatNumber(tipAmount)} искр в качестве чаевых!`, 'crit');
     }
 
-    state.shopReputation = (state.shopReputation || 0) + Math.floor(salePrice / 100);
-    let xpEarned = Math.max(1, Math.floor(salePrice / 200));
+    state.shopReputation = (state.shopReputation || 0) + Math.floor(salePrice / GAME_CONFIG.SALE_REPUTATION_DIVIDER);
+    let xpEarned = Math.max(1, Math.floor(salePrice / GAME_CONFIG.SALE_XP_SALE_PRICE_DIVIDER));
     xpEarned = Math.floor(xpEarned * (state.masteryXpModifier || 1.0));
-    state.masteryXP += xpEarned;
-    
-    while (state.masteryXP >= state.masteryXPToNextLevel) {
-        state.masteryXP -= state.masteryXPToNextLevel;
-        state.masteryLevel += 1;
-        state.masteryXPToNextLevel = Math.floor(state.masteryXPToNextLevel * 1.5);
-        showToast(`Уровень Мастерства повышен! Уровень ${state.masteryLevel}!`, 'levelup');
-        audioController.play('levelup', 'E5', '4n');
-    }
+    updateMastery(state, xpEarned, showToast);
 
     state.inventory = state.inventory.filter(item => item.uniqueId !== shelf.itemId);
     state.shopShelves[shelfIndex] = { itemId: null, customer: null, saleProgress: 0, saleTimer: 0 };
 
     showToast(`Продан "${itemDef.name}" за ${formatNumber(salePrice)} искр!`, 'success');
     audioController.play('cash', 'C5', '16n');
-    
-    checkForNewQuests(state, showToast); // Проверяем квесты после завершения продажи
+
+    checkForNewQuests(state, showToast);
     return state;
 }
 
@@ -137,45 +197,17 @@ export function handleFreeCraftCompletion(state, craftProject, showToast) {
         showToast(`Инвентарь полон! Предмет "${itemDef.name}" утерян.`, 'error');
     }
     state.activeFreeCraft = null;
-    
-    let xpEarned = Math.max(1, Math.floor(itemDef.components.reduce((sum, c) => sum + c.progress, 0) / 50));
-    xpEarned = Math.floor(xpEarned * (state.masteryXpModifier || 1.0));
-    state.masteryXP += xpEarned;
 
-    while (state.masteryXP >= state.masteryXPToNextLevel) {
-        state.masteryXP -= state.masteryXPToNextLevel;
-        state.masteryLevel += 1;
-        state.masteryXPToNextLevel = Math.floor(state.masteryXPToNextLevel * 1.5);
-        showToast(`Уровень Мастерства повышен! Уровень ${state.masteryLevel}!`, 'levelup');
-        audioController.play('levelup', 'E5', '4n');
-    }
+    let xpEarned = Math.max(1, Math.floor(itemDef.components.reduce((sum, c) => sum + c.progress, 0) / GAME_CONFIG.CRAFT_XP_PROGRESS_DIVIDER));
+    xpEarned = Math.floor(xpEarned * (state.masteryXpModifier || 1.0));
+    updateMastery(state, xpEarned, showToast);
 
     Object.values(definitions.quests).forEach(quest => {
         const questDef = definitions.quests[quest.id];
         if (state.journal.activeQuests.some(activeQuest => activeQuest.id === quest.id) && questDef.target.type === 'craft' && questDef.target.itemId === craftProject.itemKey) {
             state.journal.questProgress[quest.id] = (state.journal.questProgress[quest.id] || 0) + 1;
             if (state.journal.questProgress[quest.id] >= questDef.target.count) {
-                state.journal.completedQuests.push(quest.id);
-                state.journal.activeQuests = state.journal.activeQuests.filter(q => q.id !== quest.id);
-                delete state.journal.questProgress[quest.id];
-                showToast(`Задание "${questDef.title}" выполнено!`, 'levelup');
-                audioController.play('levelup', 'G5', '2n');
-                if (questDef.reward) {
-                    if (questDef.reward.type === 'item') {
-                        state.specialItems[questDef.reward.itemId] = (state.specialItems[questDef.reward.itemId] || 0) + questDef.reward.amount;
-                        showToast(`Получено: ${questDef.reward.amount} x ${definitions.specialItems[questDef.reward.itemId].name}!`, 'success');
-                    } else if (questDef.reward.type === 'sparks') {
-                        state.sparks += questDef.reward.amount;
-                        state.totalSparksEarned += questDef.reward.amount;
-                        showToast(`Получено: +${formatNumber(questDef.reward.amount)} искр!`, 'success');
-                    } else if (questDef.reward.type === 'matter') {
-                        state.matter += questDef.reward.amount;
-                        showToast(`Получено: +${formatNumber(questDef.reward.amount)} материи!`, 'success');
-                    } else if (questDef.reward.type === 'reputation') {
-                        state.reputation[questDef.reward.factionId] = (state.reputation[questDef.reward.factionId] || 0) + questDef.reward.amount;
-                        showToast(`Получено: +${questDef.reward.amount} репутации с ${definitions.factions[questDef.reward.factionId].name}!`, 'success');
-                    }
-                }
+                handleQuestCompletion(state, questDef, showToast);
             }
         }
     });
@@ -187,33 +219,25 @@ export function handleFreeCraftCompletion(state, craftProject, showToast) {
 export function handleCompleteReforge(state, reforgeProject, showToast) {
     const item = state.inventory.find(i => i.uniqueId === reforgeProject.itemUniqueId);
     if (item) {
-        const baseRisk = 0.15;
+        const baseRisk = GAME_CONFIG.REFORGE_BASE_RISK;
         const riskModifier = state.riskModifier || 1.0;
         const finalRisk = baseRisk * riskModifier;
 
         if (Math.random() < finalRisk) {
-            const qualityDecrease = 0.01 + Math.random() * 0.02;
+            const qualityDecrease = GAME_CONFIG.REFORGE_QUALITY_DECREASE_MIN + Math.random() * GAME_CONFIG.REFORGE_QUALITY_DECREASE_RANDOM;
             item.quality = Math.max(1.0, item.quality - qualityDecrease);
             item.location = 'inventory';
             showToast(`Перековка не удалась! Качество "${definitions.items[item.itemKey].name}" слегка ухудшилось до ${item.quality.toFixed(2)}`, "error");
             audioController.play('crit', 'C3', '8n');
         } else {
-            const qualityIncrease = 0.05 + Math.random() * 0.1;
+            const qualityIncrease = GAME_CONFIG.REFORGE_QUALITY_INCREASE_MIN + Math.random() * GAME_CONFIG.REFORGE_QUALITY_INCREASE_RANDOM;
             item.quality = Math.min(10.0, item.quality + qualityIncrease);
             item.location = 'inventory';
             showToast(`Перековка "${definitions.items[item.itemKey].name}" завершена! Качество: ${item.quality.toFixed(2)}`, "success");
-            
-            let xpEarned = Math.max(1, Math.floor(item.quality * 20));
-            xpEarned = Math.floor(xpEarned * (state.masteryXpModifier || 1.0));
-            state.masteryXP += xpEarned;
 
-            while (state.masteryXP >= state.masteryXPToNextLevel) {
-                state.masteryXP -= state.masteryXPToNextLevel;
-                state.masteryLevel += 1;
-                state.masteryXPToNextLevel = Math.floor(state.masteryXPToNextLevel * 1.5);
-                showToast(`Уровень Мастерства повышен! Уровень ${state.masteryLevel}!`, 'levelup');
-                audioController.play('levelup', 'E5', '4n');
-            }
+            let xpEarned = Math.max(1, Math.floor(item.quality * GAME_CONFIG.REFORGE_XP_QUALITY_MULTIPLIER));
+            xpEarned = Math.floor(xpEarned * (state.masteryXpModifier || 1.0));
+            updateMastery(state, xpEarned, showToast);
         }
     } else {
         showToast("Ошибка: предмет для перековки не найден.", "error");
@@ -226,7 +250,7 @@ export function handleCompleteReforge(state, reforgeProject, showToast) {
 export function handleCompleteInlay(state, inlayProject, showToast) {
     const item = state.inventory.find(i => i.uniqueId === inlayProject.itemUniqueId);
     if (item) {
-        const baseRisk = 0.10;
+        const baseRisk = GAME_CONFIG.INLAY_BASE_RISK;
         const riskModifier = state.riskModifier || 1.0;
         const finalRisk = baseRisk * riskModifier;
 
@@ -236,50 +260,23 @@ export function handleCompleteInlay(state, inlayProject, showToast) {
             audioController.play('crit', 'C3', '8n');
         } else {
             item.inlaySlots = item.inlaySlots || [];
-            item.inlaySlots.push({ type: inlayProject.gemType, qualityBonus: 0.10 });
-            const qualityIncrease = 0.05 + Math.random() * 0.05;
+            item.inlaySlots.push({ type: inlayProject.gemType, qualityBonus: GAME_CONFIG.INLAY_QUALITY_BONUS });
+            const qualityIncrease = GAME_CONFIG.INLAY_QUALITY_INCREASE_MIN + Math.random() * GAME_CONFIG.INLAY_QUALITY_INCREASE_RANDOM;
             item.quality = Math.min(10.0, item.quality + qualityIncrease);
             item.location = 'inventory';
             showToast(`Инкрустация "${definitions.items[item.itemKey].name}" завершена! Качество: ${item.quality.toFixed(2)}`, "success");
             state.totalInlayedItems = (state.totalInlayedItems || 0) + 1;
 
-            let xpEarned = Math.max(1, Math.floor(item.quality * 30));
+            let xpEarned = Math.max(1, Math.floor(item.quality * GAME_CONFIG.INLAY_XP_QUALITY_MULTIPLIER));
             xpEarned = Math.floor(xpEarned * (state.masteryXpModifier || 1.0));
-            state.masteryXP += xpEarned;
+            updateMastery(state, xpEarned, showToast);
 
-            while (state.masteryXP >= state.masteryXPToNextLevel) {
-                state.masteryXP -= state.masteryXPToNextLevel;
-                state.masteryLevel += 1;
-                state.masteryXPToNextLevel = Math.floor(state.masteryXPToNextLevel * 1.5);
-                showToast(`Уровень Мастерства повышен! Уровень ${state.masteryLevel}!`, 'levelup');
-                audioController.play('levelup', 'E5', '4n');
-            }
             Object.values(definitions.quests).forEach(quest => {
                 const questDef = definitions.quests[quest.id];
                 if (state.journal.activeQuests.some(activeQuest => activeQuest.id === quest.id) && questDef.target.type === 'inlay') {
                     state.journal.questProgress[quest.id] = (state.journal.questProgress[quest.id] || 0) + 1;
                     if (state.journal.questProgress[quest.id] >= questDef.target.count) {
-                        state.journal.completedQuests.push(quest.id);
-                        state.journal.activeQuests = state.journal.activeQuests.filter(q => q.id !== quest.id);
-                        delete state.journal.questProgress[quest.id];
-                        showToast(`Задание "${questDef.title}" выполнено!`, 'levelup');
-                        audioController.play('levelup', 'G5', '2n');
-                        if (questDef.reward) {
-                            if (questDef.reward.type === 'item') {
-                                state.specialItems[questDef.reward.itemId] = (state.specialItems[questDef.reward.itemId] || 0) + questDef.reward.amount;
-                                showToast(`Получено: ${questDef.reward.amount} x ${definitions.specialItems[questDef.reward.itemId].name}!`, 'success');
-                            } else if (questDef.reward.type === 'sparks') {
-                                state.sparks += questDef.reward.amount;
-                                state.totalSparksEarned += questDef.reward.amount;
-                                showToast(`Получено: +${formatNumber(questDef.reward.amount)} искр!`, 'success');
-                            } else if (questDef.reward.type === 'matter') {
-                                state.matter += questDef.reward.amount;
-                                showToast(`Получено: +${formatNumber(questDef.reward.amount)} материи!`, 'success');
-                            } else if (questDef.reward.type === 'reputation') {
-                                state.reputation[questDef.reward.factionId] = (state.reputation[questDef.reward.factionId] || 0) + questDef.reward.amount;
-                                showToast(`Получено: +${questDef.reward.amount} репутации с ${definitions.factions[questDef.reward.factionId].name}!`, 'success');
-                            }
-                        }
+                        handleQuestCompletion(state, questDef, showToast);
                     }
                 }
             });
@@ -295,7 +292,7 @@ export function handleCompleteInlay(state, inlayProject, showToast) {
 export function handleCompleteGraving(state, gravingProject, showToast) {
     const item = state.inventory.find(i => i.uniqueId === gravingProject.itemUniqueId);
     if (item) {
-        const baseRisk = 0.05;
+        const baseRisk = GAME_CONFIG.GRAVING_BASE_RISK;
         const riskModifier = state.riskModifier || 1.0;
         const finalRisk = baseRisk * riskModifier;
 
@@ -308,42 +305,15 @@ export function handleCompleteGraving(state, gravingProject, showToast) {
             item.location = 'inventory';
             showToast(`Гравировка "${definitions.items[item.itemKey].name}" завершена! Уровень гравировки: ${item.gravingLevel}`, "success");
 
-            const xpEarned = Math.max(1, Math.floor((item.gravingLevel || 0) * 50));
-            state.masteryXP += xpEarned;
+            const xpEarned = Math.max(1, Math.floor((item.gravingLevel || 0) * GAME_CONFIG.GRAVING_XP_LEVEL_MULTIPLIER));
+            updateMastery(state, xpEarned, showToast);
 
-            while (state.masteryXP >= state.masteryXPToNextLevel) {
-                state.masteryXP -= state.masteryXPToNextLevel;
-                state.masteryLevel += 1;
-                state.masteryXPToNextLevel = Math.floor(state.masteryXPToNextLevel * 1.5);
-                showToast(`Уровень Мастерства повышен! Уровень ${state.masteryLevel}!`, 'levelup');
-                audioController.play('levelup', 'E5', '4n');
-            }
             Object.values(definitions.quests).forEach(quest => {
                 const questDef = definitions.quests[quest.id];
                 if (state.journal.activeQuests.some(activeQuest => activeQuest.id === quest.id) && questDef.target.type === 'grave') {
                     state.journal.questProgress[quest.id] = (state.journal.questProgress[quest.id] || 0) + 1;
                     if (state.journal.questProgress[quest.id] >= questDef.target.count) {
-                        state.journal.completedQuests.push(quest.id);
-                        state.journal.activeQuests = state.journal.activeQuests.filter(q => q.id !== quest.id);
-                        delete state.journal.questProgress[quest.id];
-                        showToast(`Задание "${questDef.title}" выполнено!`, 'levelup');
-                        audioController.play('levelup', 'G5', '2n');
-                        if (questDef.reward) {
-                            if (questDef.reward.type === 'item') {
-                                state.specialItems[questDef.reward.itemId] = (state.specialItems[questDef.reward.itemId] || 0) + questDef.reward.amount;
-                                showToast(`Получено: ${questDef.reward.amount} x ${definitions.specialItems[questDef.reward.itemId].name}!`, 'success');
-                            } else if (questDef.reward.type === 'sparks') {
-                                state.sparks += questDef.reward.amount;
-                                state.totalSparksEarned += questDef.reward.amount;
-                                showToast(`Получено: +${formatNumber(questDef.reward.amount)} искр!`, 'success');
-                            } else if (questDef.reward.type === 'matter') {
-                                state.matter += questDef.reward.amount;
-                                showToast(`Получено: +${formatNumber(questDef.reward.amount)} материи!`, 'success');
-                            } else if (questDef.reward.type === 'reputation') {
-                                state.reputation[questDef.reward.factionId] = (state.reputation[questDef.reward.factionId] || 0) + questDef.reward.amount;
-                                showToast(`Получено: +${questDef.reward.amount} репутации с ${definitions.factions[questDef.reward.factionId].name}!`, 'success');
-                            }
-                        }
+                        handleQuestCompletion(state, questDef, showToast);
                     }
                 }
             });
@@ -369,37 +339,30 @@ export function handleOrderCompletion(state, order, showToast, setCompletedOrder
     if (tier === 'gold') rewardMultiplier *= 2.0;
     else if (tier === 'silver') rewardMultiplier *= 1.5;
     rewardMultiplier *= qualityMultiplier;
+
     let finalSparks = Math.floor(order.rewards.sparks * rewardMultiplier * state.sparksModifier);
     let finalMatter = Math.floor(order.rewards.matter * rewardMultiplier * state.matterModifier);
-    
-    // Quill effect (action-based) remains here
+
     if (state.artifacts.quill?.status === 'completed') {
         finalMatter += Math.floor(finalSparks / 100);
     }
-    
+
     state.sparks += finalSparks;
     state.totalSparksEarned += finalSparks;
     state.matter += finalMatter;
-    const xpEarnedRaw = Math.max(1, Math.floor((definitions.items[order.itemKey].components.reduce((sum, c) => sum + c.progress, 0) / 10) * rewardMultiplier));
-    const xpEarned = Math.floor(xpEarnedRaw * (state.masteryXpModifier || 1.0));
-    state.masteryXP += xpEarned;
+
+    // Initialize xpEarned here
+    let xpEarned = Math.max(1, Math.floor((definitions.items[order.itemKey].components.reduce((sum, c) => sum + c.progress, 0) / 10) * rewardMultiplier));
+    xpEarned = Math.floor(xpEarned * (state.masteryXpModifier || 1.0));
+    updateMastery(state, xpEarned, showToast);
     state.totalItemsCrafted = (state.totalItemsCrafted || 0) + 1;
 
-    while (state.masteryXP >= state.masteryXPToNextLevel) {
-        state.masteryXP -= state.masteryXPToNextLevel;
-        state.masteryLevel += 1;
-        state.masteryXPToNextLevel = Math.floor(state.masteryXPToNextLevel * 1.5);
-        showToast(`Уровень Мастерства повышен! Уровень ${state.masteryLevel}!`, 'levelup');
-        audioController.play('levelup', 'E5', '4n');
-    }
     Object.values(definitions.quests).forEach(quest => {
         const questDef = definitions.quests[quest.id];
         if (state.journal.activeQuests.some(activeQuest => activeQuest.id === quest.id)) {
-            // Квесты по крафту определенных предметов
             if (questDef.target.type === 'craft' && questDef.target.itemId === order.itemKey) {
                 state.journal.questProgress[quest.id] = (state.journal.questProgress[quest.id] || 0) + 1;
             }
-            // Квесты по выполнению рискованных заказов
             if (questDef.target.type === 'risky_order' && order.isRisky) {
                 state.journal.questProgress[quest.id] = (state.journal.questProgress[quest.id] || 0) + 1;
             }
@@ -412,37 +375,7 @@ export function handleOrderCompletion(state, order, showToast, setCompletedOrder
             }
 
             if (state.journal.questProgress[quest.id] >= questDef.target.count) {
-                state.journal.completedQuests.push(quest.id);
-                state.journal.activeQuests = state.journal.activeQuests.filter(q => q.id !== quest.id);
-                delete state.journal.questProgress[quest.id];
-                showToast(`Задание "${questDef.title}" выполнено!`, 'levelup');
-                audioController.play('levelup', 'G5', '2n');
-                if (questDef.reward) {
-                    if (questDef.reward.type === 'item') {
-                        state.specialItems[questDef.reward.itemId] = (state.specialItems[questDef.reward.itemId] || 0) + questDef.reward.amount;
-                        showToast(`Получено: ${questDef.reward.amount} x ${definitions.specialItems[questDef.reward.itemId].name}!`, 'success');
-                        Object.keys(state.artifacts).forEach(artId => {
-                            const artifact = state.artifacts[artId];
-                            const allObtained = Object.values(artifact.components).every(comp => state.specialItems[comp.itemId] > 0);
-                            if (allObtained && artifact.status === 'locked') {
-                                artifact.status = 'available';
-                                showToast(`Все компоненты для артефакта "${definitions.greatArtifacts[artId].name}" собраны!`, 'levelup');
-                            }
-                        });
-                    } else if (questDef.reward.type === 'unlock_recipe') {
-                        showToast(`Разблокирован новый рецепт!`, 'success');
-                    } else if (questDef.reward.type === 'sparks') {
-                        state.sparks += questDef.reward.amount;
-                        state.totalSparksEarned += questDef.reward.amount;
-                        showToast(`Получено: +${formatNumber(questDef.reward.amount)} искр!`, 'success');
-                    } else if (questDef.reward.type === 'matter') {
-                        state.matter += questDef.reward.amount;
-                        showToast(`Получено: +${formatNumber(questDef.reward.amount)} материи!`, 'success');
-                    } else if (questDef.reward.type === 'reputation') {
-                        state.reputation[questDef.reward.factionId] = (state.reputation[questDef.reward.factionId] || 0) + questDef.reward.amount;
-                        showToast(`Получено: +${questDef.reward.amount} репутации с ${definitions.factions[questDef.reward.factionId].name}!`, 'success');
-                    }
-                }
+                handleQuestCompletion(state, questDef, showToast);
             }
         }
     });

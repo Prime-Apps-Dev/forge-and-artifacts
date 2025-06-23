@@ -1,9 +1,9 @@
 // src/components/ui/FactionUpgradeButton.jsx
 import React from 'react';
-import { definitions } from '../../data/definitions';
-import { formatCosts, formatNumber } from '../../utils/helpers';
-import { hasReputation } from '../../utils/helpers';
-import Tooltip from './Tooltip'; // ИЗМЕНЕНО: Исправлен путь к Tooltip
+import { definitions } from '../../../data/definitions';
+import { formatCosts, formatNumber } from '../../../utils/formatters';
+import { hasReputation } from '../../../utils/helpers';
+import Tooltip from '../display/Tooltip'; // ИЗМЕНЕНО: Исправлен путь к Tooltip
 
 const FactionUpgradeButton = React.memo(({ upgradeId, gameState, onBuyFactionUpgrade }) => {
     const upgrade = definitions.factionUpgrades[upgradeId];

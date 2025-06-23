@@ -1,51 +1,39 @@
 // src/logic/gameCoreHandlers.js
 import { definitions } from '../data/definitions';
 import { audioController } from '../utils/audioController';
+import { gameConfig as GAME_CONFIG } from '../constants/gameConfig'; // ИЗМЕНЕНО: Правильный импорт
 import {
     handleFreeCraftCompletion,
     handleCompleteReforge,
     handleCompleteInlay,
     handleCompleteGraving,
     handleOrderCompletion,
-    // checkForNewQuests, // ИЗМЕНЕНО: Удален импорт checkForNewQuests
     handleSaleCompletion
 } from './gameCompletions';
 
-/**
- * Фабрика для создания основных низкоуровневых обработчиков игры.
- */
 export function createCoreHandlers({
     showToast,
     setIsWorking,
     workTimeoutRef,
     setCompletedOrderInfo,
 }) {
-
     const triggerWorkAnimation = () => {
         setIsWorking(true);
         if (workTimeoutRef.current) clearTimeout(workTimeoutRef.current);
         workTimeoutRef.current = setTimeout(() => setIsWorking(false), 200);
     };
 
-    /**
-     * Применяет прогресс к текущему активному проекту.
-     */
     const applyProgress = (state, progressAmount) => {
         state.totalClicks = (state.totalClicks || 0) + 1;
 
         const workstationMod = state.workstationBonus[state.activeWorkstationId] || 1;
         progressAmount *= workstationMod;
 
-        // REMOVED: Bastion effect moved to recalculateAllModifiers
-        // if (state.artifacts.bastion?.status === 'completed') {
-        //     progressAmount *= 1.15;
-        // }
-
         if (state.activeSale) {
             const saleProject = state.activeSale;
             saleProject.progress += progressAmount / workstationMod;
             if (saleProject.progress >= saleProject.requiredProgress) {
-                handleSaleCompletion(state, saleProject, showToast);
+                handleSaleCompletion(state, saleProject.shelfIndex, showToast);
             }
             return state;
         }
@@ -118,16 +106,11 @@ export function createCoreHandlers({
                 }
             }
             epicOrder.progress += progressAmount;
-            if (epicOrder.progress >= stageDef.progress) {
+            if (epicOrder.progress >= stageDef.progress * state.componentProgressRequiredModifier) {
                 const isLastStage = epicOrder.currentStage === artifactDef.epicOrder.length;
                 if (isLastStage) {
                     audioController.play('levelup', 'C6', '1n');
                     state.artifacts[epicOrder.artifactId].status = 'completed';
-                    // REMOVED: Crown effect moved to recalculateAllModifiers
-                    // if (epicOrder.artifactId === 'crown') {
-                    //     state.sparksModifier += 0.25;
-                    //     state.matterModifier += 0.25;
-                    // }
                     setCompletedOrderInfo({ isArtifact: true, artifactId: epicOrder.artifactId });
                     state.currentEpicOrder = null;
                     showToast(`Шедевр создан: ${artifactDef.name}!`, 'levelup');
@@ -141,7 +124,6 @@ export function createCoreHandlers({
             return state;
         }
 
-        // Проверяем, что активный проект принадлежит игроку, а не подмастерью
         const activeProject = state.activeOrder || state.activeFreeCraft;
 
         if (activeProject) {
@@ -164,7 +146,6 @@ export function createCoreHandlers({
             }
 
             if ((activeProject.componentProgress[componentDef.id] || 0) === 0 && componentDef.cost) {
-                // Aegis effect (action-based) remains here
                 if (state.artifacts.aegis.status === 'completed' && Math.random() < 0.10) {
                     showToast("Эгида защитила вас от трат!", 'levelup');
                 } else {
@@ -192,17 +173,13 @@ export function createCoreHandlers({
             }
 
             let criticalProgressBonus = 0;
-            if (state.purchasedSkills.mithrilCritStrike) {
-                if (Math.random() < 0.1) {
-                    criticalProgressBonus += (progressAmount * 0.5);
-                    showToast("Критический удар Мифрила: Дополнительный прогресс!", "crit");
-                }
+            if (state.purchasedSkills.mithrilCritStrike && Math.random() < 0.1) {
+                criticalProgressBonus += (progressAmount * (state.critBonusModifier || 0.5));
+                showToast("Критический удар Мифрила: Дополнительный прогресс!", "crit");
             }
-            if (state.purchasedSkills.legendaryCritStrike) {
-                if (Math.random() < 0.05) {
-                    criticalProgressBonus += (progressAmount * 1.0);
-                    showToast("Критический удар Легенды: Огромный бонус!", "crit");
-                }
+            if (state.purchasedSkills.legendaryCritStrike && Math.random() < 0.05) {
+                criticalProgressBonus += (progressAmount * (state.critBonusModifier || 1.0));
+                showToast("Критический удар Легенды: Огромный бонус!", "crit");
             }
             progressAmount += criticalProgressBonus;
 
@@ -220,7 +197,7 @@ export function createCoreHandlers({
             }
             return state;
         }
-        
+
         return state;
     };
 
@@ -230,7 +207,6 @@ export function createCoreHandlers({
         const isSale = !!state.activeSale;
         const minigameState = state.activeOrder?.minigameState;
 
-        // Hammer effect (action-based) remains here
         if (state.artifacts.hammer.status === 'completed' && Math.random() < 0.01) {
             state.specialItems.gem = (state.specialItems.gem || 0) + 1;
             showToast("Молот Горного Сердца: Вы нашли самоцвет!", 'crit');
@@ -249,7 +225,7 @@ export function createCoreHandlers({
                     for (const zone of component.minigame.zones) {
                         if (pos >= zone.from && pos <= zone.to) {
                             hitQuality = zone.quality;
-                            progressBonus = zone.progressBonus * state.progressPerClick;
+                            progressBonus = zone.progressBonus * state.critBonus;
                             qualityBonus = zone.qualityBonus;
                             break;
                         }
@@ -269,7 +245,7 @@ export function createCoreHandlers({
         } else {
             audioController.play('click', 'C3');
             applyProgress(state, state.progressPerClick);
-            
+
             if (state.activeOrder && !isSale) {
                 const itemDef = definitions.items[state.activeOrder.itemKey];
                 const component = itemDef.components.find(c => c.id === state.activeOrder.activeComponentId);
@@ -281,15 +257,14 @@ export function createCoreHandlers({
             }
         }
         return state;
-    }
+    };
 
     const handleSelectWorkstation = (state, workstationId) => {
         state.activeWorkstationId = workstationId;
         return state;
-    }
+    };
 
     const handleSelectComponent = (state, componentId) => {
-        // Игрок может выбирать компоненты только для своих активных проектов
         if (state.activeOrder) {
             state.activeOrder.activeComponentId = componentId;
         }
@@ -297,11 +272,11 @@ export function createCoreHandlers({
             state.activeFreeCraft.activeComponentId = componentId;
         }
         return state;
-    }
+    };
 
     const handleCloseRewardModal = () => {
         setCompletedOrderInfo(null);
-    }
+    };
 
     return {
         applyProgress,

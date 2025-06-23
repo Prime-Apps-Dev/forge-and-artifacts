@@ -1,8 +1,9 @@
 // src/components/ui/TradeableResource.jsx
 import React, { useState } from 'react';
-import { definitions } from '../../data/definitions';
-import { formatNumber, getReputationLevel, getResourceImageSrc } from '../../utils/helpers';
-import SvgIcon from './SvgIcon';
+import { definitions } from '../../../data/definitions';
+import { formatNumber } from '../../../utils/formatters'; // Теперь formatNumber из formatters
+import { getResourceImageSrc, getReputationLevel } from '../../../utils/helpers'; 
+import SvgIcon from '../display/SvgIcon';
 
 const TradeableResource = React.memo(({ resourceId, name, icon, iconClass, gameState, onBuy, onSell }) => {
     if (!gameState || !gameState.market || !gameState.market.prices) {
@@ -13,13 +14,10 @@ const TradeableResource = React.memo(({ resourceId, name, icon, iconClass, gameS
 
     const market = gameState.market;
     const merchantsReputation = gameState.reputation?.merchants || 0;
-    // Базовый репутационный модификатор для торговцев (изначально 1 - (0/5000) = 1)
     const repModifierBase = 1 - (getReputationLevel(merchantsReputation).threshold / 5000);
 
-    // Добавляем модификатор от навыка Trade Negotiation
-    const tradeNegotiationModifier = gameState.purchasedSkills.tradeNegotiation ? 0.95 : 1.0; // 5% снижение цены покупки
-    const tradeNegotiationSellModifier = gameState.purchasedSkills.tradeNegotiation ? 1.05 : 1.0; // 5% увеличение цены продажи
-
+    const tradeNegotiationModifier = gameState.purchasedSkills.tradeNegotiation ? 0.95 : 1.0;
+    const tradeNegotiationSellModifier = gameState.purchasedSkills.tradeNegotiation ? 1.05 : 1.0;
 
     const basePrices = market.prices[resourceId];
     if (!basePrices) {
@@ -35,11 +33,8 @@ const TradeableResource = React.memo(({ resourceId, name, icon, iconClass, gameS
 
     const finalMarketBuyModifier = gameState.marketBuyModifier || 1.0;
     
-    // Рассчитываем цену за 1 единицу
-    // Учитываем tradeNegotiationModifier для покупки
-    const unitBuyPrice = Math.ceil(basePrices.buy * repModifierBase * buyPriceModifier * demandModifier * finalMarketBuyModifier * tradeNegotiationModifier); // ИЗМЕНЕНО
-    // Учитываем tradeNegotiationSellModifier для продажи
-    const unitSellPrice = Math.floor(basePrices.sell * repModifierBase * sellPriceModifier * demandModifier * tradeNegotiationSellModifier); // ИЗМЕНЕНО
+    const unitBuyPrice = Math.ceil(basePrices.buy * repModifierBase * buyPriceModifier * demandModifier * finalMarketBuyModifier * tradeNegotiationModifier);
+    const unitSellPrice = Math.floor(basePrices.sell * repModifierBase * sellPriceModifier * demandModifier * tradeNegotiationSellModifier);
 
     const totalBuyPrice = unitBuyPrice * multiplier;
     const totalSellPrice = unitSellPrice * multiplier;
@@ -58,7 +53,6 @@ const TradeableResource = React.memo(({ resourceId, name, icon, iconClass, gameS
 
     const imageSrcForResource = getResourceImageSrc(resourceId, 32);
     const useImgTag = imageSrcForResource && imageSrcForResource.startsWith('/img/');
-
 
     return (
         <div className="bg-black/20 p-4 rounded-lg flex items-center gap-4 border border-gray-700">

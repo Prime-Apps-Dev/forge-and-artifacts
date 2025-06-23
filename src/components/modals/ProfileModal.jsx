@@ -1,10 +1,10 @@
 // src/components/modals/ProfileModal.jsx
 import React, { useState } from 'react';
-import { formatNumber } from '../../utils/helpers';
+import { formatNumber } from '../../utils/formatters';
 import { definitions } from '../../data/definitions';
 import AchievementsPanel from '../panels/AchievementsPanel';
 import StatsPanel from '../panels/StatsPanel';
-import Tooltip from '../ui/Tooltip'; // ИЗМЕНЕНО: Исправлен путь к Tooltip
+import Tooltip from '../ui/display/Tooltip'; // Обновленный путь
 
 const ProfileModal = ({ isOpen, onClose, gameState, handlers }) => {
     if (!isOpen) return null;

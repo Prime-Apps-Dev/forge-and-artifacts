@@ -1,20 +1,12 @@
 // src/components/modals/AvatarSelectionModal.jsx
-// src/components/modals/AvatarSelectionModal.jsx
 import React from 'react';
 import { definitions } from '../../data/definitions';
-import Tooltip from '../ui/Tooltip';
+import Tooltip from '../ui/display/Tooltip';
 
 const AvatarSelectionModal = ({ isOpen, onClose, gameState, onSelectAvatar }) => {
     if (!isOpen) return null;
 
     const availableAvatars = Object.values(definitions.avatars).filter(avatar => {
-        // Логика разблокировки аватаров (если она будет). Пока все доступны.
-        // if (avatar.unlockCondition) {
-        //     if (avatar.unlockCondition.type === 'achievement' && !gameState.completedAchievements.includes(avatar.unlockCondition.id)) {
-        //         return false;
-        //     }
-        //     // Добавить другие условия разблокировки
-        // }
         return true;
     });
 
@@ -45,14 +37,6 @@ const AvatarSelectionModal = ({ isOpen, onClose, gameState, onSelectAvatar }) =>
                             {gameState.playerAvatarId === avatar.id && (
                                 <span className="material-icons-outlined text-yellow-400 text-xl absolute top-1 right-1">check_circle</span>
                             )}
-                            {/* Если аватар заблокирован, можно добавить оверлей и тултип */}
-                            {/* {!isUnlocked && (
-                                <div className="absolute inset-0 bg-black/70 flex items-center justify-center rounded-lg">
-                                    <Tooltip text="Выполните достижение X для разблокировки">
-                                        <span className="material-icons-outlined text-red-400 text-4xl">lock</span>
-                                    </Tooltip>
-                                </div>
-                            )} */}
                         </div>
                     ))}
                 </div>

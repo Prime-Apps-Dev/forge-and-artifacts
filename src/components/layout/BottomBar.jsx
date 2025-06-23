@@ -1,14 +1,14 @@
 // src/components/layout/BottomBar.jsx
 import React from 'react';
-import { formatNumber } from '../../utils/helpers';
-import Tooltip from '../ui/Tooltip';
-import { definitions } from '../../data/definitions'; // Импортируем definitions для доступа к аватарам
+import { formatNumber } from '../../utils/formatters';
+import Tooltip from '../ui/display/Tooltip'; // Обновленный путь
+import { definitions } from '../../data/definitions';
+import { IMAGE_PATHS } from '../../constants/paths';
 
 const BottomBar = ({ gameState, onToggleInventoryModal, onToggleSettingsModal, onToggleProfileModal, isBottomBarVisible, onToggleBottomBarVisibility }) => {
     const progress = gameState.masteryXP / gameState.masteryXPToNextLevel * 100;
 
-    // Получаем путь к текущему аватару игрока
-    const currentAvatarSrc = definitions.avatars[gameState.playerAvatarId]?.src || '/img/default_avatar.png'; // Fallback на дефолтный
+    const currentAvatarSrc = definitions.avatars[gameState.playerAvatarId]?.src || IMAGE_PATHS.AVATARS.DEFAULT_MALE;
 
     return (
         <div className={`
@@ -19,7 +19,6 @@ const BottomBar = ({ gameState, onToggleInventoryModal, onToggleSettingsModal, o
             transition-all duration-300 ease-in-out
             ${isBottomBarVisible ? 'w-max px-4 pointer-events-auto' : 'translate-y-full opacity-0 pointer-events-none'}
         `}>
-            {/* Левая часть: Профиль игрока */}
             <div className="flex items-center">
                 <Tooltip text="Открыть профиль">
                     <button
@@ -27,7 +26,6 @@ const BottomBar = ({ gameState, onToggleInventoryModal, onToggleSettingsModal, o
                         className="interactive-element flex items-center gap-2 p-2 rounded-lg focus:outline-none"
                     >
                         <div className="relative w-8 h-8 rounded-full overflow-hidden bg-gray-800">
-                            {/* ИЗМЕНЕНО: Использование playerAvatarId для src изображения */}
                             <img src={currentAvatarSrc} alt="Аватар" className="object-cover w-full h-full" />
                             <div className="absolute bottom-0 left-0 w-full bg-yellow-500 text-center text-xs font-bold text-black rounded-sm">{gameState.masteryLevel}</div>
                         </div>
@@ -43,7 +41,6 @@ const BottomBar = ({ gameState, onToggleInventoryModal, onToggleSettingsModal, o
                 <div className="h-8 border-r border-gray-700 mx-2"></div>
             </div>
 
-            {/* Середина: Ресурсы */}
             <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1 text-white">
                     <span className="material-icons-outlined text-yellow-400 text-xl">bolt</span>
@@ -56,7 +53,6 @@ const BottomBar = ({ gameState, onToggleInventoryModal, onToggleSettingsModal, o
                 <div className="h-8 border-r border-gray-700 mx-1"></div>
             </div>
 
-            {/* Правая часть: Кнопки действий и скрытие панели */}
             <div className="flex items-center gap-2">
                 <button
                     onClick={onToggleInventoryModal}

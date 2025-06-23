@@ -1,10 +1,9 @@
 // src/components/ui/SmeltButton.jsx
 import React, { memo } from 'react';
-import Tooltip from './Tooltip';
-import { definitions } from '../../data/definitions';
-import { getResourceImageSrc } from '../../utils/helpers';
+import Tooltip from '../display/Tooltip';
+import { definitions } from '../../../data/definitions';
+import { getResourceImageSrc } from '../../../utils/helpers';
 
-// Словарь для правильных названий ресурсов
 const resourceNames = {
     ironOre: 'железной руды',
     copperOre: 'медной руды',
@@ -17,7 +16,7 @@ const resourceNames = {
     sparks: 'искр'
 };
 
-const SmeltButton = memo(({ recipeId, onClick, disabled, gameState }) => { // ИЗМЕНЕНО: Удален children из пропсов
+const SmeltButton = memo(({ recipeId, onClick, disabled, gameState }) => {
     const recipe = definitions.recipes[recipeId];
     if (!recipe) return null;
 
@@ -54,7 +53,6 @@ const SmeltButton = memo(({ recipeId, onClick, disabled, gameState }) => { // И
            <span className="font-bold text-base leading-tight flex-grow overflow-hidden text-ellipsis px-1">
                {recipe.name}
            </span>
-           {/* ИЗМЕНЕНО: Удалено {children} отсюда */}
         </button>
     );
 

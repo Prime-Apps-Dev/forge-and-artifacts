@@ -1,9 +1,9 @@
 // src/components/ui/EternalSkillNode.jsx
 
 import React, { memo } from 'react';
-import { definitions } from '../../data/definitions';
-import { formatNumber } from '../../utils/helpers';
-import Tooltip from '../ui/Tooltip'; // ИЗМЕНЕНО: Исправлен путь к Tooltip
+import { definitions } from '../../../data/definitions';
+import { formatNumber } from '../../../utils/formatters';
+import Tooltip from '../display/Tooltip'; // ИЗМЕНЕНО: Исправлен путь к Tooltip
 
 const EternalSkillNode = memo(({ skillId, gameState, onBuyEternalSkill }) => {
     const skill = definitions.eternalSkills[skillId];

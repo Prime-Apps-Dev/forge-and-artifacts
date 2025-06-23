@@ -1,26 +1,19 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { definitions } from '../../data/definitions';
-import { formatNumber } from '../../utils/helpers';
-import { getItemImageSrc } from '../../utils/helpers'; // Импортируем новую функцию
+import { formatNumber } from '../../utils/formatters';
+import { getItemImageSrc } from '../../utils/helpers';
 
-// Компонент для отображения одного требуемого предмета.
 const MissionRequirement = ({ req, inventory, onSelectGear, selectedItemId, allSelectedGear }) => {
-    const itemDef = definitions.items?.[req.itemKey]; // Безопасный доступ
-    if (!itemDef) return null; // Если itemDef не найден, ничего не рендерим
+    const itemDef = definitions.items?.[req.itemKey];
+    if (!itemDef) return null;
 
-    // --- ИЗМЕНЕНИЕ ЗДЕСЬ: Логика фильтрации теперь сложнее ---
     const suitableItems = useMemo(() => {
-        // Собираем ID всех предметов, выбранных в ДРУГИХ слотах
         const otherSelectedIds = Object.values(allSelectedGear).filter(id => id !== selectedItemId);
 
-        return inventory.filter(item => 
-            // Предмет должен быть в инвентаре
+        return inventory.filter(item =>
             item.location === 'inventory' &&
-            // Предмет должен соответствовать типу требования
-            item.itemKey === req.itemKey && 
-            // Качество должно быть не ниже минимального
+            item.itemKey === req.itemKey &&
             item.quality >= req.minQuality &&
-            // Предмет не должен быть выбран в другом слоте
             !otherSelectedIds.includes(item.uniqueId)
         );
     }, [inventory, req, selectedItemId, allSelectedGear]);
@@ -31,7 +24,7 @@ const MissionRequirement = ({ req, inventory, onSelectGear, selectedItemId, allS
         <div className={`flex flex-col gap-2 bg-gray-900/50 p-2 rounded-md border ${currentlySelectedItem ? 'border-green-500' : 'border-gray-700'}`}>
             <div className="flex items-center gap-2">
                 <img
-                    src={getItemImageSrc(req.itemKey, 32)} // Используем новую функцию, размер 32x32
+                    src={getItemImageSrc(req.itemKey, 32)}
                     alt={itemDef.name}
                     className="w-8 h-8 object-contain"
                 />
@@ -47,7 +40,7 @@ const MissionRequirement = ({ req, inventory, onSelectGear, selectedItemId, allS
                     <button onClick={() => onSelectGear(null)} className="text-red-400 hover:text-red-300 text-xs">(отменить)</button>
                 </div>
             ) : (
-                <select 
+                <select
                     onChange={(e) => onSelectGear(e.target.value || null)}
                     className="bg-gray-800 border border-gray-600 text-white text-xs rounded-md p-1 w-full focus:outline-none focus:border-orange-500"
                 >
@@ -63,12 +56,11 @@ const MissionRequirement = ({ req, inventory, onSelectGear, selectedItemId, allS
     );
 };
 
-// Компонент для отображения одной миссии
 const MissionCard = ({ mission, gameState, handlers }) => {
     const [selectedGear, setSelectedGear] = useState({});
 
-    const expandedRequirements = useMemo(() => 
-        mission.requiredGear.flatMap((req, originalIndex) => 
+    const expandedRequirements = useMemo(() =>
+        mission.requiredGear.flatMap((req, originalIndex) =>
             Array.from({ length: req.count }, (_, i) => ({
                 ...req,
                 uniqueReqKey: `${mission.id}-${originalIndex}-${i}`
@@ -78,7 +70,6 @@ const MissionCard = ({ mission, gameState, handlers }) => {
     const handleSelectGear = (uniqueReqKey, itemUniqueId) => {
         setSelectedGear(prev => {
             const newSelection = { ...prev };
-            // Запрещаем выбирать один и тот же предмет в разные слоты
             const isAlreadySelected = Object.values(newSelection).includes(itemUniqueId);
             if (itemUniqueId && isAlreadySelected) {
                 handlers.showToast("Этот предмет уже выбран для другого слота!", "error");
@@ -94,10 +85,8 @@ const MissionCard = ({ mission, gameState, handlers }) => {
         });
     };
     
-    // Проверяем, все ли РАСШИРЕННЫЕ требования удовлетворены
     const allRequirementsMet = expandedRequirements.length === Object.keys(selectedGear).length;
 
-    // --- ИЗМЕНЕНИЕ ЗДЕСЬ: Кнопка теперь вызывает реальную логику ---
     const handlePrepareExpedition = () => {
         if (!allRequirementsMet) return;
         handlers.handleStartMission(mission.id, selectedGear);
@@ -112,7 +101,7 @@ const MissionCard = ({ mission, gameState, handlers }) => {
                 <h4 className="font-bold text-sm text-gray-300 mb-2">Требуемое снаряжение:</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {expandedRequirements.map((req) => (
-                        <MissionRequirement 
+                        <MissionRequirement
                             key={req.uniqueReqKey}
                             req={req}
                             inventory={gameState.inventory}
@@ -140,9 +129,9 @@ const MissionCard = ({ mission, gameState, handlers }) => {
                 </div>
             </div>
             
-            <button 
+            <button
                 onClick={handlePrepareExpedition}
-                disabled={!allRequirementsMet} 
+                disabled={!allRequirementsMet}
                 className="interactive-element w-full mt-4 bg-orange-800/80 text-white font-bold py-2 px-4 rounded-md hover:enabled:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
                 {allRequirementsMet ? 'Отправить экспедицию' : 'Снаряжение не готово'}
@@ -151,10 +140,9 @@ const MissionCard = ({ mission, gameState, handlers }) => {
     );
 };
 
-// --- НОВЫЙ КОМПОНЕНТ для отображения активных миссий ---
 const ActiveMission = ({ mission }) => {
-    const missionDef = definitions.missions?.[mission.missionId]; // Безопасный доступ
-    if (!missionDef) return null; // Если missionDef не найден, ничего не рендерим
+    const missionDef = definitions.missions?.[mission.missionId];
+    if (!missionDef) return null;
 
     const [timeLeft, setTimeLeft] = useState(0);
 
@@ -182,7 +170,6 @@ const ActiveMission = ({ mission }) => {
 }
 
 const GuildView = ({ gameState, handlers }) => {
-    // Фильтруем миссии, чтобы не показывать уже активные
     const availableMissions = Object.values(definitions.missions).filter(
         missionDef => !gameState.activeMissions.some(active => active.missionId === missionDef.id)
     );
@@ -194,7 +181,6 @@ const GuildView = ({ gameState, handlers }) => {
             </h2>
             <p className="text-gray-400 mb-6">Здесь вы можете браться за особые поручения, требующие не только вашего времени, но и мастерства. Снабдите экспедиции лучшим снаряжением, чтобы получить достойную награду.</p>
             
-            {/* --- НОВЫЙ РАЗДЕЛ ДЛЯ АКТИВНЫХ МИССИЙ --- */}
             {gameState.activeMissions.length > 0 && (
                 <div className="mb-6">
                     <h3 className="font-cinzel text-xl text-yellow-400 mb-3">Экспедиции в пути</h3>

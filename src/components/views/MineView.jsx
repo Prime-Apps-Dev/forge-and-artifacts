@@ -1,8 +1,8 @@
 // src/components/views/MineView.jsx
 import React from 'react';
-import MineButton from '../ui/MineButton';
-import { formatNumber } from '../../utils/helpers';
-import Tooltip from '../ui/Tooltip';
+import MineButton from '../ui/buttons/MineButton'; // Обновленный путь
+import { formatNumber } from '../../utils/formatters';
+import Tooltip from '../ui/display/Tooltip'; // Обновленный путь
 import { definitions } from '../../data/definitions';
 
 const MineView = ({ gameState, handlers }) => {
@@ -23,9 +23,9 @@ const MineView = ({ gameState, handlers }) => {
 
         return {
             oreType,
-            name: definitions.resources?.[oreType]?.name || oreType.replace('Ore', ' руда').replace('ironOre', 'Железная руда').replace('copperOre', 'Медная руда').replace('mithrilOre', 'Мифриловая руда').replace('adamantiteOre', 'Адамантитовая руда'),
+            name: definitions.resources?.[oreType]?.name || oreType.replace('Ore', ' руда'),
             amount: gameState[oreType] || 0,
-            isLocked: isTotallyLocked, // Этот флаг теперь используется для полного скрытия
+            isLocked: isTotallyLocked,
             lockText: lockText,
             skillLearnedButLocked: isUnlocked && isPlaythroughLocked
         };
@@ -46,21 +46,20 @@ const MineView = ({ gameState, handlers }) => {
             <p className="text-gray-400 mb-6">Здесь можно добыть ценную руду для будущих шедевров. Подмастерья будут добывать только базовые типы руды.</p>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {ores.map(ore => (
-                    // ИЗМЕНЕНО: Условный рендеринг всего блока, если не заблокирован
                     !ore.isLocked ? (
                         <div key={ore.oreType} className="flex flex-col items-center">
                             <MineButton
                                 oreType={ore.oreType}
                                 name={ore.name}
                                 onClick={handlers.handleMineOre}
-                                isLocked={false} // Кнопка не заблокирована, если отображается
+                                isLocked={false}
                                 lockText=""
                             />
                             <p className={`text-sm mt-2 ${ore.oreType === 'mithrilOre' ? 'text-cyan-400' : ore.oreType === 'adamantiteOre' ? 'text-indigo-400' : 'text-gray-400'}`}>
                                 В наличии: {formatNumber(ore.amount)}
                             </p>
                         </div>
-                    ) : null // Если заблокирован, ничего не рендерим
+                    ) : null
                 ))}
             </div>
         </div>

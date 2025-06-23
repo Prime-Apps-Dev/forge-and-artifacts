@@ -1,7 +1,7 @@
 // src/components/views/SkillsView.jsx
 import React, { useRef } from 'react';
 import { definitions } from '../../data/definitions';
-import SkillNode from '../ui/SkillNode';
+import SkillNode from '../ui/cards/SkillNode'; // Обновленный путь
 
 const SkillsView = ({ gameState, handlers }) => {
     const scrollContainerRef = useRef(null);
@@ -12,7 +12,6 @@ const SkillsView = ({ gameState, handlers }) => {
     );
     const Connector = () => <div className="h-8 w-px bg-gray-600 my-2"></div>;
 
-    // ИЗМЕНЕНИЕ: Обновленная структура дерева навыков с новыми навыками
     const skillTreeStructure = [
         {
             age: "Железный Век",
@@ -24,14 +23,14 @@ const SkillsView = ({ gameState, handlers }) => {
                 { id: "row5", skills: ["divisionOfLabor"] },
                 { id: "row6", skills: ["hammerStrength", "preciseTools", "perfectGrinding"] },
                 { id: "row7", skills: ["sharpeningStone", "advancedForging"] },
-                { id: "row8", skills: ["geologicalSurvey", "sturdyVice"] }, // Добавлен sturdyVice
+                { id: "row8", skills: ["geologicalSurvey", "sturdyVice"] },
             ]
         },
         {
             age: "Медный Век",
             rows: [
                 { id: "row9", skills: ["findCopper"] },
-                { id: "row10", skills: ["copperProspecting", "crucibleRefinement", "jewelryCrafting", "chainWeaving"] }, // Добавлен chainWeaving
+                { id: "row10", skills: ["copperProspecting", "crucibleRefinement", "jewelryCrafting", "chainWeaving"] },
                 { id: "row11", skills: ["apprenticeTraining", "qualityControl"] },
                 { id: "row12", skills: ["advancedSmelting", "tradeRoutes"] },
                 { id: "row13", skills: ["guildContracts", "masterworkHammers"] },
@@ -43,18 +42,17 @@ const SkillsView = ({ gameState, handlers }) => {
                 { id: "row14", skills: ["artOfAlloys"] },
                 { id: "row15", skills: ["riskAssessment", "steadyHand", "masterReforging"] },
                 { id: "row16", skills: ["blueprint_eliteArmor", "blueprint_fineWeapons", "reinforcedStructure", "ancientKnowledge"] },
-                { id: "row17", skills: ["expeditionPlanning", "gildingTechniques", "weaponryPreparation", "repairWorkshop"] }, // Добавлены weaponryPreparation, repairWorkshop
+                { id: "row17", skills: ["expeditionPlanning", "gildingTechniques", "weaponryPreparation", "repairWorkshop"] },
                 { id: "row18", skills: ["legendaryClients", "optimizedSmelting", "efficientCrafting"] },
-                { id: "row19", skills: ["matterAlchemy", "tradeNegotiation", "artisanMentor", "jewelersKit", "universalPincers"] }, // Добавлены jewelersKit, universalPincers
-                { id: "row20", skills: ["timeMastery", "blueprint_masterwork", "truePotential", "crossbowMastery", "armorPlating", "precisionChronometry"] }, // Добавлены crossbowMastery, armorPlating, precisionChronometry
+                { id: "row19", skills: ["matterAlchemy", "tradeNegotiation", "artisanMentor", "jewelersKit", "universalPincers"] },
+                { id: "row20", skills: ["timeMastery", "blueprint_masterwork", "truePotential", "crossbowMastery", "armorPlating", "precisionChronometry"] },
             ]
         },
         {
             age: "Мифриловая Эпоха",
             rows: [
                 { id: "row21", skills: ["mithrilProspecting"] },
-                { id: "row22", skills: ["blueprint_mithrilCrafting", "archersMastery"] }, // Добавлен archersMastery
-                // НОВЫЕ РЯДЫ ДЛЯ МИФРИЛОВОЙ ЭПОХИ
+                { id: "row22", skills: ["blueprint_mithrilCrafting", "archersMastery"] },
                 { id: "row23_mithril", skills: ["mithrilStrength"] },
                 { id: "row24_mithril", skills: ["mithrilDefense"] },
                 { id: "row25_mithril", skills: ["mithrilSpeed"] },
@@ -71,10 +69,9 @@ const SkillsView = ({ gameState, handlers }) => {
             age: "Эпоха Легенд",
             rows: [
                 { id: "row33", skills: ["adamantiteMining"] },
-                { id: "row34", skills: ["blueprint_adamantiteForging", "adamantiteArmorCrafting"] }, // Добавлен adamantiteArmorCrafting
+                { id: "row34", skills: ["blueprint_adamantiteForging", "adamantiteArmorCrafting"] },
                 { id: "row35", skills: ["arcaneMetallurgy"] },
-                { id: "row36", skills: ["blueprint_arcaniteMastery", "arcaniteJewelry"] }, // Добавлен arcaniteJewelry
-                // НОВЫЕ РЯДЫ ДЛЯ ЭПОХИ ЛЕГЕНД
+                { id: "row36", skills: ["blueprint_arcaniteMastery", "arcaniteJewelry"] },
                 { id: "row37_legend", skills: ["legendaryStrength"] },
                 { id: "row38_legend", skills: ["legendaryDefense"] },
                 { id: "row39_legend", skills: ["legendarySpeed"] },
@@ -89,7 +86,6 @@ const SkillsView = ({ gameState, handlers }) => {
         }
     ];
 
-    // Функция для рендеринга ряда навыков
     const renderSkillRow = (row, previousRow = null) => {
         return (
             <div key={row.id} className="skills-row flex justify-center gap-12 flex-wrap">
@@ -107,7 +103,7 @@ const SkillsView = ({ gameState, handlers }) => {
         );
     };
 
-    let previousRow = null; // Для отслеживания предыдущего ряда для логики разблокировки
+    let previousRow = null;
 
     return (
         <div ref={scrollContainerRef} className="skills-tree-container relative h-full w-full overflow-y-auto p-4">
@@ -124,10 +120,6 @@ const SkillsView = ({ gameState, handlers }) => {
                         <AgeHeader title={ageGroup.age} />
                         {ageGroup.rows.map((row, rowIndex) => {
                             const renderedRow = renderSkillRow(row, previousRow);
-                            // Мы не обновляем previousRow здесь, так как логика зависимостей в SkillNode.jsx
-                            // работает на основе skill.requires, а не позиции в этом массиве.
-                            // Однако, для визуальных соединителей, можно было бы передавать previousRow.
-                            // Пока оставляем как есть, так как SkillNode обрабатывает зависимости сам.
                             return (
                                 <React.Fragment key={row.id}>
                                     {renderedRow}

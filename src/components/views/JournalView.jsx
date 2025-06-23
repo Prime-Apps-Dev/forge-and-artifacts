@@ -1,7 +1,6 @@
 import React from 'react';
 import { definitions } from '../../data/definitions';
 
-// Отдельный компонент для карточки квеста, чтобы избежать дублирования
 const QuestCard = ({ quest, onAccept, progress, type }) => {
     const faction = definitions.factions[quest.factionId];
     const targetItem = quest.target.type === 'craft' ? definitions.items[quest.target.itemId] : null;
@@ -45,7 +44,6 @@ const JournalView = ({ gameState, onStartQuest }) => {
             </h2>
 
             <div className="space-y-6">
-                {/* --- АКТИВНЫЕ ЗАДАНИЯ --- */}
                 <div>
                     <h3 className="font-cinzel text-xl text-orange-400 mb-3">Активные задания</h3>
                     <div className="space-y-4">
@@ -59,8 +57,7 @@ const JournalView = ({ gameState, onStartQuest }) => {
                     </div>
                 </div>
 
-                {/* --- ДОСТУПНЫЕ ЗАДАНИЯ --- */}
-                 <div>
+                <div>
                     <h3 className="font-cinzel text-xl text-yellow-400 mb-3">Доступные задания</h3>
                      <div className="space-y-4">
                         {availableQuests.length > 0
@@ -73,7 +70,6 @@ const JournalView = ({ gameState, onStartQuest }) => {
                     </div>
                 </div>
 
-                 {/* --- ЗАВЕРШЕННЫЕ ЗАДАНИЯ --- */}
                  <div>
                     <h3 className="font-cinzel text-xl text-gray-500 mb-3">Завершенные задания</h3>
                      <div className="space-y-2">

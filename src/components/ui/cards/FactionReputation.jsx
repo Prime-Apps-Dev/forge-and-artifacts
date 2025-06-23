@@ -1,6 +1,7 @@
 import React from 'react';
-import { definitions } from '../../data/definitions'; // Импортируем definitions
-import { formatNumber, getReputationLevel } from '../../utils/helpers'; // Импортируем helpers
+import { definitions } from '../../../data/definitions'; // Импортируем definitions
+import { formatNumber } from '../../../utils/formatters';
+import { getReputationLevel } from '../../../utils/helpers';
 
 const FactionReputation = React.memo(({ factionId, gameState }) => { // Добавляем gameState
     const faction = definitions.factions[factionId];
