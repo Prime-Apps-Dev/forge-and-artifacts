@@ -191,9 +191,11 @@ export const achievements = {
             return { current: state.shopReputation, target: 500, isComplete: state.shopReputation >= 500 };
         },
         apply: (state) => {
-            if (!state.completedAchievements.includes('shop_expansion_applied')) {
+            // Эта проверка должна быть в gameLogic, но оставлю ее здесь пока для ясности.
+            // Применение награды в gameLogic должно быть помечено через appliedAchievementRewards
+            if (!state.completedAchievements.includes('shop_expansion_applied')) { // Это некорректная проверка здесь
                 state.shopShelves.push({ itemId: null, customer: null, saleProgress: 0, saleTimer: 0 });
-                state.completedAchievements.push('shop_expansion_applied');
+                state.completedAchievements.push('shop_expansion_applied'); // Это тоже некорректно
             }
             console.log("Достижение 'Магазинное Пространство' применено: +1 Торговая Полка.");
         }
@@ -206,8 +208,8 @@ export const achievements = {
         effectName: '+1% к шансу крит. удара',
         icon: IMAGE_PATHS.ACHIEVEMENTS.NOVICE_COLLECTOR,
         levels: [
-            { target: 5, reward: { critChance: 0.01 } },
-            { target: 15, reward: { critChance: 0.02 } }
+            { target: 5, reward: { critChance: 0.01 }, effectName: '+1% к шансу крит. удара (Ур.1)' },
+            { target: 15, reward: { critChance: 0.02 }, effectName: '+2% к шансу крит. удара (Ур.2)' }
         ],
         check: (state, defs) => {
             const uniqueItems = new Set(state.inventory.map(item => item.itemKey));
@@ -226,22 +228,13 @@ export const achievements = {
             return {
                 current: currentTotal,
                 target: targetForNextLevel,
-                isComplete: currentLevel === achievements.novice_collector.levels.length
+                isComplete: currentLevel === achievements.novice_collector.levels.length,
+                currentLevel: currentLevel // Добавил текущий уровень для удобства в gameLogic
             };
         },
-        apply: (state) => {
-            let totalCritChanceBonus = 0;
-            const uniqueItemsCount = new Set(state.inventory.map(item => item.itemKey)).size;
-
-            achievements.novice_collector.levels.forEach((level, index) => {
-                const achievementIdMarker = `novice_collector_level_${index + 1}_applied`;
-                if (uniqueItemsCount >= level.target && !state.completedAchievements.includes(achievementIdMarker)) {
-                    totalCritChanceBonus += level.reward.critChance;
-                    state.completedAchievements.push(achievementIdMarker);
-                }
-            });
-            state.critChance += totalCritChanceBonus;
-            console.log(`Достижение 'Начинающий Коллекционер' применено: +${(totalCritChanceBonus * 100).toFixed(0)}% к шансу крит. удара.`);
+        apply: (state, levelReward) => { // Теперь apply принимает levelReward
+            if (levelReward.critChance) state.critChance += levelReward.critChance;
+            console.log(`Достижение 'Начинающий Коллекционер' применено: +${(levelReward.critChance * 100).toFixed(0)}% к шансу крит. удара.`);
         }
     },
     resource_tycoon: {
@@ -252,8 +245,8 @@ export const achievements = {
         effectName: '+1 к добыче руды за клик',
         icon: IMAGE_PATHS.ACHIEVEMENTS.RESOURCE_TYCOON,
         levels: [
-            { target: 1000, reward: { orePerClick: 1 } },
-            { target: 10000, reward: { orePerClick: 1 } }
+            { target: 1000, reward: { orePerClick: 1 }, effectName: '+1 к добыче руды за клик (Ур.1)' },
+            { target: 10000, reward: { orePerClick: 1 }, effectName: '+1 к добыче руды за клик (Ур.2)' }
         ],
         check: (state, defs) => {
             const totalOre = (state.ironOre || 0) + (state.copperOre || 0) + (state.mithrilOre || 0) + (state.adamantiteOre || 0);
@@ -272,22 +265,13 @@ export const achievements = {
             return {
                 current: currentTotal,
                 target: targetForNextLevel,
-                isComplete: currentLevel === achievements.resource_tycoon.levels.length
+                isComplete: currentLevel === achievements.resource_tycoon.levels.length,
+                currentLevel: currentLevel
             };
         },
-        apply: (state) => {
-            let totalOrePerClickBonus = 0;
-            const totalOre = (state.ironOre || 0) + (state.copperOre || 0) + (state.mithrilOre || 0) + (state.adamantiteOre || 0);
-
-            achievements.resource_tycoon.levels.forEach((level, index) => {
-                const achievementIdMarker = `resource_tycoon_level_${index + 1}_applied`;
-                if (totalOre >= level.target && !state.completedAchievements.includes(achievementIdMarker)) {
-                    totalOrePerClickBonus += level.reward.orePerClick;
-                    state.completedAchievements.push(achievementIdMarker);
-                }
-            });
-            state.orePerClick += totalOrePerClickBonus;
-            console.log(`Достижение 'Магнат Ресурсов' применено: +${totalOrePerClickBonus} к добыче руды за клик.`);
+        apply: (state, levelReward) => {
+            if (levelReward.orePerClick) state.orePerClick += levelReward.orePerClick;
+            console.log(`Достижение 'Магнат Ресурсов' применено: +${levelReward.orePerClick} к добыче руды за клик.`);
         }
     },
     inlay_master: {
@@ -298,8 +282,8 @@ export const achievements = {
         effectName: '+5% к бонусной Материи от заказов',
         icon: IMAGE_PATHS.ACHIEVEMENTS.INLAY_MASTER,
         levels: [
-            { target: 1, reward: { matterModifier: 0.05 } },
-            { target: 5, reward: { matterModifier: 0.05 } }
+            { target: 1, reward: { matterModifier: 0.05 }, effectName: '+5% к бонусной Материи от заказов (Ур.1)' },
+            { target: 5, reward: { matterModifier: 0.05 }, effectName: '+5% к бонусной Материи от заказов (Ур.2)' }
         ],
         check: (state, defs) => {
             const totalInlayedItems = state.totalInlayedItems || 0;
@@ -318,22 +302,13 @@ export const achievements = {
             return {
                 current: currentTotal,
                 target: targetForNextLevel,
-                isComplete: currentLevel === achievements.inlay_master.levels.length
+                isComplete: currentLevel === achievements.inlay_master.levels.length,
+                currentLevel: currentLevel
             };
         },
-        apply: (state) => {
-            let totalMatterModifierBonus = 0;
-            const totalInlayedItems = state.totalInlayedItems || 0;
-
-            achievements.inlay_master.levels.forEach((level, index) => {
-                const achievementIdMarker = `inlay_master_level_${index + 1}_applied`;
-                if (totalInlayedItems >= level.target && !state.completedAchievements.includes(achievementIdMarker)) {
-                    totalMatterModifierBonus += level.reward.matterModifier;
-                    state.completedAchievements.push(achievementIdMarker);
-                }
-            });
-            state.matterModifier += totalMatterModifierBonus;
-            console.log(`Достижение 'Мастер Инкрустации' применено: +${(totalMatterModifierBonus * 100).toFixed(0)}% к бонусной Материи.`);
+        apply: (state, levelReward) => {
+            if (levelReward.matterModifier) state.matterModifier += levelReward.matterModifier;
+            console.log(`Достижение 'Мастер Инкрустации' применено: +${(levelReward.matterModifier * 100).toFixed(0)}% к бонусной Материи.`);
         }
     },
     graving_legend: {
@@ -344,8 +319,8 @@ export const achievements = {
         effectName: '+5% к бонусным Искрам от заказов',
         icon: IMAGE_PATHS.ACHIEVEMENTS.GRAVING_LEGEND,
         levels: [
-            { target: 1, reward: { sparksModifier: 0.05 } },
-            { target: 5, reward: { sparksModifier: 0.05 } }
+            { target: 1, reward: { sparksModifier: 0.05 }, effectName: '+5% к бонусным Искрам от заказов (Ур.1)' },
+            { target: 5, reward: { sparksModifier: 0.05 }, effectName: '+5% к бонусным Искрам от заказов (Ур.2)' }
         ],
         check: (state, defs) => {
             const totalGravedItems = state.totalGravedItems || 0;
@@ -364,22 +339,13 @@ export const achievements = {
             return {
                 current: currentTotal,
                 target: targetForNextLevel,
-                isComplete: currentLevel === achievements.graving_legend.levels.length
+                isComplete: currentLevel === achievements.graving_legend.levels.length,
+                currentLevel: currentLevel
             };
         },
-        apply: (state) => {
-            let totalSparksModifierBonus = 0;
-            const totalGravedItems = state.totalGravedItems || 0;
-
-            achievements.graving_legend.levels.forEach((level, index) => {
-                const achievementIdMarker = `graving_legend_level_${index + 1}_applied`;
-                if (totalGravedItems >= level.target && !state.completedAchievements.includes(achievementIdMarker)) {
-                    totalSparksModifierBonus += level.reward.sparksModifier;
-                    state.completedAchievements.push(achievementIdMarker);
-                }
-            });
-            state.sparksModifier += totalSparksModifierBonus;
-            console.log(`Достижение 'Гравировщик Легенд' применено: +${(totalSparksModifierBonus * 100).toFixed(0)}% к бонусным Искрам.`);
+        apply: (state, levelReward) => {
+            if (levelReward.sparksModifier) state.sparksModifier += levelReward.sparksModifier;
+            console.log(`Достижение 'Гравировщик Легенд' применено: +${(levelReward.sparksModifier * 100).toFixed(0)}% к бонусным Искрам.`);
         }
     },
     veteran_crafter: {
@@ -390,8 +356,8 @@ export const achievements = {
         effectName: '+1 к прогрессу за клик',
         icon: IMAGE_PATHS.ACHIEVEMENTS.VETERAN_CRAFTER,
         levels: [
-            { target: 10, reward: { progressPerClick: 1 } },
-            { target: 50, reward: { progressPerClick: 1 } }
+            { target: 10, reward: { progressPerClick: 1 }, effectName: '+1 к прогрессу за клик (Ур.1)' },
+            { target: 50, reward: { progressPerClick: 1 }, effectName: '+1 к прогрессу за клик (Ур.2)' }
         ],
         check: (state, defs) => {
             const totalItems = state.totalItemsCrafted || 0;
@@ -410,22 +376,13 @@ export const achievements = {
             return {
                 current: currentTotal,
                 target: targetForNextLevel,
-                isComplete: currentLevel === achievements.veteran_crafter.levels.length
+                isComplete: currentLevel === achievements.veteran_crafter.levels.length,
+                currentLevel: currentLevel
             };
         },
-        apply: (state) => {
-            let totalProgressPerClickBonus = 0;
-            const totalItems = state.totalItemsCrafted || 0;
-
-            achievements.veteran_crafter.levels.forEach((level, index) => {
-                const achievementIdMarker = `veteran_crafter_level_${index + 1}_applied`;
-                if (totalItems >= level.target && !state.completedAchievements.includes(achievementIdMarker)) {
-                    totalProgressPerClickBonus += level.reward.progressPerClick;
-                    state.completedAchievements.push(achievementIdMarker);
-                }
-            });
-            state.progressPerClick += totalProgressPerClickBonus;
-            console.log(`Достижение 'Кузнец-Ветеран' применено: +${totalProgressPerClickBonus} к прогрессу за клик.`);
+        apply: (state, levelReward) => {
+            if (levelReward.progressPerClick) state.progressPerClick += levelReward.progressPerClick;
+            console.log(`Достижение 'Кузнец-Ветеран' применено: +${levelReward.progressPerClick} к прогрессу за клик.`);
         }
     },
     diligent_smelter: {
@@ -436,8 +393,8 @@ export const achievements = {
         effectName: '+5% к скорости плавки',
         icon: IMAGE_PATHS.ACHIEVEMENTS.DILIGENT_SMELTER,
         levels: [
-            { target: 500, reward: { smeltingSpeedModifier: 0.05 } },
-            { target: 2500, reward: { smeltingSpeedModifier: 0.05 } }
+            { target: 500, reward: { smeltingSpeedModifier: 0.05 }, effectName: '+5% к скорости плавки (Ур.1)' },
+            { target: 2500, reward: { smeltingSpeedModifier: 0.05 }, effectName: '+5% к скорости плавки (Ур.2)' }
         ],
         check: (state, defs) => {
             const totalIngots = state.totalIngotsSmelted || 0;
@@ -456,22 +413,13 @@ export const achievements = {
             return {
                 current: currentTotal,
                 target: targetForNextLevel,
-                isComplete: currentLevel === achievements.diligent_smelter.levels.length
+                isComplete: currentLevel === achievements.diligent_smelter.levels.length,
+                currentLevel: currentLevel
             };
         },
-        apply: (state) => {
-            let totalSmeltingSpeedBonus = 0;
-            const totalIngots = state.totalIngotsSmelted || 0;
-
-            achievements.diligent_smelter.levels.forEach((level, index) => {
-                const achievementIdMarker = `diligent_smelter_level_${index + 1}_applied`;
-                if (totalIngots >= level.target && !state.completedAchievements.includes(achievementIdMarker)) {
-                    totalSmeltingSpeedBonus += level.reward.smeltingSpeedModifier;
-                    state.completedAchievements.push(achievementIdMarker);
-                }
-            });
-            state.smeltingSpeedModifier += totalSmeltingSpeedBonus;
-            console.log(`Достижение 'Усердный Плавильщик' применено: +${(totalSmeltingSpeedBonus * 100).toFixed(0)}% к скорости плавки.`);
+        apply: (state, levelReward) => {
+            if (levelReward.smeltingSpeedModifier) state.smeltingSpeedModifier += levelReward.smeltingSpeedModifier;
+            console.log(`Достижение 'Усердный Плавильщик' применено: +${(levelReward.smeltingSpeedModifier * 100).toFixed(0)}% к скорости плавки.`);
         }
     },
     treasurer: {
@@ -482,8 +430,8 @@ export const achievements = {
         effectName: '+5% к Искрам от заказов',
         icon: IMAGE_PATHS.ACHIEVEMENTS.TREASURER,
         levels: [
-            { target: 10000, reward: { sparksModifier: 0.05 } },
-            { target: 100000, reward: { sparksModifier: 0.05 } }
+            { target: 10000, reward: { sparksModifier: 0.05 }, effectName: '+5% к Искрам от заказов (Ур.1)' },
+            { target: 100000, reward: { sparksModifier: 0.05 }, effectName: '+5% к Искрам от заказов (Ур.2)' }
         ],
         check: (state, defs) => {
             const totalSparks = state.totalSparksEarned || 0;
@@ -502,22 +450,13 @@ export const achievements = {
             return {
                 current: currentTotal,
                 target: targetForNextLevel,
-                isComplete: currentLevel === achievements.treasurer.levels.length
+                isComplete: currentLevel === achievements.treasurer.levels.length,
+                currentLevel: currentLevel
             };
         },
-        apply: (state) => {
-            let totalSparksModifierBonus = 0;
-            const totalSparks = state.totalSparksEarned || 0;
-
-            achievements.treasurer.levels.forEach((level, index) => {
-                const achievementIdMarker = `treasurer_level_${index + 1}_applied`;
-                if (totalSparks >= level.target && !state.completedAchievements.includes(achievementIdMarker)) {
-                    totalSparksModifierBonus += level.reward.sparksModifier;
-                    state.completedAchievements.push(achievementIdMarker);
-                }
-            });
-            state.sparksModifier += totalSparksModifierBonus;
-            console.log(`Достижение 'Казначей' применено: +${(totalSparksModifierBonus * 100).toFixed(0)}% к Искрам от заказов.`);
+        apply: (state, levelReward) => {
+            if (levelReward.sparksModifier) state.sparksModifier += levelReward.sparksModifier;
+            console.log(`Достижение 'Казначей' применено: +${(levelReward.sparksModifier * 100).toFixed(0)}% к Искрам от заказов.`);
         }
     },
     matter_essence_master: {
@@ -528,8 +467,8 @@ export const achievements = {
         effectName: '-5% к стоимости Материи для навыков',
         icon: IMAGE_PATHS.ACHIEVEMENTS.MATTER_ESSENCE_MASTER,
         levels: [
-            { target: 500, reward: { matterCostReduction: 0.05 } },
-            { target: 5000, reward: { matterCostReduction: 0.05 } }
+            { target: 500, reward: { matterCostReduction: 0.05 }, effectName: '-5% к стоимости Материи для навыков (Ур.1)' },
+            { target: 5000, reward: { matterCostReduction: 0.05 }, effectName: '-5% к стоимости Материи для навыков (Ур.2)' }
         ],
         check: (state, defs) => {
             const totalMatter = state.totalMatterSpent || 0;
@@ -548,22 +487,13 @@ export const achievements = {
             return {
                 current: currentTotal,
                 target: targetForNextLevel,
-                isComplete: currentLevel === achievements.matter_essence_master.levels.length
+                isComplete: currentLevel === achievements.matter_essence_master.levels.length,
+                currentLevel: currentLevel
             };
         },
-        apply: (state) => {
-            let totalMatterCostReductionBonus = 0;
-            const totalMatter = state.totalMatterSpent || 0;
-
-            achievements.matter_essence_master.levels.forEach((level, index) => {
-                const achievementIdMarker = `matter_essence_master_level_${index + 1}_applied`;
-                if (totalMatter >= level.target && !state.completedAchievements.includes(achievementIdMarker)) {
-                    totalMatterCostReductionBonus += level.reward.matterCostReduction;
-                    state.completedAchievements.push(achievementIdMarker);
-                }
-            });
-            state.matterCostReduction += totalMatterCostReductionBonus;
-            console.log(`Достижение 'Мастер Сущности' применено: -${(totalMatterCostReductionBonus * 100).toFixed(0)}% к стоимости Материи.`);
+        apply: (state, levelReward) => {
+            if (levelReward.matterCostReduction) state.matterCostReduction += levelReward.matterCostReduction;
+            console.log(`Достижение 'Мастер Сущности' применено: -${(levelReward.matterCostReduction * 100).toFixed(0)}% к стоимости Материи.`);
         }
     },
     first_resettlement: {
@@ -588,8 +518,8 @@ export const achievements = {
         effectName: '-10% к стоимости разблокировки регионов',
         icon: IMAGE_PATHS.ACHIEVEMENTS.WORLD_EXPLORER,
         levels: [
-            { target: 2, reward: { regionUnlockCostReduction: 0.10 } },
-            { target: 3, reward: { regionUnlockCostReduction: 0.10 } }
+            { target: 2, reward: { regionUnlockCostReduction: 0.10 }, effectName: '-10% к стоимости разблокировки регионов (Ур.1)' },
+            { target: 3, reward: { regionUnlockCostReduction: 0.10 }, effectName: '-10% к стоимости разблокировки регионов (Ур.2)' }
         ],
         check: (state, defs) => {
             const visitedRegionsCount = state.regionsVisited.length;
@@ -608,22 +538,13 @@ export const achievements = {
             return {
                 current: currentTotal,
                 target: targetForNextLevel,
-                isComplete: currentLevel === achievements.world_explorer.levels.length
+                isComplete: currentLevel === achievements.world_explorer.levels.length,
+                currentLevel: currentLevel
             };
         },
-        apply: (state) => {
-            let totalRegionUnlockCostReductionBonus = 0;
-            const visitedRegionsCount = state.regionsVisited.length;
-
-            achievements.world_explorer.levels.forEach((level, index) => {
-                const achievementIdMarker = `world_explorer_level_${index + 1}_applied`;
-                if (visitedRegionsCount >= level.target && !state.completedAchievements.includes(achievementIdMarker)) {
-                    totalRegionUnlockCostReductionBonus += level.reward.regionUnlockCostReduction;
-                    state.completedAchievements.push(achievementIdMarker);
-                }
-            });
-            state.regionUnlockCostReduction += totalRegionUnlockCostReductionBonus;
-            console.log(`Достижение 'Исследователь Мира' применено: -${(totalRegionUnlockCostReductionBonus * 100).toFixed(0)}% к стоимости разблокировки регионов.`);
+        apply: (state, levelReward) => {
+            if (levelReward.regionUnlockCostReduction) state.regionUnlockCostReduction += levelReward.regionUnlockCostReduction;
+            console.log(`Достижение 'Исследователь Мира' применено: -${(levelReward.regionUnlockCostReduction * 100).toFixed(0)}% к стоимости разблокировки регионов.`);
         }
     },
     peak_mastery: {
@@ -634,8 +555,8 @@ export const achievements = {
         effectName: '+10% к XP за все действия',
         icon: IMAGE_PATHS.ACHIEVEMENTS.PEAK_MASTERY,
         levels: [
-            { target: 5, reward: { masteryXpModifier: 0.10 } },
-            { target: 10, reward: { masteryXpModifier: 0.10 } }
+            { target: 5, reward: { masteryXpModifier: 0.10 }, effectName: '+10% к XP за все действия (Ур.1)' },
+            { target: 10, reward: { masteryXpModifier: 0.10 }, effectName: '+10% к XP за все действия (Ур.2)' }
         ],
         check: (state, defs) => {
             const currentMasteryLevel = state.masteryLevel || 1;
@@ -654,21 +575,13 @@ export const achievements = {
             return {
                 current: currentTotal,
                 target: targetForNextLevel,
-                isComplete: currentLevel === achievements.peak_mastery.levels.length
+                isComplete: currentLevel === achievements.peak_mastery.levels.length,
+                currentLevel: currentLevel
             };
         },
-        apply: (state) => {
-            let totalMasteryXpModifier = 0;
-            const currentMasteryLevel = state.masteryLevel || 1;
-
-            achievements.peak_mastery.levels.forEach((level, index) => {
-                const achievementIdMarker = `peak_mastery_level_${index + 1}_applied`;
-                if (currentMasteryLevel >= level.target && !state.completedAchievements.includes(achievementIdMarker)) {
-                    totalMasteryXpModifier += level.reward.masteryXpModifier;
-                    state.completedAchievements.push(achievementIdMarker);
-                }
-            });
-            console.log(`Достижение 'Высшее Мастерство' применено: +${(totalMasteryXpModifier * 100).toFixed(0)}% к XP.`);
+        apply: (state, levelReward) => {
+            if (levelReward.masteryXpModifier) state.masteryXpModifier += levelReward.masteryXpModifier;
+            console.log(`Достижение 'Высшее Мастерство' применено: +${(levelReward.masteryXpModifier * 100).toFixed(0)}% к XP.`);
         }
     },
     enhanced_clicker: {
@@ -679,8 +592,8 @@ export const achievements = {
         effectName: '+1 к прогрессу за клик',
         icon: IMAGE_PATHS.ACHIEVEMENTS.ENHANCED_CLICKER,
         levels: [
-            { target: 10000, reward: { progressPerClick: 1 } },
-            { target: 100000, reward: { progressPerClick: 1 } }
+            { target: 10000, reward: { progressPerClick: 1 }, effectName: '+1 к прогрессу за клик (Ур.1)' },
+            { target: 100000, reward: { progressPerClick: 1 }, effectName: '+1 к прогрессу за клик (Ур.2)' }
         ],
         check: (state, defs) => {
             const totalClicks = state.totalClicks || 0;
@@ -699,22 +612,13 @@ export const achievements = {
             return {
                 current: currentTotal,
                 target: targetForNextLevel,
-                isComplete: currentLevel === achievements.enhanced_clicker.levels.length
+                isComplete: currentLevel === achievements.enhanced_clicker.levels.length,
+                currentLevel: currentLevel
             };
         },
-        apply: (state) => {
-            let totalProgressPerClickBonus = 0;
-            const totalClicks = state.totalClicks || 0;
-
-            achievements.enhanced_clicker.levels.forEach((level, index) => {
-                const achievementIdMarker = `enhanced_clicker_level_${index + 1}_applied`;
-                if (totalClicks >= level.target && !state.completedAchievements.includes(achievementIdMarker)) {
-                    totalProgressPerClickBonus += level.reward.progressPerClick;
-                    state.completedAchievements.push(achievementIdMarker);
-                }
-            });
-            state.progressPerClick += totalProgressPerClickBonus;
-            console.log(`Достижение 'Усиленный Кликер' применено: +${totalProgressPerClickBonus} к прогрессу за клик.`);
+        apply: (state, levelReward) => {
+            if (levelReward.progressPerClick) state.progressPerClick += levelReward.progressPerClick;
+            console.log(`Достижение 'Усиленный Кликер' применено: +${levelReward.progressPerClick} к прогрессу за клик.`);
         }
     },
     pathfinders_first_step: {

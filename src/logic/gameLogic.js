@@ -99,7 +99,7 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                         shelf.customer = client;
                         shelf.saleTimer = 15 + Math.random() * 15;
                         showToast(`Новый клиент интересуется товаром на полке #${index + 1}!`, "info");
-                    }
+                    };
                 }
             });
             const now = Date.now();
@@ -125,6 +125,7 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                     const achievementStatus = achievementDef.check(state, definitions);
 
                     if (!achievementDef.levels) {
+                        // Логика для одноуровневых достижений
                         if (achievementStatus.isComplete && !state.completedAchievements.includes(achievementDef.id)) {
                             state.completedAchievements.push(achievementDef.id);
                             if (!state.appliedAchievementRewards.includes(achievementDef.id)) {
@@ -132,49 +133,44 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                                 state.appliedAchievementRewards.push(achievementDef.id);
                                 showToast(`Достижение выполнено: "${achievementDef.title}"!`, 'levelup');
                                 audioController.play('levelup', 'G6', '2n');
-                                showAchievementRewardModal(achievementDef);
+                                showAchievementRewardModal(achievementDef); // Вызываем модалку
                                 recalculateAllModifiers(state);
                             }
                         }
                     } else {
-                        if (achievementStatus.currentLevel > 0) {
-                            achievementDef.levels.forEach((levelData, index) => {
-                                const levelId = `${achievementDef.id}_level_${index + 1}`;
-                                if (achievementStatus.current >= levelData.target && !state.appliedAchievementRewards.includes(levelId)) {
-                                    const reward = levelData.reward;
-                                    if (reward.sparksModifier) state.sparksModifier += reward.sparksModifier;
-                                    if (reward.matterModifier) state.matterModifier += reward.matterModifier;
-                                    if (reward.critChance) state.critChance += reward.critChance;
-                                    if (reward.orePerClick) state.orePerClick += reward.orePerClick;
-                                    if (reward.progressPerClick) state.progressPerClick += reward.progressPerClick;
-                                    if (reward.smeltingSpeedModifier) state.smeltingSpeedModifier += reward.smeltingSpeedModifier;
-                                    if (reward.matterCostReduction) state.matterCostReduction += reward.matterCostReduction;
-                                    if (reward.reputationGainModifier) {
-                                        for (const factionId in reward.reputationGainModifier) {
-                                            state.reputationGainModifier[factionId] = (state.reputationGainModifier[factionId] || 1) + reward.reputationGainModifier[factionId];
-                                        }
-                                    }
-                                    if (reward.riskModifier) state.riskModifier = (state.riskModifier || 1.0) * (1 - reward.riskModifier);
-                                    if (reward.expeditionMapCostReduction) state.expeditionMapCostModifier = (state.expeditionMapCostModifier || 1.0) * (1 - reward.expeditionMapCostReduction);
-                                    if (reward.passiveIncomeModifier) state.passiveIncomeModifier = (state.passiveIncomeModifier || 1.0) + reward.passiveIncomeModifier;
-                                    if (reward.masteryXpModifier) state.masteryXpModifier = (state.masteryXpModifier || 1.0) + levelData.reward.masteryXpModifier;
-                                    if (reward.regionUnlockCostReduction) state.regionUnlockCostReduction = (state.regionUnlockCostReduction || 0) + reward.regionUnlockCostReduction;
-                                    if (reward.questRewardModifier) state.questRewardModifier = (state.questRewardModifier || 1.0) + reward.questRewardModifier;
+                        // Логика для многоуровневых достижений
+                        let currentLevelAchieved = 0;
+                        for (let i = 0; i < achievementDef.levels.length; i++) {
+                            if (achievementStatus.current >= achievementDef.levels[i].target) {
+                                currentLevelAchieved = i + 1;
+                            } else {
+                                break;
+                            }
+                        }
 
-                                    if (reward.item) {
-                                        state.specialItems[reward.item.id] = (state.specialItems[reward.item.id] || 0) + reward.item.amount;
-                                    }
-                                    if (reward.shopShelf) {
-                                        state.shopShelves.push({ id: `shelf_${state.shopShelves.length}`, itemId: null, customer: null, saleProgress: 0, saleTimer: 0 });
-                                    }
+                        if (currentLevelAchieved > 0) {
+                            for (let i = 0; i < currentLevelAchieved; i++) {
+                                const levelId = `${achievementDef.id}_level_${i + 1}`;
+                                const levelData = achievementDef.levels[i];
 
+                                if (!state.appliedAchievementRewards.includes(levelId)) {
+                                    // Применяем награду за этот конкретный уровень
+                                    achievementDef.apply(state, levelData.reward);
                                     state.appliedAchievementRewards.push(levelId);
-                                    showToast(`Достижение выполнено: "${achievementDef.title}" (Ур. ${index + 1})!`, 'levelup');
+                                    showToast(`Достижение выполнено: "${achievementDef.title}" (Ур. ${i + 1})!`, 'levelup');
                                     audioController.play('levelup', 'G6', '2n');
-                                    showAchievementRewardModal(achievementDef);
+                                    showAchievementRewardModal({ // Передаем объект, который может быть обработан модалкой
+                                        id: achievementDef.id,
+                                        title: `${achievementDef.title} (Ур. ${i + 1})`,
+                                        description: achievementDef.description,
+                                        effectName: levelData.effectName || achievementDef.effectName, // Используем эффект уровня, если есть
+                                        icon: achievementDef.icon,
+                                        isLevelAchievement: true, // Для определения в модалке
+                                        level: i + 1
+                                    });
                                     recalculateAllModifiers(state);
                                 }
-                            });
+                            }
                         }
                     }
                 });
