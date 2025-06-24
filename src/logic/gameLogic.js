@@ -8,7 +8,7 @@ import { gameConfig as GAME_CONFIG } from '../constants/gameConfig.js';
 
 let achievementCheckTimer = 0;
 
-export function startGameLoop(updateState, handlers, showToast, showAchievementRewardModal) {
+export function startGameLoop(updateState, handlers, showToast, showAchievementRewardModal) { // Удалена showShopReputationModal из параметров, так как она не используется здесь
     return setInterval(() => {
         updateState(state => {
             const deltaTime = 0.1;
@@ -61,10 +61,6 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                 else if (newPos <= 0) { newPos = 0; activeProjectPlayer.minigameState.direction = 1; }
                 activeProjectPlayer.minigameState.position = newPos;
             }
-            // УДАЛЕНА ЛОГИКА АВТОМАТИЧЕСКОГО ЗАПОЛНЕНИЯ ПРОГРЕССА
-            // else if (activeProjectPlayer && !state.activeSale) {
-            //     handlers.applyProgress(state, state.progressPerClick * deltaTime);
-            // }
 
             if (state.activeMissions && state.activeMissions.length > 0) {
                 const now = Date.now();
@@ -128,13 +124,14 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                         // Логика для одноуровневых достижений
                         if (achievementStatus.isComplete && !state.completedAchievements.includes(achievementDef.id)) {
                             state.completedAchievements.push(achievementDef.id);
-                            if (!state.appliedAchievementRewards.includes(achievementDef.id)) {
-                                achievementDef.apply(state);
-                                state.appliedAchievementRewards.push(achievementDef.id);
-                                showToast(`Достижение выполнено: "${achievementDef.title}"!`, 'levelup');
-                                audioController.play('levelup', 'G6', '2n');
-                                showAchievementRewardModal(achievementDef); // Вызываем модалку
-                                recalculateAllModifiers(state);
+                            const rewardId = achievementDef.id;
+                            if (!state.appliedAchievementRewards.includes(rewardId)) {
+                                achievementDef.apply(state); // Применяем эффект (теперь apply функция сама определяет, куда сохранять эффект)
+                                state.appliedAchievementRewards.push(rewardId); // Помечаем как примененное
+                                // showToast(`Достижение выполнено: "${achievementDef.title}"!`, 'levelup'); // Удален тост
+                                // audioController.play('levelup', 'G6', '2n'); // Удален звук
+                                showAchievementRewardModal(achievementDef); // Показываем модалку
+                                recalculateAllModifiers(state); // Пересчитываем модификаторы, так как могли измениться вечные бонусы
                             }
                         }
                     } else {
@@ -154,21 +151,20 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                                 const levelData = achievementDef.levels[i];
 
                                 if (!state.appliedAchievementRewards.includes(levelId)) {
-                                    // Применяем награду за этот конкретный уровень
-                                    achievementDef.apply(state, levelData.reward);
-                                    state.appliedAchievementRewards.push(levelId);
-                                    showToast(`Достижение выполнено: "${achievementDef.title}" (Ур. ${i + 1})!`, 'levelup');
-                                    audioController.play('levelup', 'G6', '2n');
-                                    showAchievementRewardModal({ // Передаем объект, который может быть обработан модалкой
+                                    achievementDef.apply(state, levelData.reward); // Применяем эффект уровня
+                                    state.appliedAchievementRewards.push(levelId); // Помечаем как примененное
+                                    // showToast(`Достижение выполнено: "${achievementDef.title}" (Ур. ${i + 1})!`, 'levelup'); // Удален тост
+                                    // audioController.play('levelup', 'G6', '2n'); // Удален звук
+                                    showAchievementRewardModal({ // Передаем объект для модалки
                                         id: achievementDef.id,
                                         title: `${achievementDef.title} (Ур. ${i + 1})`,
                                         description: achievementDef.description,
-                                        effectName: levelData.effectName || achievementDef.effectName, // Используем эффект уровня, если есть
+                                        effectName: levelData.effectName || achievementDef.effectName,
                                         icon: achievementDef.icon,
-                                        isLevelAchievement: true, // Для определения в модалке
+                                        isLevelAchievement: true,
                                         level: i + 1
                                     });
-                                    recalculateAllModifiers(state);
+                                    recalculateAllModifiers(state); // Пересчитываем модификаторы
                                 }
                             }
                         }

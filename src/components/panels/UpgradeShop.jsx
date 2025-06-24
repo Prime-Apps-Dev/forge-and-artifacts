@@ -1,6 +1,6 @@
 import React from 'react';
 import { definitions } from '../../data/definitions';
-import ShopUpgradeButton from '../ui/buttons/ShopUpgradeButton'; // Обновленный путь
+import ShopUpgradeButton from '../ui/buttons/ShopUpgradeButton';
 
 const UpgradeShop = ({ gameState, handlers }) => {
     const availableUpgrades = Object.keys(definitions.upgrades).filter(id => {
@@ -22,7 +22,7 @@ const UpgradeShop = ({ gameState, handlers }) => {
     return (
         <div className="panel-section">
             <h4 className="font-cinzel text-lg text-gray-400 border-b border-gray-700/50 pb-1 mb-4">Мастерская</h4>
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4"> {/* Откат */}
                 {availableUpgrades.length > 0 ? (
                     availableUpgrades.map(id => (
                         <ShopUpgradeButton

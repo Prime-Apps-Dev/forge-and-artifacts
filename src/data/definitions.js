@@ -11,13 +11,18 @@ import { avatars } from './definitions/avatars.js';
 import { personnel } from './definitions/personnel.js';
 import { sharedDefinitions } from './definitions/shared.js';
 
+// НОВЫЕ ИМПОРТЫ
+import { masteryLevelRewards } from './definitions/masteryLevelRewards.js';
+import { playerRanks } from './definitions/playerRanks.js';
+import { shopLevels } from './definitions/shopLevels.js';
+
 // Импортируем из отдельных файлов
 import { greatArtifacts } from './definitions/greatArtifacts.js';
 import { specialItems } from './definitions/specialItems.js';
 import { upgrades } from './definitions/upgrades.js';
 import { shopUpgrades } from './definitions/shopUpgrades.js';
 import { recipes } from './definitions/recipes.js';
-import { gameConfig } from '../constants/gameConfig.js'; // ИЗМЕНЕНО: Теперь импортируется как gameConfig
+import { gameConfig } from '../constants/gameConfig.js';
 
 // Вспомогательная константа для resourceIcons, т.к. она ссылается на пути, а не на объекты
 import { IMAGE_PATHS } from '../constants/paths.js';
@@ -48,7 +53,12 @@ export const definitions = {
     upgrades,
     shopUpgrades,
     recipes,
-    gameConfig, // Здесь используется как свойство объекта definitions
+    gameConfig,
+
+    // НОВЫЕ ОПРЕДЕЛЕНИЯ
+    masteryLevelRewards,
+    playerRanks,
+    shopLevels,
 
     resourceIcons: {
         ironOre: IMAGE_PATHS.ORES.IRON,

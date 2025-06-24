@@ -1,19 +1,79 @@
 // src/logic/gameCompletions.js
 import { definitions } from '../data/definitions';
 import { audioController } from '../utils/audioController';
-import { formatNumber } from '../utils/formatters'; // ИЗМЕНЕНО: Импорт formatNumber отдельно
-import { getReputationLevel } from '../utils/helpers'; // ИЗМЕНЕНО: Импорт getReputationLevel из helpers
+import { formatNumber } from '../utils/formatters';
+import { getReputationLevel } from '../utils/helpers';
 import { checkForNewQuests } from '../utils/gameEventChecks';
 import { gameConfig as GAME_CONFIG } from '../constants/gameConfig.js';
+import { visualEffects } from '../utils/visualEffects';
 
-function updateMastery(state, xpEarned, showToast) {
+// Вспомогательная функция для применения наград к состоянию игры
+export function applyRewardToState(state, reward, showToast) {
+    if (!reward) return;
+
+    // Применение базовых ресурсов
+    if (reward.sparks) {
+        state.sparks += reward.sparks;
+        state.totalSparksEarned += reward.sparks;
+    }
+    if (reward.matter) {
+        state.matter += reward.matter;
+    }
+    if (reward.ironOre) { state.ironOre += reward.ironOre; }
+    if (reward.copperOre) { state.copperOre += reward.copperOre; }
+    if (reward.mithrilOre) { state.mithrilOre += reward.mithrilOre; }
+    if (reward.adamantiteOre) { state.adamantiteOre += reward.adamantiteOre; }
+
+    // Специальные награды (например, добавление полок, увеличение инвентаря)
+    if (reward.shopShelf) {
+        for(let i=0; i < reward.shopShelf; i++) {
+            state.shopShelves.push({ id: `shelf_${Date.now()}_${Math.random()}`, itemId: null, customer: null, saleProgress: 0, saleTimer: 0 });
+        }
+        showToast(`Получено: +${reward.shopShelf} торговых полок!`, 'success');
+    }
+    if (reward.inventoryCapacity) {
+        state.inventoryCapacity += reward.inventoryCapacity;
+    }
+    // Добавьте здесь другие одноразовые эффекты, которые не влияют на eternalAchievementBonuses
+    if (reward.prestigePoints) {
+        state.prestigePoints = (state.prestigePoints || 0) + reward.prestigePoints;
+    }
+}
+
+
+export function updateMastery(state, xpEarned, showToast) {
+    const oldLevel = state.masteryLevel;
+    
+    const maxPlayerRankLevel = definitions.playerRanks[definitions.playerRanks.length - 1].level;
+
+    // Если игрок уже на максимальном уровне, не начисляем XP и не повышаем уровень
+    if (state.masteryLevel >= maxPlayerRankLevel) {
+        state.masteryXP = 0; // На максимальном уровне XP обнуляется
+        state.masteryXPToNextLevel = 0; // На максимальном уровне XP больше не требуется
+        return;
+    }
+
     state.masteryXP += xpEarned;
-    while (state.masteryXP >= state.masteryXPToNextLevel) {
+
+    while (state.masteryXP >= state.masteryXPToNextLevel && state.masteryLevel < maxPlayerRankLevel) {
         state.masteryXP -= state.masteryXPToNextLevel;
         state.masteryLevel += 1;
-        state.masteryXPToNextLevel = Math.floor(state.masteryXPToNextLevel * GAME_CONFIG.MASTERY_XP_LEVEL_MULTIPLIER);
+        
+        // Если это последний уровень, устанавливаем XPToNextLevel в 0
+        if (state.masteryLevel >= maxPlayerRankLevel) {
+            state.masteryXPToNextLevel = 0;
+            state.masteryXP = 0; // Обнуляем XP на максимальном уровне
+        } else {
+            // Пересчет XP до следующего уровня
+            state.masteryXPToNextLevel = Math.floor(state.masteryXPToNextLevel * GAME_CONFIG.MASTERY_XP_LEVEL_MULTIPLIER);
+            // Защита от слишком малого xpToNextLevel (минимум 1, чтобы избежать деления на ноль)
+            if (state.masteryXPToNextLevel < 1) state.masteryXPToNextLevel = 1;
+        }
+
         showToast(`Уровень Мастерства повышен! Уровень ${state.masteryLevel}!`, 'levelup');
         audioController.play('levelup', 'E5', '4n');
+        // Вызов эффекта частиц при повышении уровня игрока
+        visualEffects.showParticleEffect(window.innerWidth / 2, window.innerHeight / 2, 'levelup');
     }
 }
 
@@ -27,33 +87,11 @@ function handleQuestCompletion(state, questDef, showToast) {
     let xpEarnedForQuest = 0;
 
     if (questDef.reward) {
-        if (questDef.reward.type === 'item') {
-            state.specialItems[questDef.reward.itemId] = (state.specialItems[questDef.reward.itemId] || 0) + questDef.reward.amount;
-            showToast(`Получено: ${questDef.reward.amount} x ${definitions.specialItems[questDef.reward.itemId].name}!`, 'success');
-            Object.keys(definitions.greatArtifacts).forEach(artId => {
-                const artifact = state.artifacts[artId];
-                const allObtained = Object.values(artifact.components).every(comp => state.specialItems[comp.itemId] > 0);
-                if (allObtained && artifact.status === 'locked') {
-                    artifact.status = 'available';
-                    showToast(`Все компоненты для артефакта "${definitions.greatArtifacts[artId].name}" собраны!`, 'levelup');
-                }
-            });
-        } else if (questDef.reward.type === 'unlock_recipe') {
-            showToast(`Разблокирован новый рецепт!`, 'success');
-        } else if (questDef.reward.type === 'sparks') {
-            const finalSparks = Math.floor(questDef.reward.amount * (state.questRewardModifier || 1.0));
-            state.sparks += finalSparks;
-            state.totalSparksEarned += finalSparks;
-            showToast(`Получено: +${formatNumber(finalSparks)} искр!`, 'success');
-            xpEarnedForQuest += finalSparks / GAME_CONFIG.QUEST_XP_SPARK_DIVIDER;
-        } else if (questDef.reward.type === 'matter') {
-            const finalMatter = Math.floor(questDef.reward.amount * (state.questRewardModifier || 1.0));
-            state.matter += finalMatter;
-            showToast(`Получено: +${formatNumber(finalMatter)} материи!`, 'success');
-        } else if (questDef.reward.type === 'reputation') {
-            state.reputation[questDef.reward.factionId] = (state.reputation[questDef.reward.factionId] || 0) + questDef.reward.amount;
-            showToast(`Получено: +${questDef.reward.amount} репутации с ${definitions.factions[questDef.reward.factionId].name}!`, 'success');
-        }
+        // Здесь используем applyRewardToState для ресурсов
+        applyRewardToState(state, questDef.reward, showToast);
+        
+        // Модификаторы квестов теперь должны быть частью applyRewardToState
+        // или напрямую влиять на eternalAchievementBonuses, если они постоянны
         if (questDef.reward.riskReduction) {
             state.riskModifier = (state.riskModifier || 1.0) * (1 - questDef.reward.riskReduction);
         }
@@ -76,6 +114,16 @@ function handleQuestCompletion(state, questDef, showToast) {
         if (questDef.reward.progressPerClick) {
             state.progressPerClick += questDef.reward.progressPerClick;
         }
+
+        // Если награда типа unlock_recipe, она просто открывает возможность, не меняя state напрямую здесь
+        if (questDef.reward.type === 'unlock_recipe') {
+             // showToast(`Разблокирован новый рецепт!`, 'success'); // Это уже было в usePlayerActions
+        }
+
+        // XP за квесты
+        if (questDef.reward.sparks) { // Если XP начисляется от искр
+            xpEarnedForQuest += questDef.reward.sparks / GAME_CONFIG.QUEST_XP_SPARK_DIVIDER;
+        }
     }
     xpEarnedForQuest = Math.floor(xpEarnedForQuest * (state.masteryXpModifier || 1.0));
     updateMastery(state, xpEarnedForQuest, showToast);
@@ -90,19 +138,9 @@ export function handleCompleteMission(state, activeMissionId, showToast) {
 
     let rewardToast = [`Экспедиция "${missionDef.name}" завершена!`];
 
-    if (missionDef.baseReward.sparks) {
-        state.sparks += missionDef.baseReward.sparks;
-        state.totalSparksEarned += missionDef.baseReward.sparks;
-        rewardToast.push(`+${formatNumber(missionDef.baseReward.sparks)} искр`);
-    }
-    if (missionDef.baseReward.matter) {
-        state.matter += missionDef.baseReward.matter;
-        rewardToast.push(`+${formatNumber(missionDef.baseReward.matter)} материи`);
-    }
-    if (missionDef.baseReward.ironOre) {
-        state.ironOre += missionDef.baseReward.ironOre;
-        rewardToast.push(`+${formatNumber(missionDef.baseReward.ironOre)} железной руды`);
-    }
+    // Здесь используем applyRewardToState для базовых наград миссии
+    applyRewardToState(state, missionDef.baseReward, showToast);
+
     if (missionDef.baseReward.reputation) {
         for (const factionId in missionDef.baseReward.reputation) {
             state.reputation[factionId] = (state.reputation[factionId] || 0) + missionDef.baseReward.reputation[factionId];
@@ -125,7 +163,7 @@ export function handleCompleteMission(state, activeMissionId, showToast) {
         }
     }
 
-    let xpEarned = Math.max(1, Math.floor(missionDef.baseReward.sparks / GAME_CONFIG.QUEST_XP_SPARK_DIVIDER));
+    let xpEarned = Math.max(1, Math.floor(missionDef.baseReward.sparks / GAME_CONFIG.MISSION_XP_SPARK_DIVIDER));
     xpEarned = Math.floor(xpEarned * (state.masteryXpModifier || 1.0));
     updateMastery(state, xpEarned, showToast);
 
@@ -161,7 +199,22 @@ export function handleSaleCompletion(state, shelfIndex, showToast) {
         showToast(`Клиент в восторге! Вы получили ${formatNumber(tipAmount)} искр в качестве чаевых!`, 'crit');
     }
 
-    state.shopReputation = (state.shopReputation || 0) + Math.floor(salePrice / GAME_CONFIG.SALE_REPUTATION_DIVIDER);
+    // shopXP обновляется и проверяется уровень магазина
+    const oldShopLevel = state.shopLevel;
+    state.shopXP = (state.shopXP || 0) + GAME_CONFIG.SHOP_REPUTATION_XP_PER_SALE;
+    
+    const nextShopLevelDef = definitions.shopLevels.find(lvl => lvl.level === state.shopLevel + 1);
+    if (nextShopLevelDef && state.shopXP >= nextShopLevelDef.requiredXP) {
+        state.shopLevel += 1;
+        state.shopXPToNextLevel = nextShopLevelDef.requiredXP;
+
+        showToast(`Уровень Магазина повышен! Уровень ${state.shopLevel}!`, 'levelup');
+        audioController.play('levelup', 'E5', '4n');
+        // Вызов эффекта частиц при повышении уровня магазина
+        visualEffects.showParticleEffect(window.innerWidth / 2, window.innerHeight / 2, 'shop_levelup');
+    }
+
+
     let xpEarned = Math.max(1, Math.floor(salePrice / GAME_CONFIG.SALE_XP_SALE_PRICE_DIVIDER));
     xpEarned = Math.floor(xpEarned * (state.masteryXpModifier || 1.0));
     updateMastery(state, xpEarned, showToast);
@@ -306,6 +359,7 @@ export function handleCompleteGraving(state, gravingProject, showToast) {
             showToast(`Гравировка "${definitions.items[item.itemKey].name}" завершена! Уровень гравировки: ${item.gravingLevel}`, "success");
 
             const xpEarned = Math.max(1, Math.floor((item.gravingLevel || 0) * GAME_CONFIG.GRAVING_XP_LEVEL_MULTIPLIER));
+            xpEarned = Math.floor(xpEarned * (state.masteryXpModifier || 1.0));
             updateMastery(state, xpEarned, showToast);
 
             Object.values(definitions.quests).forEach(quest => {
@@ -351,19 +405,49 @@ export function handleOrderCompletion(state, order, showToast, setCompletedOrder
     state.totalSparksEarned += finalSparks;
     state.matter += finalMatter;
 
-    // Initialize xpEarned here
-    let xpEarned = Math.max(1, Math.floor((definitions.items[order.itemKey].components.reduce((sum, c) => sum + c.progress, 0) / 10) * rewardMultiplier));
+    let xpEarned = Math.max(1, Math.floor((definitions.items[order.itemKey].components.reduce((sum, c) => sum + c.progress, 0) / GAME_CONFIG.ORDER_XP_PROGRESS_DIVIDER) * rewardMultiplier));
     xpEarned = Math.floor(xpEarned * (state.masteryXpModifier || 1.0));
     updateMastery(state, xpEarned, showToast);
     state.totalItemsCrafted = (state.totalItemsCrafted || 0) + 1;
 
+    // Флаг для отслеживания рискованных заказов подряд
+    if (order.isRisky) {
+        state.consecutiveRiskyOrders = (state.consecutiveRiskyOrders || 0) + 1;
+    } else {
+        state.consecutiveRiskyOrders = 0; // Сбрасываем, если заказ не рискованный
+    }
+
     Object.values(definitions.quests).forEach(quest => {
         const questDef = definitions.quests[quest.id];
         if (state.journal.activeQuests.some(activeQuest => activeQuest.id === quest.id)) {
+            // Обновление прогресса для новых типов целей
             if (questDef.target.type === 'craft' && questDef.target.itemId === order.itemKey) {
                 state.journal.questProgress[quest.id] = (state.journal.questProgress[quest.id] || 0) + 1;
             }
-            if (questDef.target.type === 'risky_order' && order.isRisky) {
+            else if (questDef.target.type === 'risky_order' && order.isRisky) {
+                state.journal.questProgress[quest.id] = (state.journal.questProgress[quest.id] || 0) + 1;
+            }
+            // НОВЫЕ ТИПЫ ЦЕЛЕЙ
+            else if (questDef.target.type === 'complex_order') {
+                const itemComplexity = itemDef.components.length;
+                if (itemComplexity >= 3) { // Определяем "сложный заказ" по количеству компонентов
+                    state.journal.questProgress[quest.id] = (state.journal.questProgress[quest.id] || 0) + 1;
+                }
+            }
+            else if (questDef.target.type === 'craft_quality' && itemDef.itemType === questDef.target.itemType && itemSold.quality >= questDef.target.minQuality) {
+                state.journal.questProgress[quest.id] = (state.journal.questProgress[quest.id] || 0) + 1;
+            }
+            else if (questDef.target.type === 'risky_order_consecutive' && order.isRisky) {
+                // Прогресс уже отслеживается через state.consecutiveRiskyOrders
+                if (state.consecutiveRiskyOrders >= questDef.target.count) {
+                    // Это будет засчитано как завершение квеста, но прогресс нужно обнулить
+                    state.journal.questProgress[quest.id] = questDef.target.count; // Засчитываем сразу
+                }
+            }
+            else if (questDef.target.type === 'craft_item_tag' && itemDef.tags?.includes(questDef.target.itemTag)) { // Предполагаем наличие tags в items.js
+                state.journal.questProgress[quest.id] = (state.journal.questProgress[quest.id] || 0) + 1;
+            }
+            else if (questDef.target.type === 'inlay_item_tag' && itemSold.inlaySlots?.some(slot => definitions.items[itemSold.itemKey].tags?.includes(questDef.target.itemTag))) { // Для инкрустации с тегом
                 state.journal.questProgress[quest.id] = (state.journal.questProgress[quest.id] || 0) + 1;
             }
 
@@ -376,6 +460,10 @@ export function handleOrderCompletion(state, order, showToast, setCompletedOrder
 
             if (state.journal.questProgress[quest.id] >= questDef.target.count) {
                 handleQuestCompletion(state, questDef, showToast);
+                // Если квест risky_order_consecutive, обнуляем счетчик после завершения
+                if (questDef.target.type === 'risky_order_consecutive') {
+                    state.consecutiveRiskyOrders = 0;
+                }
             }
         }
     });

@@ -134,5 +134,96 @@ export const quests = {
         trigger: { type: 'achievement', achievementId: 'enhanced_clicker', level: 2 },
         target: { type: 'totalClicks', count: 200000 },
         reward: { type: 'progressPerClick', amount: 2, sparks: 12000 }
+    },
+    // НОВЫЕ КВЕСТЫ ГИЛЬДИЙ
+    guild_contracts_ii_quest: {
+        id: 'guild_contracts_ii_quest',
+        title: "Мастер Гильдейских Контрактов",
+        description: "Гильдия Торговцев признает ваше влияние. Выполните 10 сложных заказов, чтобы получить их полное доверие и доступ к особым поручениям.",
+        factionId: 'merchants',
+        trigger: { type: 'skill', skillId: 'guildContractsII' },
+        target: { type: 'complex_order', count: 10 }, // Новый тип цели: сложные заказы
+        reward: { type: 'reputation', factionId: 'merchants', amount: 200, matter: 500, sparks: 20000 }
+    },
+    durable_gear_quest: {
+        id: 'durable_gear_quest',
+        title: "Поставки для Авантюристов",
+        description: "Лиге Авантюристов требуется партия брони высочайшего качества для их самых опасных экспедиций. Создайте 3 элемента брони с качеством не ниже 8.0.",
+        factionId: 'adventurers',
+        trigger: { type: 'skill', skillId: 'durableGear' },
+        target: { type: 'craft_quality', itemType: 'armor', count: 3, minQuality: 8.0 }, // Новый тип цели: крафт с мин. качеством
+        reward: { type: 'item', itemId: 'mithrilIngots', amount: 10, reputation: { adventurers: 150 }, sparks: 15000 }
+    },
+    resource_expert_quest: {
+        id: 'resource_expert_quest',
+        title: "Контроль Поставок",
+        description: "Королевский Двор нуждается в огромном количестве редкой руды для своих проектов. Доставьте 5000 единиц мифриловой или адамантитовой руды.",
+        factionId: 'court',
+        trigger: { type: 'skill', skillId: 'resourceExpert' },
+        target: { type: 'deliver_resources', resources: ['mithrilOre', 'adamantiteOre'], count: 5000 }, // Новый тип цели: доставка ресурсов
+        reward: { type: 'matter', amount: 200, reputation: { court: 150 }, sparks: 25000 }
+    },
+    ancient_ruins_quest: {
+        id: 'ancient_ruins_quest',
+        title: "Тайны Забытых Шахт",
+        description: "Авантюристы обнаружили древние руины, полные ловушек и запечатанных проходов. Они просят вас создать 5 универсальных клещей из искростали для их вскрытия.",
+        factionId: 'adventurers',
+        trigger: { type: 'skill', skillId: 'ancientRuins' },
+        target: { type: 'craft', itemId: 'sparksteelPincers', count: 5 },
+        reward: { type: 'item', itemId: 'material_lavaAgate', amount: 1, matter: 1000, sparks: 30000 }
+    },
+    secret_operations_quest: {
+        id: 'secret_operations_quest',
+        title: "Негласное Задание",
+        description: "Тайные заказчики из Гильдии Торговцев предлагают опасное задание. Выполните его, не привлекая внимания (успешно завершите 3 рискованных заказа подряд).",
+        factionId: 'merchants',
+        trigger: { type: 'skill', skillId: 'secretOperations' },
+        target: { type: 'risky_order_consecutive', count: 3 }, // Новый тип цели: N рискованных заказов подряд
+        reward: { type: 'sparks', amount: 50000, riskReduction: 0.05, reputation: { merchants: 200 } }
+    },
+    // Квесты для более поздних эпох
+    legendary_craft_quest: {
+        id: 'legendary_craft_quest',
+        title: "Высшая Проба",
+        description: "Королевский Двор желает получить подтверждение вашего легендарного мастерства. Создайте 1 предмет уровня 'Легенда' (качество 10.0), чтобы получить их абсолютную благосклонность.",
+        factionId: 'court',
+        trigger: { type: 'skill', skillId: 'blueprint_masterwork' },
+        target: { type: 'craft_quality', itemType: 'any', count: 1, minQuality: 10.0 },
+        reward: { type: 'matter', amount: 5000, sparks: 100000, reputation: { court: 300 } }
+    },
+    mithril_supply_chain_quest: {
+        id: 'mithril_supply_chain_quest',
+        title: "Мифриловые Поставки",
+        description: "Торговая Гильдия хочет наладить бесперебойные поставки мифрила. Выполните 5 заказов на мифриловые изделия.",
+        factionId: 'merchants',
+        trigger: { type: 'skill', skillId: 'mithrilProspecting' },
+        target: { type: 'craft_item_tag', itemTag: 'mithril', count: 5 }, // Новый тип цели: крафт по тегу
+        reward: { type: 'passiveGeneration', resourceType: 'mithrilOre', amount: 0.1, sparks: 40000 }
+    },
+    arcanite_master_quest: {
+        id: 'arcanite_master_quest',
+        title: "Секреты Арканита",
+        description: "Лига Авантюристов узнала о ваших успехах с арканитом. Продемонстрируйте свои навыки, инкрустировав 3 арканитовых предмета.",
+        factionId: 'adventurers',
+        trigger: { type: 'skill', skillId: 'arcaniteJewelry' },
+        target: { type: 'inlay_item_tag', itemTag: 'arcanite', count: 3 }, // Новый тип цели: инкрустация по тегу
+        reward: { type: 'item', itemId: 'component_focusingLens', amount: 1, matter: 10000, reputation: { adventurers: 250 } }
+    },
+    eternal_knowledge_quest: {
+        id: 'eternal_knowledge_quest',
+        title: "Поиск Вечных Знаний",
+        description: "Королевский Двор заинтересован в восстановлении древних знаний. Потратьте 10000 единиц материи, чтобы доказать свою приверженность науке.",
+        factionId: 'court',
+        trigger: { type: 'matter_spent', count: 10000 }, // Новый тип цели: потратить материю
+        reward: { type: 'matterModifier', amount: 0.1, sparks: 50000 }
+    },
+    forge_legend_quest: {
+        id: 'forge_legend_quest',
+        title: "Выковать Легенду",
+        description: "Торговая Гильдия вызывает вас на создание абсолютного шедевра. Создайте артефакт 'Молот Горного Сердца', чтобы войти в историю.",
+        factionId: 'merchants',
+        trigger: { type: 'artifact_completed', artifactId: 'hammer' }, // Новый тип цели: создание артефакта
+        target: { type: 'artifact_completed', artifactId: 'hammer' }, // Цель дублируется для консистентности, но фактически проверяется триггером
+        reward: { type: 'prestigePoints', amount: 100, sparks: 100000, matter: 5000 }
     }
 };

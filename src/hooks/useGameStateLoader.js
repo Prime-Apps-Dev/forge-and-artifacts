@@ -1,9 +1,9 @@
 // src/hooks/useGameStateLoader.js
-
 import { useState, useRef } from 'react';
 import { definitions } from '../data/definitions.js';
 import { recalculateAllModifiers } from '../utils/gameStateUtils.js';
-import { IMAGE_PATHS } from '../constants/paths.js'; // Используем IMAGE_PATHS для дефолтного аватара
+import { IMAGE_PATHS } from '../constants/paths.js';
+import { applyRewardToState } from '../logic/gameCompletions.js';
 
 export const initialGameState = {
     sparks: 0, matter: 0,
@@ -14,8 +14,7 @@ export const initialGameState = {
     inventoryCapacity: 8,
     shopShelves: [
         { id: 'shelf_0', itemId: null, customer: null, saleProgress: 0, saleTimer: 0 },
-        { id: 'shelf_1', itemId: null, customer: null, saleProgress: 0, saleTimer: 0 },
-        { id: 'shelf_2', itemId: null, customer: null, saleProgress: 0, saleTimer: 0 }
+        { id: 'shelf_1', itemId: null, customer: null, saleProgress: 0, saleTimer: 0 }
     ],
     passiveGeneration: { ironOre: 0, copperOre: 0, ironIngots: 0, forgeProgress: 0, sparks: 0 },
     orderQueue: [],
@@ -24,12 +23,18 @@ export const initialGameState = {
     currentEpicOrder: null,
     smeltingProcess: null,
     activeWorkstationId: 'anvil',
+    workstations: {
+        anvil: { level: 1, xp: 0, xpToNextLevel: definitions.workstations.anvil.baseXpToNextLevel },
+        workbench: { level: 1, xp: 0, xpToNextLevel: definitions.workstations.workbench.baseXpToNextLevel },
+        grindstone: { level: 1, xp: 0, xpToNextLevel: definitions.workstations.grindstone.baseXpToNextLevel },
+    },
     workstationBonus: { anvil: 1, workbench: 1, grindstone: 1 },
     progressPerClick: 1, orePerClick: 1,
     sparksModifier: 1.0, matterModifier: 1.0,
     critChance: 0.0, critBonus: 2.0,
     smeltingSpeedModifier: 1.0, timeLimitModifier: 1.0,
     componentCostReduction: 0,
+    matterCostReduction: 0,
     isAutoOrderOn: true,
     passiveIncomeModifier: 1.0,
     upgradeLevels: {},
@@ -47,11 +52,10 @@ export const initialGameState = {
     expeditionMapCostModifier: 1,
     marketTradeSpeedModifier: 1.0,
     playerShopSalesSpeedModifier: 1.0,
-    matterCostReduction: 0,
-    masteryLevel: 1,
-    masteryXP: 0,
-    masteryXPToNextLevel: 100,
-    shopReputation: 0,
+    shopLevel: 1,
+    shopXP: 0,
+    shopXPToNextLevel: definitions.shopLevels[0].requiredXP,
+    claimedShopLevelRewards: [],
     lastClickTime: 0,
     clickCount: 0,
     isShopLocked: false,
@@ -80,7 +84,14 @@ export const initialGameState = {
     totalExpeditionMapsBought: 0,
     totalCourtOrdersCompleted: 0,
     totalRiskyOrdersCompleted: 0,
-    playerAvatarId: IMAGE_PATHS.AVATARS.DEFAULT_MALE, // Дефолтный аватар
+    playerAvatarId: IMAGE_PATHS.AVATARS.DEFAULT_MALE,
+    playerName: 'Безымянный Кузнец',
+    claimedMasteryLevelRewards: [],
+    eternalAchievementBonuses: {}, // Объект для хранения всех постоянных бонусов от достижений
+    masteryXP: 0,
+    masteryLevel: 1,
+    masteryXPToNextLevel: definitions.gameConfig.MASTERY_XP_LEVEL_START,
+    consecutiveRiskyOrders: 0, // Добавлен для отслеживания рискованных заказов подряд
 };
 
 
@@ -124,7 +135,19 @@ export function useGameStateLoader(showToast) {
                 }
             } else if (key === 'activeMissions' && parsed[key]) {
                 tempState[key] = parsed[key];
-            } else if (initialGameState[key] && typeof initialGameState[key] === 'object' && !Array.isArray(initialGameState[key])) {
+            } else if (key === 'workstations') {
+                for (const workstationId in initialGameState.workstations) {
+                    tempState.workstations[workstationId] = {
+                        level: parsed.workstations?.[workstationId]?.level || initialGameState.workstations[workstationId].level,
+                        xp: parsed.workstations?.[workstationId]?.xp || initialGameState.workstations[workstationId].xp,
+                        xpToNextLevel: parsed.workstations?.[workstationId]?.xpToNextLevel || initialGameState.workstations[workstationId].xpToNextLevel,
+                    };
+                }
+            }
+            else if (key === 'eternalAchievementBonuses') {
+                tempState.eternalAchievementBonuses = { ...(initialGameState.eternalAchievementBonuses), ...(parsed.eternalAchievementBonuses || {}) };
+            }
+            else if (initialGameState[key] && typeof initialGameState[key] === 'object' && !Array.isArray(initialGameState[key])) {
                 tempState[key] = { ...(initialGameState[key]), ...(parsed[key] || {}) };
             } else if (Array.isArray(initialGameState[key])) {
                 if (key === 'inventory') {
@@ -142,14 +165,14 @@ export function useGameStateLoader(showToast) {
                         saleProgress: 0,
                         saleTimer: 0
                     }));
-                } else if (key === 'completedAchievements' || key === 'appliedAchievementRewards') {
+                } else if (key === 'completedAchievements' || key === 'appliedAchievementRewards' || key === 'claimedMasteryLevelRewards' || key === 'claimedShopLevelRewards') {
                     tempState[key] = parsed[key] || [];
                 }
                 else {
                     tempState[key] = parsed[key] !== undefined ? parsed[key] : initialGameState[key];
                 }
             }
-            else if (['eternalSkills', 'prestigePoints', 'regionsVisited', 'isFirstPlaythrough', 'initialGravingLevel', 'regionUnlockCostReduction', 'questRewardModifier', 'playerAvatarId', 'totalItemsCrafted', 'totalIngotsSmelted', 'totalClicks', 'totalSparksEarned', 'totalMatterSpent', 'totalExpeditionMapsBought', 'totalCourtOrdersCompleted', 'totalRiskyOrdersCompleted'].includes(key)) {
+            else if (['eternalSkills', 'prestigePoints', 'regionsVisited', 'isFirstPlaythrough', 'initialGravingLevel', 'regionUnlockCostReduction', 'questRewardModifier', 'playerAvatarId', 'totalItemsCrafted', 'totalIngotsSmelted', 'totalClicks', 'totalSparksEarned', 'totalMatterSpent', 'totalExpeditionMapsBought', 'totalCourtOrdersCompleted', 'totalRiskyOrdersCompleted', 'playerName', 'shopLevel', 'shopXP', 'shopXPToNextLevel', 'consecutiveRiskyOrders'].includes(key)) { // Добавлен consecutiveRiskyOrders
                 tempState[key] = parsed[key] !== undefined ? parsed[key] : initialGameState[key];
             }
             else if (['lastClickTime', 'clickCount', 'activeReforge', 'activeInlay', 'activeGraving', 'activeInfoModal', 'activeOrder', 'activeFreeCraft', 'currentEpicOrder', 'smeltingProcess', 'activeSale'].includes(key)) {
@@ -159,72 +182,98 @@ export function useGameStateLoader(showToast) {
             }
         });
 
+        // Ensure shopShelves count matches initial state if not parsed correctly
         while (tempState.shopShelves.length < initialGameState.shopShelves.length) {
             tempState.shopShelves.push({ id: `shelf_${tempState.shopShelves.length}`, itemId: null, customer: null, saleProgress: 0, saleTimer: 0 });
         }
 
-        if (parsed.masterFame !== undefined && tempState.masteryXP === undefined) {
-            tempState.masteryXP = parsed.masterFame;
+        // Handle old shopReputation field for migration
+        if (parsed.shopReputation !== undefined && tempState.shopXP === initialGameState.shopXP) {
+            tempState.shopXP = parsed.shopReputation;
+            let tempShopLevel = 1;
+            let tempShopXPToNextLevel = definitions.shopLevels[0].requiredXP;
+            while (tempShopXPToNextLevel !== undefined && tempState.shopXP >= tempShopXPToNextLevel && tempShopLevel < definitions.shopLevels.length) {
+                tempShopLevel++;
+                const nextLevelDef = definitions.shopLevels[tempShopLevel - 1];
+                tempShopXPToNextLevel = nextLevelDef ? nextLevelDef.requiredXP : tempShopXPToNextLevel * 1.5;
+            }
+            tempState.shopLevel = tempShopLevel;
+            tempState.shopXPToNextLevel = tempShopXPToNextLevel || definitions.shopLevels[definitions.shopLevels.length - 1].requiredXP; // Ensure it's not undefined
         }
-        tempState.masteryXP = tempState.masteryXP !== undefined ? tempState.masteryXP : initialGameState.masteryXP;
-        tempState.masteryLevel = tempState.masteryLevel !== undefined ? tempState.masteryLevel : initialGameState.masteryLevel;
-        tempState.masteryXPToNextLevel = tempState.masteryXPToNextLevel !== undefined ? tempState.masteryXPToNextLevel : initialGameState.masteryXPToNextLevel;
 
 
-        tempState.isShopLocked = parsed.isShopLocked || initialGameState.isShopLocked;
-        tempState.shopLockEndTime = parsed.shopLockEndTime || initialGameState.shopLockEndTime;
-        if (tempState.isShopLocked && Date.now() > tempState.shopLockEndTime) {
-            tempState.isShopLocked = false;
-            tempState.shopLockEndTime = 0;
-        }
-
-        Object.values(definitions.achievements).forEach(achievementDef => {
-            const achievementStatus = achievementDef.check(tempState, definitions);
-
-            if (!achievementDef.levels) {
-                if (achievementStatus.isComplete && !tempState.completedAchievements.includes(achievementDef.id)) {
-                    tempState.completedAchievements.push(achievementDef.id);
-                    if (!tempState.appliedAchievementRewards.includes(achievementDef.id)) {
-                        achievementDef.apply(tempState);
-                        tempState.appliedAchievementRewards.push(achievementDef.id);
-                    }
-                }
+        // ОБНОВЛЕНО: Корректная инициализация masteryXPToNextLevel при загрузке
+        if (parsed.masteryLevel !== undefined) {
+            tempState.masteryLevel = parsed.masteryLevel;
+            tempState.masteryXP = parsed.masteryXP !== undefined ? parsed.masteryXP : 0;
+            
+            // Если игрок на максимальном уровне, XPToNextLevel = 0
+            const maxPlayerRankLevel = definitions.playerRanks[definitions.playerRanks.length - 1].level;
+            if (tempState.masteryLevel >= maxPlayerRankLevel) {
+                tempState.masteryXPToNextLevel = 0;
+                tempState.masteryXP = 0;
             } else {
-                if (achievementStatus.currentLevel > 0) {
-                    achievementDef.levels.forEach((levelData, index) => {
-                        const levelId = `${achievementDef.id}_level_${index + 1}`;
-                        if (achievementStatus.current >= levelData.target && !tempState.appliedAchievementRewards.includes(levelId)) {
-                            const reward = levelData.reward;
-                            if (reward.sparksModifier) tempState.sparksModifier += reward.sparksModifier;
-                            if (reward.matterModifier) tempState.matterModifier += reward.matterModifier;
-                            if (reward.critChance) tempState.critChance += reward.critChance;
-                            if (reward.orePerClick) tempState.orePerClick += reward.orePerClick;
-                            if (reward.progressPerClick) tempState.progressPerClick += reward.progressPerClick;
-                            if (reward.smeltingSpeedModifier) tempState.smeltingSpeedModifier += reward.smeltingSpeedModifier;
-                            if (reward.matterCostReduction) tempState.matterCostReduction += reward.matterCostReduction;
-                            if (reward.reputationGainModifier) {
-                                for (const factionId in reward.reputationGainModifier) {
-                                    tempState.reputationGainModifier[factionId] = (tempState.reputationGainModifier[factionId] || 1) + reward.reputationGainModifier[factionId];
-                                }
-                            }
-                            if (reward.riskModifier) tempState.riskModifier = (tempState.riskModifier || 1.0) * (1 - reward.riskModifier);
-                            if (reward.expeditionMapCostModifier) tempState.expeditionMapCostModifier = (tempState.expeditionMapCostModifier || 1.0) * (1 - reward.expeditionMapCostModifier);
-                            if (reward.passiveIncomeModifier) tempState.passiveIncomeModifier = (tempState.passiveIncomeModifier || 1.0) + reward.passiveIncomeModifier;
-                            if (reward.masteryXpModifier) tempState.masteryXpModifier = (tempState.masteryXpModifier || 1.0) + levelData.reward.masteryXpModifier;
-                            if (reward.regionUnlockCostReduction) tempState.regionUnlockCostReduction = (tempState.regionUnlockCostReduction || 0) + reward.regionUnlockCostReduction;
-                            if (reward.questRewardModifier) tempState.questRewardModifier = (tempState.questRewardModifier || 1.0) + reward.questRewardModifier;
-
-                            if (reward.item) {
-                                tempState.specialItems[reward.item.id] = (tempState.specialItems[reward.item.id] || 0) + reward.item.amount;
-                            }
-                            if (reward.shopShelf) {
-                                tempState.shopShelves.push({ id: `shelf_${tempState.shopShelves.length}`, itemId: null, customer: null, saleProgress: 0, saleTimer: 0 });
-                            }
-
-                            tempState.appliedAchievementRewards.push(levelId);
-                        }
-                    });
+                let calculatedXPToNext = definitions.gameConfig.MASTERY_XP_LEVEL_START; // Базовое значение для уровня 1
+                for (let i = 1; i < tempState.masteryLevel; i++) {
+                    calculatedXPToNext = Math.floor(calculatedXPToNext * definitions.gameConfig.MASTERY_XP_LEVEL_MULTIPLIER);
                 }
+                tempState.masteryXPToNextLevel = calculatedXPToNext;
+            }
+        } else {
+            // Если данных нет, используем начальные значения из initialGameState
+            tempState.masteryXP = initialGameState.masteryXP;
+            tempState.masteryLevel = initialGameState.masteryLevel;
+            tempState.masteryXPToNextLevel = initialGameState.masteryXPToNextLevel;
+        }
+        // Защита от 0 или отрицательных значений XPToNextLevel на НЕ максимальном уровне
+        if (tempState.masteryLevel < definitions.playerRanks[definitions.playerRanks.length - 1].level && tempState.masteryXPToNextLevel <= 0) {
+            tempState.masteryXPToNextLevel = definitions.gameConfig.MASTERY_XP_LEVEL_START; // Сброс к базовому значению, если сломалось
+        }
+
+
+        // Reapply achievement rewards (persistent ones) on load
+        const appliedAchievementRewardsSnapshot = parsed.appliedAchievementRewards || [];
+        tempState.appliedAchievementRewards = []; // Clear current list for reapplication
+        
+        Object.values(definitions.achievements).forEach(achievementDef => {
+            if (!achievementDef.levels) { // Single-level achievement
+                const rewardId = achievementDef.id;
+                if (appliedAchievementRewardsSnapshot.includes(rewardId)) {
+                    if (!achievementDef.isOneTimeReward) { // Reapply only if it's NOT a one-time reward.
+                        achievementDef.apply(tempState);
+                    }
+                    tempState.appliedAchievementRewards.push(rewardId);
+                }
+            } else { // Multi-level achievement
+                achievementDef.levels.forEach((levelData, index) => {
+                    const levelId = `${achievementDef.id}_level_${index + 1}`;
+                    if (appliedAchievementRewardsSnapshot.includes(levelId)) {
+                        if (!(levelData.reward && levelData.reward.isOneTimeReward)) {
+                            achievementDef.apply(tempState, levelData.reward);
+                        }
+                        tempState.appliedAchievementRewards.push(levelId);
+                    }
+                });
+            }
+        });
+
+
+        // Apply mastery level rewards from saved state (these are applied via recalculateAllModifiers)
+        const claimedMasteryLevelRewardsSnapshot = parsed.claimedMasteryLevelRewards || [];
+        tempState.claimedMasteryLevelRewards = [];
+        Object.values(definitions.masteryLevelRewards).forEach(rewardDef => {
+            const rewardId = rewardDef.id;
+            if (claimedMasteryLevelRewardsSnapshot.includes(rewardId)) {
+                tempState.claimedMasteryLevelRewards.push(rewardId);
+            }
+        });
+
+        // Apply shop level rewards from saved state (these are applied via recalculateAllModifiers)
+        const claimedShopLevelRewardsSnapshot = parsed.claimedShopLevelRewards || [];
+        tempState.claimedShopLevelRewards = [];
+        Object.values(definitions.shopLevels).forEach(levelDef => {
+            if (levelDef.reward && levelDef.reward.id && claimedShopLevelRewardsSnapshot.includes(levelDef.reward.id)) {
+                tempState.claimedShopLevelRewards.push(levelDef.reward.id);
             }
         });
 

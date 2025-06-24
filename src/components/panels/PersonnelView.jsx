@@ -1,6 +1,6 @@
 import React from 'react';
 import { definitions } from '../../data/definitions';
-import PersonnelUpgradeButton from '../ui/buttons/PersonnelUpgradeButton'; // Обновленный путь
+import PersonnelUpgradeButton from '../ui/buttons/PersonnelUpgradeButton';
 
 const PersonnelView = ({ gameState, handlers }) => {
     return (

@@ -15,9 +15,8 @@ export const achievements = {
             return { current: completed, target: total, isComplete: completed >= total };
         },
         apply: (state) => {
-            state.sparksModifier += 0.05;
-            state.matterModifier += 0.05;
-            console.log("Достижение 'Создать все Великие Артефакты' применено: +5% к Искрам и Материи.");
+            state.eternalAchievementBonuses.sparksModifier = (state.eternalAchievementBonuses.sparksModifier || 0) + 0.05;
+            state.eternalAchievementBonuses.matterModifier = (state.eternalAchievementBonuses.matterModifier || 0) + 0.05;
         }
     },
     faction_merchants: {
@@ -33,8 +32,7 @@ export const achievements = {
             return { current: currentRep, target: exaltedThreshold, isComplete: currentRep >= exaltedThreshold };
         },
         apply: (state) => {
-            state.playerShopSalesSpeedModifier += 0.05;
-            console.log("Достижение 'Превознесение у Торговцев' применено: +5% к скорости продажи.");
+            state.eternalAchievementBonuses.playerShopSalesSpeedModifier = (state.eternalAchievementBonuses.playerShopSalesSpeedModifier || 0) + 0.05;
         }
     },
     faction_adventurers: {
@@ -50,8 +48,7 @@ export const achievements = {
             return { current: currentRep, target: exaltedThreshold, isComplete: currentRep >= exaltedThreshold };
         },
         apply: (state) => {
-            state.progressPerClick += 2;
-            console.log("Достижение 'Превознесение у Авантюристов' применено: +2 к прогрессу за клик.");
+            state.eternalAchievementBonuses.progressPerClick = (state.eternalAchievementBonuses.progressPerClick || 0) + 2;
         }
     },
     faction_court: {
@@ -67,8 +64,7 @@ export const achievements = {
             return { current: currentRep, target: exaltedThreshold, isComplete: currentRep >= exaltedThreshold };
         },
         apply: (state) => {
-            state.matterCostReduction += 0.10;
-            console.log("Достижение 'Превознесение у Королевского Двора' применено: -10% к стоимости Материи.");
+            state.eternalAchievementBonuses.matterCostReduction = (state.eternalAchievementBonuses.matterCostReduction || 0) + 0.10;
         }
     },
     mastery_skills: {
@@ -87,8 +83,7 @@ export const achievements = {
             return { current: completed, target: availableSkillsInCurrentPlaythrough, isComplete: completed >= availableSkillsInCurrentPlaythrough };
         },
         apply: (state) => {
-            state.passiveIncomeModifier += 0.10;
-            console.log("Достижение 'Изучить все навыки' применено: +10% к эффективности подмастерьев.");
+            state.eternalAchievementBonuses.passiveIncomeModifier = (state.eternalAchievementBonuses.passiveIncomeModifier || 0) + 0.10;
         }
     },
     mastery_quests: {
@@ -104,8 +99,7 @@ export const achievements = {
             return { current: completed, target: total, isComplete: completed >= total };
         },
         apply: (state) => {
-            state.questRewardModifier += 0.10;
-            console.log("Достижение 'Выполнить все задания' применено: +10% к наградам за квесты.");
+            state.eternalAchievementBonuses.questRewardModifier = (state.eternalAchievementBonuses.questRewardModifier || 0) + 0.10;
         }
     },
     mastery_personnel: {
@@ -127,11 +121,11 @@ export const achievements = {
             return { current: completed, target: total, isComplete: completed >= total };
         },
         apply: (state) => {
-            state.passiveGeneration.ironOre += 0.2;
-            state.passiveGeneration.copperOre += 0.2;
-            state.passiveGeneration.mithrilOre = (state.passiveGeneration.mithrilOre || 0) + 0.2;
-            state.passiveGeneration.adamantiteOre = (state.passiveGeneration.adamantiteOre || 0) + 0.2;
-            console.log("Достижение 'Макс. персонал' применено: +0.2 к пассивной добыче руды.");
+            state.eternalAchievementBonuses.passiveGeneration = state.eternalAchievementBonuses.passiveGeneration || {};
+            state.eternalAchievementBonuses.passiveGeneration.ironOre = (state.eternalAchievementBonuses.passiveGeneration.ironOre || 0) + 0.2;
+            state.eternalAchievementBonuses.passiveGeneration.copperOre = (state.eternalAchievementBonuses.passiveGeneration.copperOre || 0) + 0.2;
+            state.eternalAchievementBonuses.passiveGeneration.mithrilOre = (state.eternalAchievementBonuses.passiveGeneration.mithrilOre || 0) + 0.2;
+            state.eternalAchievementBonuses.passiveGeneration.adamantiteOre = (state.eternalAchievementBonuses.passiveGeneration.adamantiteOre || 0) + 0.2;
         }
     },
     first_forge: {
@@ -141,12 +135,12 @@ export const achievements = {
         description: 'Вы выковали свой первый предмет. Получите скромное вознаграждение, чтобы продолжить свой путь.',
         effectName: '+500 Искр',
         icon: IMAGE_PATHS.ACHIEVEMENTS.FIRST_FORGE,
+        isOneTimeReward: true, // ФЛАГ: это разовая награда
         check: (state, defs) => {
             return { current: state.totalItemsCrafted, target: 1, isComplete: state.totalItemsCrafted >= 1 };
         },
         apply: (state) => {
-            state.sparks += 500;
-            console.log("Достижение 'Первые Искры' применено: +500 Искр.");
+            state.sparks += 500; // Разовая награда, применяется только один раз
         }
     },
     master_smelter: {
@@ -160,8 +154,7 @@ export const achievements = {
             return { current: state.totalIngotsSmelted || 0, target: 100, isComplete: (state.totalIngotsSmelted || 0) >= 100 };
         },
         apply: (state) => {
-            state.smeltingSpeedModifier += 0.05;
-            console.log("Достижение 'Плавильный Тигель' применено: +5% к скорости плавки.");
+            state.eternalAchievementBonuses.smeltingSpeedModifier = (state.eternalAchievementBonuses.smeltingSpeedModifier || 0) + 0.05;
         }
     },
     first_apprentice_hire: {
@@ -176,8 +169,8 @@ export const achievements = {
             return { current: hasApprentice ? 1 : 0, target: 1, isComplete: hasApprentice };
         },
         apply: (state) => {
-            state.passiveGeneration.ironOre += 0.1;
-            console.log("Достижение 'Первый Ученик' применено: +0.1/сек Железной Руды.");
+            state.eternalAchievementBonuses.passiveGeneration = state.eternalAchievementBonuses.passiveGeneration || {};
+            state.eternalAchievementBonuses.passiveGeneration.ironOre = (state.eternalAchievementBonuses.passiveGeneration.ironOre || 0) + 0.1;
         }
     },
     shop_expansion: {
@@ -187,17 +180,12 @@ export const achievements = {
         description: 'Вы продали 5 предметов в вашем магазине. Ваше дело расширяется, и вы открываете новую торговую полку.',
         effectName: '+1 Торговая Полка',
         icon: IMAGE_PATHS.ACHIEVEMENTS.SHOP_EXPANSION,
+        isOneTimeReward: true, // ФЛАГ: это разовая награда
         check: (state, defs) => {
-            return { current: state.shopReputation, target: 500, isComplete: state.shopReputation >= 500 };
+            return { current: state.shopXP, target: 500, isComplete: state.shopXP >= 500 };
         },
         apply: (state) => {
-            // Эта проверка должна быть в gameLogic, но оставлю ее здесь пока для ясности.
-            // Применение награды в gameLogic должно быть помечено через appliedAchievementRewards
-            if (!state.completedAchievements.includes('shop_expansion_applied')) { // Это некорректная проверка здесь
-                state.shopShelves.push({ itemId: null, customer: null, saleProgress: 0, saleTimer: 0 });
-                state.completedAchievements.push('shop_expansion_applied'); // Это тоже некорректно
-            }
-            console.log("Достижение 'Магазинное Пространство' применено: +1 Торговая Полка.");
+            state.shopShelves.push({ id: `shelf_ach_${Date.now()}_${Math.random()}`, itemId: null, customer: null, saleProgress: 0, saleTimer: 0 }); // Разовая награда
         }
     },
     novice_collector: {
@@ -205,36 +193,26 @@ export const achievements = {
         category: 'Коллекционирование',
         title: 'Начинающий Коллекционер',
         description: 'Соберите различные предметы и станьте признанным ценителем редкостей.',
-        effectName: '+1% к шансу крит. удара',
         icon: IMAGE_PATHS.ACHIEVEMENTS.NOVICE_COLLECTOR,
         levels: [
             { target: 5, reward: { critChance: 0.01 }, effectName: '+1% к шансу крит. удара (Ур.1)' },
             { target: 15, reward: { critChance: 0.02 }, effectName: '+2% к шансу крит. удара (Ур.2)' }
         ],
         check: (state, defs) => {
-            const uniqueItems = new Set(state.inventory.map(item => item.itemKey));
+            const uniqueItems = new Set(state.inventory.map(item => item.itemKey)).size;
             let currentLevel = 0;
-            const currentTotal = uniqueItems.size;
-
             for (let i = 0; i < achievements.novice_collector.levels.length; i++) {
-                if (currentTotal >= achievements.novice_collector.levels[i].target) {
+                if (uniqueItems >= achievements.novice_collector.levels[i].target) {
                     currentLevel = i + 1;
                 } else {
                     break;
                 }
             }
-            const targetForNextLevel = achievements.novice_collector.levels[currentLevel]?.target || currentTotal;
-
-            return {
-                current: currentTotal,
-                target: targetForNextLevel,
-                isComplete: currentLevel === achievements.novice_collector.levels.length,
-                currentLevel: currentLevel // Добавил текущий уровень для удобства в gameLogic
-            };
+            const targetForNextLevel = achievements.novice_collector.levels[currentLevel]?.target || uniqueItems;
+            return { current: uniqueItems, target: targetForNextLevel, isComplete: currentLevel === achievements.novice_collector.levels.length, currentLevel: currentLevel };
         },
-        apply: (state, levelReward) => { // Теперь apply принимает levelReward
-            if (levelReward.critChance) state.critChance += levelReward.critChance;
-            console.log(`Достижение 'Начинающий Коллекционер' применено: +${(levelReward.critChance * 100).toFixed(0)}% к шансу крит. удара.`);
+        apply: (state, levelReward) => {
+            state.eternalAchievementBonuses.critChance = (state.eternalAchievementBonuses.critChance || 0) + (levelReward.critChance || 0);
         }
     },
     resource_tycoon: {
@@ -242,7 +220,6 @@ export const achievements = {
         category: 'Ресурсы',
         title: 'Магнат Ресурсов',
         description: 'Накопите огромные запасы сырья.',
-        effectName: '+1 к добыче руды за клик',
         icon: IMAGE_PATHS.ACHIEVEMENTS.RESOURCE_TYCOON,
         levels: [
             { target: 1000, reward: { orePerClick: 1 }, effectName: '+1 к добыче руды за клик (Ур.1)' },
@@ -251,27 +228,18 @@ export const achievements = {
         check: (state, defs) => {
             const totalOre = (state.ironOre || 0) + (state.copperOre || 0) + (state.mithrilOre || 0) + (state.adamantiteOre || 0);
             let currentLevel = 0;
-            const currentTotal = totalOre;
-
             for (let i = 0; i < achievements.resource_tycoon.levels.length; i++) {
-                if (currentTotal >= achievements.resource_tycoon.levels[i].target) {
+                if (totalOre >= achievements.resource_tycoon.levels[i].target) {
                     currentLevel = i + 1;
                 } else {
                     break;
                 }
             }
-            const targetForNextLevel = achievements.resource_tycoon.levels[currentLevel]?.target || currentTotal;
-
-            return {
-                current: currentTotal,
-                target: targetForNextLevel,
-                isComplete: currentLevel === achievements.resource_tycoon.levels.length,
-                currentLevel: currentLevel
-            };
+            const targetForNextLevel = achievements.resource_tycoon.levels[currentLevel]?.target || totalOre;
+            return { current: totalOre, target: targetForNextLevel, isComplete: currentLevel === achievements.resource_tycoon.levels.length, currentLevel: currentLevel };
         },
         apply: (state, levelReward) => {
-            if (levelReward.orePerClick) state.orePerClick += levelReward.orePerClick;
-            console.log(`Достижение 'Магнат Ресурсов' применено: +${levelReward.orePerClick} к добыче руды за клик.`);
+            state.eternalAchievementBonuses.orePerClick = (state.eternalAchievementBonuses.orePerClick || 0) + (levelReward.orePerClick || 0);
         }
     },
     inlay_master: {
@@ -279,7 +247,6 @@ export const achievements = {
         category: 'Мастерство',
         title: 'Мастер Инкрустации',
         description: 'Ваши навыки инкрустации поражают. Каждый инкрустированный предмет улучшает ваши общие способности.',
-        effectName: '+5% к бонусной Материи от заказов',
         icon: IMAGE_PATHS.ACHIEVEMENTS.INLAY_MASTER,
         levels: [
             { target: 1, reward: { matterModifier: 0.05 }, effectName: '+5% к бонусной Материи от заказов (Ур.1)' },
@@ -288,27 +255,18 @@ export const achievements = {
         check: (state, defs) => {
             const totalInlayedItems = state.totalInlayedItems || 0;
             let currentLevel = 0;
-            const currentTotal = totalInlayedItems;
-
             for (let i = 0; i < achievements.inlay_master.levels.length; i++) {
-                if (currentTotal >= achievements.inlay_master.levels[i].target) {
+                if (totalInlayedItems >= achievements.inlay_master.levels[i].target) {
                     currentLevel = i + 1;
                 } else {
                     break;
                 }
             }
-            const targetForNextLevel = achievements.inlay_master.levels[currentLevel]?.target || currentTotal;
-
-            return {
-                current: currentTotal,
-                target: targetForNextLevel,
-                isComplete: currentLevel === achievements.inlay_master.levels.length,
-                currentLevel: currentLevel
-            };
+            const targetForNextLevel = achievements.inlay_master.levels[currentLevel]?.target || totalInlayedItems;
+            return { current: totalInlayedItems, target: targetForNextLevel, isComplete: currentLevel === achievements.inlay_master.levels.length, currentLevel: currentLevel };
         },
         apply: (state, levelReward) => {
-            if (levelReward.matterModifier) state.matterModifier += levelReward.matterModifier;
-            console.log(`Достижение 'Мастер Инкрустации' применено: +${(levelReward.matterModifier * 100).toFixed(0)}% к бонусной Материи.`);
+            state.eternalAchievementBonuses.matterModifier = (state.eternalAchievementBonuses.matterModifier || 0) + (levelReward.matterModifier || 0);
         }
     },
     graving_legend: {
@@ -316,7 +274,6 @@ export const achievements = {
         category: 'Мастерство',
         title: 'Гравировщик Легенд',
         description: 'Ваша гравировка безупречна. Гравированные предметы приносят вам больше Искр.',
-        effectName: '+5% к бонусным Искрам от заказов',
         icon: IMAGE_PATHS.ACHIEVEMENTS.GRAVING_LEGEND,
         levels: [
             { target: 1, reward: { sparksModifier: 0.05 }, effectName: '+5% к бонусным Искрам от заказов (Ур.1)' },
@@ -325,27 +282,18 @@ export const achievements = {
         check: (state, defs) => {
             const totalGravedItems = state.totalGravedItems || 0;
             let currentLevel = 0;
-            const currentTotal = totalGravedItems;
-
             for (let i = 0; i < achievements.graving_legend.levels.length; i++) {
-                if (currentTotal >= achievements.graving_legend.levels[i].target) {
+                if (totalGravedItems >= achievements.graving_legend.levels[i].target) {
                     currentLevel = i + 1;
                 } else {
                     break;
                 }
             }
-            const targetForNextLevel = achievements.graving_legend.levels[currentLevel]?.target || currentTotal;
-
-            return {
-                current: currentTotal,
-                target: targetForNextLevel,
-                isComplete: currentLevel === achievements.graving_legend.levels.length,
-                currentLevel: currentLevel
-            };
+            const targetForNextLevel = achievements.graving_legend.levels[currentLevel]?.target || totalGravedItems;
+            return { current: totalGravedItems, target: targetForNextLevel, isComplete: currentLevel === achievements.graving_legend.levels.length, currentLevel: currentLevel };
         },
         apply: (state, levelReward) => {
-            if (levelReward.sparksModifier) state.sparksModifier += levelReward.sparksModifier;
-            console.log(`Достижение 'Гравировщик Легенд' применено: +${(levelReward.sparksModifier * 100).toFixed(0)}% к бонусным Искрам.`);
+            state.eternalAchievementBonuses.sparksModifier = (state.eternalAchievementBonuses.sparksModifier || 0) + (levelReward.sparksModifier || 0);
         }
     },
     veteran_crafter: {
@@ -353,7 +301,6 @@ export const achievements = {
         category: 'Кузнечное Дело',
         title: 'Кузнец-Ветеран',
         description: 'Вы стали опытным ремесленником, создав множество предметов.',
-        effectName: '+1 к прогрессу за клик',
         icon: IMAGE_PATHS.ACHIEVEMENTS.VETERAN_CRAFTER,
         levels: [
             { target: 10, reward: { progressPerClick: 1 }, effectName: '+1 к прогрессу за клик (Ур.1)' },
@@ -362,27 +309,18 @@ export const achievements = {
         check: (state, defs) => {
             const totalItems = state.totalItemsCrafted || 0;
             let currentLevel = 0;
-            const currentTotal = totalItems;
-
             for (let i = 0; i < achievements.veteran_crafter.levels.length; i++) {
-                if (currentTotal >= achievements.veteran_crafter.levels[i].target) {
+                if (totalItems >= achievements.veteran_crafter.levels[i].target) {
                     currentLevel = i + 1;
                 } else {
                     break;
                 }
             }
-            const targetForNextLevel = achievements.veteran_crafter.levels[currentLevel]?.target || currentTotal;
-
-            return {
-                current: currentTotal,
-                target: targetForNextLevel,
-                isComplete: currentLevel === achievements.veteran_crafter.levels.length,
-                currentLevel: currentLevel
-            };
+            const targetForNextLevel = achievements.veteran_crafter.levels[currentLevel]?.target || totalItems;
+            return { current: totalItems, target: targetForNextLevel, isComplete: currentLevel === achievements.veteran_crafter.levels.length, currentLevel: currentLevel };
         },
         apply: (state, levelReward) => {
-            if (levelReward.progressPerClick) state.progressPerClick += levelReward.progressPerClick;
-            console.log(`Достижение 'Кузнец-Ветеран' применено: +${levelReward.progressPerClick} к прогрессу за клик.`);
+            state.eternalAchievementBonuses.progressPerClick = (state.eternalAchievementBonuses.progressPerClick || 0) + (levelReward.progressPerClick || 0);
         }
     },
     diligent_smelter: {
@@ -390,7 +328,6 @@ export const achievements = {
         category: 'Мастерство',
         title: 'Усердный Плавильщик',
         description: 'Ваши знания о металлах углубляются с каждой переплавленной партией.',
-        effectName: '+5% к скорости плавки',
         icon: IMAGE_PATHS.ACHIEVEMENTS.DILIGENT_SMELTER,
         levels: [
             { target: 500, reward: { smeltingSpeedModifier: 0.05 }, effectName: '+5% к скорости плавки (Ур.1)' },
@@ -399,27 +336,18 @@ export const achievements = {
         check: (state, defs) => {
             const totalIngots = state.totalIngotsSmelted || 0;
             let currentLevel = 0;
-            const currentTotal = totalIngots;
-
             for (let i = 0; i < achievements.diligent_smelter.levels.length; i++) {
-                if (currentTotal >= achievements.diligent_smelter.levels[i].target) {
+                if (totalIngots >= achievements.diligent_smelter.levels[i].target) {
                     currentLevel = i + 1;
                 } else {
                     break;
                 }
             }
-            const targetForNextLevel = achievements.diligent_smelter.levels[currentLevel]?.target || currentTotal;
-
-            return {
-                current: currentTotal,
-                target: targetForNextLevel,
-                isComplete: currentLevel === achievements.diligent_smelter.levels.length,
-                currentLevel: currentLevel
-            };
+            const targetForNextLevel = achievements.diligent_smelter.levels[currentLevel]?.target || totalIngots;
+            return { current: totalIngots, target: targetForNextLevel, isComplete: currentLevel === achievements.diligent_smelter.levels.length, currentLevel: currentLevel };
         },
         apply: (state, levelReward) => {
-            if (levelReward.smeltingSpeedModifier) state.smeltingSpeedModifier += levelReward.smeltingSpeedModifier;
-            console.log(`Достижение 'Усердный Плавильщик' применено: +${(levelReward.smeltingSpeedModifier * 100).toFixed(0)}% к скорости плавки.`);
+            state.eternalAchievementBonuses.smeltingSpeedModifier = (state.eternalAchievementBonuses.smeltingSpeedModifier || 0) + (levelReward.smeltingSpeedModifier || 0);
         }
     },
     treasurer: {
@@ -427,7 +355,6 @@ export const achievements = {
         category: 'Экономика',
         title: 'Казначей',
         description: 'Вы накопили значительное состояние, управляя финансами мастерской.',
-        effectName: '+5% к Искрам от заказов',
         icon: IMAGE_PATHS.ACHIEVEMENTS.TREASURER,
         levels: [
             { target: 10000, reward: { sparksModifier: 0.05 }, effectName: '+5% к Искрам от заказов (Ур.1)' },
@@ -436,27 +363,18 @@ export const achievements = {
         check: (state, defs) => {
             const totalSparks = state.totalSparksEarned || 0;
             let currentLevel = 0;
-            const currentTotal = totalSparks;
-
             for (let i = 0; i < achievements.treasurer.levels.length; i++) {
-                if (currentTotal >= achievements.treasurer.levels[i].target) {
+                if (totalSparks >= achievements.treasurer.levels[i].target) {
                     currentLevel = i + 1;
                 } else {
                     break;
                 }
             }
-            const targetForNextLevel = achievements.treasurer.levels[currentLevel]?.target || currentTotal;
-
-            return {
-                current: currentTotal,
-                target: targetForNextLevel,
-                isComplete: currentLevel === achievements.treasurer.levels.length,
-                currentLevel: currentLevel
-            };
+            const targetForNextLevel = achievements.treasurer.levels[currentLevel]?.target || totalSparks;
+            return { current: totalSparks, target: targetForNextLevel, isComplete: currentLevel === achievements.treasurer.levels.length, currentLevel: currentLevel };
         },
         apply: (state, levelReward) => {
-            if (levelReward.sparksModifier) state.sparksModifier += levelReward.sparksModifier;
-            console.log(`Достижение 'Казначей' применено: +${(levelReward.sparksModifier * 100).toFixed(0)}% к Искрам от заказов.`);
+            state.eternalAchievementBonuses.sparksModifier = (state.eternalAchievementBonuses.sparksModifier || 0) + (levelReward.sparksModifier || 0);
         }
     },
     matter_essence_master: {
@@ -464,7 +382,6 @@ export const achievements = {
         category: 'Экономика',
         title: 'Мастер Сущности',
         description: 'Вы научились эффективно использовать Материю, превращая её в новые возможности.',
-        effectName: '-5% к стоимости Материи для навыков',
         icon: IMAGE_PATHS.ACHIEVEMENTS.MATTER_ESSENCE_MASTER,
         levels: [
             { target: 500, reward: { matterCostReduction: 0.05 }, effectName: '-5% к стоимости Материи для навыков (Ур.1)' },
@@ -473,27 +390,18 @@ export const achievements = {
         check: (state, defs) => {
             const totalMatter = state.totalMatterSpent || 0;
             let currentLevel = 0;
-            const currentTotal = totalMatter;
-
             for (let i = 0; i < achievements.matter_essence_master.levels.length; i++) {
-                if (currentTotal >= achievements.matter_essence_master.levels[i].target) {
+                if (totalMatter >= achievements.matter_essence_master.levels[i].target) {
                     currentLevel = i + 1;
                 } else {
                     break;
                 }
             }
-            const targetForNextLevel = achievements.matter_essence_master.levels[currentLevel]?.target || currentTotal;
-
-            return {
-                current: currentTotal,
-                target: targetForNextLevel,
-                isComplete: currentLevel === achievements.matter_essence_master.levels.length,
-                currentLevel: currentLevel
-            };
+            const targetForNextLevel = achievements.matter_essence_master.levels[currentLevel]?.target || totalMatter;
+            return { current: totalMatter, target: targetForNextLevel, isComplete: currentLevel === achievements.matter_essence_master.levels.length, currentLevel: currentLevel };
         },
         apply: (state, levelReward) => {
-            if (levelReward.matterCostReduction) state.matterCostReduction += levelReward.matterCostReduction;
-            console.log(`Достижение 'Мастер Сущности' применено: -${(levelReward.matterCostReduction * 100).toFixed(0)}% к стоимости Материи.`);
+            state.eternalAchievementBonuses.matterCostReduction = (state.eternalAchievementBonuses.matterCostReduction || 0) + (levelReward.matterCostReduction || 0);
         }
     },
     first_resettlement: {
@@ -501,13 +409,13 @@ export const achievements = {
         category: 'Прогресс',
         title: 'Первое Переселение',
         description: 'Вы начали новую жизнь в новом регионе, сохранив накопленные знания.',
-        effectName: '+1 Осколок Памяти за каждый уровень Мастерства',
+        effectName: '+5% к Осколкам Памяти',
         icon: IMAGE_PATHS.ACHIEVEMENTS.FIRST_RESETTLEMENT,
         check: (state, defs) => {
             return { current: state.isFirstPlaythrough ? 0 : 1, target: 1, isComplete: !state.isFirstPlaythrough };
         },
         apply: (state) => {
-            console.log("Достижение 'Первое Переселение' применено.");
+            state.eternalAchievementBonuses.prestigePointsGainModifier = (state.eternalAchievementBonuses.prestigePointsGainModifier || 0) + 0.05;
         }
     },
     world_explorer: {
@@ -515,7 +423,6 @@ export const achievements = {
         category: 'Прогресс',
         title: 'Исследователь Мира',
         description: 'Вы открыли новые земли и расширили свои горизонты.',
-        effectName: '-10% к стоимости разблокировки регионов',
         icon: IMAGE_PATHS.ACHIEVEMENTS.WORLD_EXPLORER,
         levels: [
             { target: 2, reward: { regionUnlockCostReduction: 0.10 }, effectName: '-10% к стоимости разблокировки регионов (Ур.1)' },
@@ -524,27 +431,18 @@ export const achievements = {
         check: (state, defs) => {
             const visitedRegionsCount = state.regionsVisited.length;
             let currentLevel = 0;
-            const currentTotal = visitedRegionsCount;
-
             for (let i = 0; i < achievements.world_explorer.levels.length; i++) {
-                if (currentTotal >= achievements.world_explorer.levels[i].target) {
+                if (visitedRegionsCount >= achievements.world_explorer.levels[i].target) {
                     currentLevel = i + 1;
                 } else {
                     break;
                 }
             }
-            const targetForNextLevel = achievements.world_explorer.levels[currentLevel]?.target || currentTotal;
-
-            return {
-                current: currentTotal,
-                target: targetForNextLevel,
-                isComplete: currentLevel === achievements.world_explorer.levels.length,
-                currentLevel: currentLevel
-            };
+            const targetForNextLevel = achievements.world_explorer.levels[currentLevel]?.target || visitedRegionsCount;
+            return { current: visitedRegionsCount, target: targetForNextLevel, isComplete: currentLevel === achievements.world_explorer.levels.length, currentLevel: currentLevel };
         },
         apply: (state, levelReward) => {
-            if (levelReward.regionUnlockCostReduction) state.regionUnlockCostReduction += levelReward.regionUnlockCostReduction;
-            console.log(`Достижение 'Исследователь Мира' применено: -${(levelReward.regionUnlockCostReduction * 100).toFixed(0)}% к стоимости разблокировки регионов.`);
+            state.eternalAchievementBonuses.regionUnlockCostReduction = (state.eternalAchievementBonuses.regionUnlockCostReduction || 0) + (levelReward.regionUnlockCostReduction || 0);
         }
     },
     peak_mastery: {
@@ -552,7 +450,6 @@ export const achievements = {
         category: 'Прогресс',
         title: 'Высшее Мастерство',
         description: 'Вы достигли вершин своего ремесла, значительно превзойдя обычных кузнецов.',
-        effectName: '+10% к XP за все действия',
         icon: IMAGE_PATHS.ACHIEVEMENTS.PEAK_MASTERY,
         levels: [
             { target: 5, reward: { masteryXpModifier: 0.10 }, effectName: '+10% к XP за все действия (Ур.1)' },
@@ -561,27 +458,18 @@ export const achievements = {
         check: (state, defs) => {
             const currentMasteryLevel = state.masteryLevel || 1;
             let currentLevel = 0;
-            const currentTotal = currentMasteryLevel;
-
             for (let i = 0; i < achievements.peak_mastery.levels.length; i++) {
-                if (currentTotal >= achievements.peak_mastery.levels[i].target) {
+                if (currentMasteryLevel >= achievements.peak_mastery.levels[i].target) {
                     currentLevel = i + 1;
                 } else {
                     break;
                 }
             }
-            const targetForNextLevel = achievements.peak_mastery.levels[currentLevel]?.target || currentTotal;
-
-            return {
-                current: currentTotal,
-                target: targetForNextLevel,
-                isComplete: currentLevel === achievements.peak_mastery.levels.length,
-                currentLevel: currentLevel
-            };
+            const targetForNextLevel = achievements.peak_mastery.levels[currentLevel]?.target || currentMasteryLevel;
+            return { current: currentMasteryLevel, target: targetForNextLevel, isComplete: currentLevel === achievements.peak_mastery.levels.length, currentLevel: currentLevel };
         },
         apply: (state, levelReward) => {
-            if (levelReward.masteryXpModifier) state.masteryXpModifier += levelReward.masteryXpModifier;
-            console.log(`Достижение 'Высшее Мастерство' применено: +${(levelReward.masteryXpModifier * 100).toFixed(0)}% к XP.`);
+            state.eternalAchievementBonuses.masteryXpModifier = (state.eternalAchievementBonuses.masteryXpModifier || 0) + (levelReward.masteryXpModifier || 0);
         }
     },
     enhanced_clicker: {
@@ -589,7 +477,6 @@ export const achievements = {
         category: 'Кузнечное Дело',
         title: 'Усиленный Кликер',
         description: 'Ваши руки стали невероятно быстрыми и сильными.',
-        effectName: '+1 к прогрессу за клик',
         icon: IMAGE_PATHS.ACHIEVEMENTS.ENHANCED_CLICKER,
         levels: [
             { target: 10000, reward: { progressPerClick: 1 }, effectName: '+1 к прогрессу за клик (Ур.1)' },
@@ -598,27 +485,18 @@ export const achievements = {
         check: (state, defs) => {
             const totalClicks = state.totalClicks || 0;
             let currentLevel = 0;
-            const currentTotal = totalClicks;
-
             for (let i = 0; i < achievements.enhanced_clicker.levels.length; i++) {
-                if (currentTotal >= achievements.enhanced_clicker.levels[i].target) {
+                if (totalClicks >= achievements.enhanced_clicker.levels[i].target) {
                     currentLevel = i + 1;
                 } else {
                     break;
                 }
             }
-            const targetForNextLevel = achievements.enhanced_clicker.levels[currentLevel]?.target || currentTotal;
-
-            return {
-                current: currentTotal,
-                target: targetForNextLevel,
-                isComplete: currentLevel === achievements.enhanced_clicker.levels.length,
-                currentLevel: currentLevel
-            };
+            const targetForNextLevel = achievements.enhanced_clicker.levels[currentLevel]?.target || totalClicks;
+            return { current: totalClicks, target: targetForNextLevel, isComplete: currentLevel === achievements.enhanced_clicker.levels.length, currentLevel: currentLevel };
         },
         apply: (state, levelReward) => {
-            if (levelReward.progressPerClick) state.progressPerClick += levelReward.progressPerClick;
-            console.log(`Достижение 'Усиленный Кликер' применено: +${levelReward.progressPerClick} к прогрессу за клик.`);
+            state.eternalAchievementBonuses.progressPerClick = (state.eternalAchievementBonuses.progressPerClick || 0) + (levelReward.progressPerClick || 0);
         }
     },
     pathfinders_first_step: {
@@ -632,8 +510,7 @@ export const achievements = {
             return { current: state.specialization ? 1 : 0, target: 1, isComplete: !!state.specialization };
         },
         apply: (state) => {
-            state.passiveIncomeModifier += 0.05;
-            console.log("Достижение 'Начало Пути' применено: +5% к эффективности подмастерьев.");
+            state.eternalAchievementBonuses.passiveIncomeModifier = (state.eternalAchievementBonuses.passiveIncomeModifier || 0) + 0.05;
         }
     },
     royal_forger: {
@@ -647,8 +524,8 @@ export const achievements = {
             return { current: state.totalCourtOrdersCompleted || 0, target: 5, isComplete: (state.totalCourtOrdersCompleted || 0) >= 5 };
         },
         apply: (state) => {
-            state.reputationGainModifier.court = (state.reputationGainModifier.court || 1) + 0.05;
-            console.log("Достижение 'Королевский Кузнец' применено: +5% к репутации с Двором.");
+            state.eternalAchievementBonuses.reputationGainModifier = state.eternalAchievementBonuses.reputationGainModifier || {};
+            state.eternalAchievementBonuses.reputationGainModifier.court = (state.eternalAchievementBonuses.reputationGainModifier.court || 0) + 0.05;
         }
     },
     secret_agent: {
@@ -662,8 +539,7 @@ export const achievements = {
             return { current: state.totalRiskyOrdersCompleted || 0, target: 15, isComplete: (state.totalRiskyOrdersCompleted || 0) >= 15 };
         },
         apply: (state) => {
-            state.riskModifier = (state.riskModifier || 1.0) * 0.95;
-            console.log("Достижение 'Тайный Агент' применено: -5% к риску.");
+            state.eternalAchievementBonuses.riskModifier = (state.eternalAchievementBonuses.riskModifier || 1.0) * 0.95;
         }
     },
     adventurers_cartographer: {
@@ -677,8 +553,7 @@ export const achievements = {
             return { current: state.totalExpeditionMapsBought || 0, target: 5, isComplete: (state.totalExpeditionMapsBought || 0) >= 5 };
         },
         apply: (state) => {
-            state.expeditionMapCostModifier = (state.expeditionMapCostModifier || 1) * 0.90;
-            console.log("Достижение 'Картограф Авантюриста' применено: -10% к стоимости Карт Вылазок.");
+            state.eternalAchievementBonuses.expeditionMapCostModifier = (state.eternalAchievementBonuses.expeditionMapCostModifier || 1) * 0.90;
         }
     }
 };

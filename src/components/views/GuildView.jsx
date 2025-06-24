@@ -59,6 +59,11 @@ const MissionRequirement = ({ req, inventory, onSelectGear, selectedItemId, allS
 const MissionCard = ({ mission, gameState, handlers }) => {
     const [selectedGear, setSelectedGear] = useState({});
 
+    // Reset selectedGear when mission changes
+    useEffect(() => {
+        setSelectedGear({});
+    }, [mission.id]);
+
     const expandedRequirements = useMemo(() =>
         mission.requiredGear.flatMap((req, originalIndex) =>
             Array.from({ length: req.count }, (_, i) => ({
@@ -70,7 +75,11 @@ const MissionCard = ({ mission, gameState, handlers }) => {
     const handleSelectGear = (uniqueReqKey, itemUniqueId) => {
         setSelectedGear(prev => {
             const newSelection = { ...prev };
-            const isAlreadySelected = Object.values(newSelection).includes(itemUniqueId);
+            // Check if the itemUniqueId is already selected for a *different* slot
+            const isAlreadySelected = Object.entries(newSelection).some(([key, value]) => 
+                key !== uniqueReqKey && value === itemUniqueId
+            );
+
             if (itemUniqueId && isAlreadySelected) {
                 handlers.showToast("Этот предмет уже выбран для другого слота!", "error");
                 return prev;
@@ -85,11 +94,16 @@ const MissionCard = ({ mission, gameState, handlers }) => {
         });
     };
     
-    const allRequirementsMet = expandedRequirements.length === Object.keys(selectedGear).length;
+    // Check if all required slots are filled with an item
+    const allRequirementsMet = expandedRequirements.every(req => selectedGear[req.uniqueReqKey]);
 
     const handlePrepareExpedition = () => {
-        if (!allRequirementsMet) return;
+        if (!allRequirementsMet) {
+            handlers.showToast("Пожалуйста, выберите все необходимое снаряжение.", "error");
+            return;
+        }
         handlers.handleStartMission(mission.id, selectedGear);
+        setSelectedGear({}); // Clear selection after starting mission
     };
 
     return (

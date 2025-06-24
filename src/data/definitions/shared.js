@@ -17,9 +17,36 @@ export const sharedDefinitions = {
     ],
 
     workstations: {
-        anvil: { name: "Наковальня", icon: "hardware" },
-        workbench: { name: "Верстак", icon: "handyman" },
-        grindstone: { name: "Точильный станок", icon: "healing" }
+        anvil: {
+            name: "Наковальня", icon: "hardware",
+            maxLevel: 100, // Максимальный уровень
+            baseXpToNextLevel: 100, // Начальное XP для следующего уровня
+            xpToNextLevelMultiplier: 1.1, // Множитель для следующего уровня
+            bonusesPerLevel: {
+                progressPerClick: 0.1, // +0.1 к прогрессу за клик
+                critChance: 0.001, // +0.1% к шансу крита
+            }
+        },
+        workbench: {
+            name: "Верстак", icon: "handyman",
+            maxLevel: 100,
+            baseXpToNextLevel: 100,
+            xpToNextLevelMultiplier: 1.1,
+            bonusesPerLevel: {
+                componentCostReduction: 0.05, // -0.05 к стоимости компонентов (для предметов со стоимостью в материи, искрах)
+                matterModifier: 0.001, // +0.1% к материи от заказов
+            }
+        },
+        grindstone: {
+            name: "Точильный станок", icon: "healing",
+            maxLevel: 100,
+            baseXpToNextLevel: 100,
+            xpToNextLevelMultiplier: 1.1,
+            bonusesPerLevel: {
+                critBonus: 0.05, // +0.05 к множителю крит. бонуса
+                smeltingSpeedModifier: 0.001, // +0.1% к скорости плавки
+            }
+        }
     },
 
     clients: [

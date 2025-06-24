@@ -26,12 +26,14 @@ export function useGameState() {
     const [achievementToDisplay, setAchievementToDisplay] = useState(null);
     const [isAvatarSelectionModalOpen, setIsAvatarSelectionModalOpen] = useState(false);
     const [isCreditsModalOpen, setIsCreditsModalOpen] = useState(false);
+    const [isShopReputationModalOpen, setIsShopReputationModalOpen] = useState(false); 
+
     const workTimeoutRef = useRef(null);
 
     const isAchievementModalOpenRef = useRef(false);
     useEffect(() => {
-        isAchievementModalOpenRef.current = isAchievementRewardModalOpen;
-    }, [isAchievementRewardModalOpen]);
+        isAchievementModalOpenRef.current = isAchievementRewardModalOpen; // ИСПРАВЛЕНО: использование isAchievementRewardModalOpen
+    }, [isAchievementRewardModalOpen]); // ИСПРАВЛЕНО: использование isAchievementRewardModalOpen в зависимостях
 
     const showAchievementRewardModal = useCallback((achievementDef) => {
         if (!isAchievementModalOpenRef.current && achievementDef) {
@@ -56,14 +58,16 @@ export function useGameState() {
         setIsAvatarSelectionModalOpen,
         setIsCreditsModalOpen,
         isAchievementModalOpenRef,
-        showAchievementRewardModal
+        showAchievementRewardModal,
+        setIsShopReputationModalOpen,
+        isShopReputationModalOpen 
     );
 
     useGameLoops(
         updateState,
         handlers,
         showToast,
-        displayedGameState
+        showAchievementRewardModal
     );
 
     useEffect(() => {
@@ -105,6 +109,7 @@ export function useGameState() {
         achievementToDisplay,
         isAvatarSelectionModalOpen,
         isCreditsModalOpen,
+        isShopReputationModalOpen,
         handlers,
         removeToast,
         activeInfoModal: displayedGameState.activeInfoModal,

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { definitions } from '../../../data/definitions';
-import { formatCosts, formatNumber } from '../../../utils/formatters';
+import { formatCosts } from '../../../utils/formatters';
 import Tooltip from '../display/Tooltip';
 
 const ShopUpgradeButton = React.memo(({ upgradeId, gameState, onBuyUpgrade, upgradeType = 'upgrades' }) => {
@@ -86,7 +86,7 @@ const ShopUpgradeButton = React.memo(({ upgradeId, gameState, onBuyUpgrade, upgr
             className="interactive-element bg-transparent border border-gray-700 p-4 rounded-lg text-left w-full hover:enabled:border-orange-500 hover:enabled:shadow-lg hover:enabled:shadow-orange-500/10 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-between"
         >
             <div className="flex-grow">
-                <h4 className="font-bold font-cinzel">{upgrade.name} {isMultiLevel && level > 0 && `(Ур. ${level})`}</h4>
+                <h4 className="font-bold font-cinzel text-white">{upgrade.name} {isMultiLevel && level > 0 && `(Ур. ${level}/${upgrade.maxLevel})`}</h4> {/* Обновлено отображение уровня */}
                 <p className="text-sm text-gray-400 my-1">{upgrade.description}</p>
                 <span className={`font-bold text-sm text-gray-300`} dangerouslySetInnerHTML={{ __html: buttonText }}></span>
             </div>

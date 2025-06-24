@@ -1,8 +1,8 @@
 // src/hooks/usePlayerActions.js
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { definitions } from '../data/definitions';
-import { formatNumber } from '../utils/formatters'; // Теперь formatNumber из formatters
-import { hasReputation, getReputationLevel } from '../utils/helpers'; // Остальные функции из helpers
+import { formatNumber } from '../utils/formatters';
+import { hasReputation, getReputationLevel } from '../utils/helpers';
 import { audioController } from '../utils/audioController';
 import { recalculateAllModifiers } from '../utils/gameStateUtils';
 import {
@@ -11,11 +11,14 @@ import {
     handleCompleteInlay,
     handleCompleteGraving,
     handleOrderCompletion,
+    handleSaleCompletion,
+    handleCompleteMission,
+    applyRewardToState, // Убедимся, что applyRewardToState импортируется здесь
 } from '../logic/gameCompletions';
 import { createCoreHandlers } from '../logic/gameCoreHandlers';
 import { initialGameState } from './useGameStateLoader';
 import { checkForNewQuests } from '../utils/gameEventChecks';
-import { gameConfig as GAME_CONFIG } from '../constants/gameConfig.js'; // ИЗМЕНЕНО: Правильный импорт
+import { gameConfig as GAME_CONFIG } from '../constants/gameConfig.js';
 
 export function usePlayerActions(
     updateState, showToast, gameStateRef,
@@ -25,7 +28,11 @@ export function usePlayerActions(
     setIsAchievementRewardModalOpen,
     setAchievementToDisplay,
     setIsAvatarSelectionModalOpen,
-    setIsCreditsModalOpen
+    setIsCreditsModalOpen,
+    isAchievementModalOpenRef, // Это ref, а не boolean state
+    showAchievementRewardModal,
+    setIsShopReputationModalOpen,
+    isShopReputationModalOpen
 ) {
     const clickData = useRef({ count: 0, lastTime: 0 });
 
@@ -59,18 +66,39 @@ export function usePlayerActions(
         updateState(state => {
             const missionDef = definitions.missions[missionId];
             if (!missionDef) { showToast("Ошибка: миссия не найдена!", "error"); return state; }
-            const committedGearIds = Object.values(committedGear);
+            
+            const tempInventory = [...state.inventory];
+            let canCommitAll = true;
+            for (const uniqueReqKey in committedGear) {
+                const itemUniqueId = committedGear[uniqueReqKey];
+                const itemIndex = tempInventory.findIndex(item => item.uniqueId === itemUniqueId);
+                if (itemIndex === -1) {
+                    canCommitAll = false;
+                    break;
+                }
+                tempInventory.splice(itemIndex, 1);
+            }
+
+            if (!canCommitAll) {
+                showToast("Не удалось найти все необходимые предметы в инвентаре!", "error");
+                return state;
+            }
+
             let totalQualityBonus = 0;
             const newInventory = state.inventory.filter(item => {
-                if (committedGearIds.includes(item.uniqueId)) {
+                if (Object.values(committedGear).includes(item.uniqueId)) {
                     const requirement = missionDef.requiredGear.find(req => req.itemKey === item.itemKey);
                     if(requirement) { totalQualityBonus += Math.max(0, item.quality - requirement.minQuality); }
-                    return false; } return true; });
+                    return false;
+                }
+                return true;
+            });
             state.inventory = newInventory;
             const newActiveMission = { id: `${Date.now()}_${Math.random()}`, missionId: missionId, startTime: Date.now(), duration: missionDef.duration, qualityBonus: totalQualityBonus, };
             state.activeMissions.push(newActiveMission);
             showToast(`Экспедиция "${missionDef.name}" отправлена!`, "info");
-            audioController.play('complete', 'D4', '8n'); return state;
+            audioController.play('complete', 'D4', '8n'); 
+            return state;
         });
     }, [updateState, showToast]);
 
@@ -134,6 +162,14 @@ export function usePlayerActions(
         });
         setIsAvatarSelectionModalOpen(false);
     }, [updateState, showToast, setIsAvatarSelectionModalOpen]);
+
+    const handleSetPlayerName = useCallback((name) => {
+        updateState(state => {
+            state.playerName = name;
+            showToast(`Имя изменено на "${name}"!`, 'info');
+            return state;
+        });
+    }, [updateState, showToast]);
 
     const handleBuySkill = useCallback((skillId) => {
         let shouldOpenSpecModal = false;
@@ -231,7 +267,7 @@ export function usePlayerActions(
                         client: collectorClient,
                         itemKey,
                         rewards: { sparks: Math.max(1, Math.round(totalProgress * collectorClient.demands.reward * 3.0)),
-                                   matter: Math.max(1, Math.round((totalProgress * collectorClient.demands.reward * 3.0) / 5)) },
+                                   matter: Math.max(1, Math.round((totalProgress * client.demands.reward * 3.0) / 5)) },
                         componentProgress: {},
                         activeComponentId: item.components.find(c => !c.requires)?.id || item.components[0].id,
                         spawnTime: Date.now(),
@@ -402,6 +438,11 @@ export function usePlayerActions(
                 showToast(`Этот предмет доступен для создания только после первого Переселения!`, "error");
                 return state;
             }
+            if (item.blueprintId && !(state.specialItems[item.blueprintId] > 0)) {
+                showToast(`Необходим чертеж "${definitions.specialItems[item.blueprintId]?.name || item.blueprintId}" для создания этого предмета!`, "error");
+                return state;
+            }
+
             state.activeFreeCraft = { itemKey, componentProgress: {}, activeComponentId: item.components.find(c => !c.requires)?.id || item.components[0].id, };
             showToast(`Начато создание предмета: ${item.name}`, "info");
             return state;
@@ -545,7 +586,12 @@ export function usePlayerActions(
             if (!canAffordAndPay(state, item.cost, showToast)) {
                 return state;
             }
-            state.specialItems[itemId] = (state.specialItems[itemId] || 0) + 1; showToast(`Куплено: ${item.name}!`, 'success'); Object.keys(state.artifacts).forEach(artId => { const artifact = state.artifacts[artId]; const allObtained = Object.values(artifact.components).every(comp => state.specialItems[comp.itemId] > 0); if (allObtained && artifact.status === 'locked') { artifact.status = 'available'; showToast(`Все компоненты для артефакта "${definitions.greatArtifacts[artId].name}" собраны!`, 'levelup'); } }); return state;
+            state.specialItems[itemId] = (state.specialItems[itemId] || 0) + 1; 
+            if (itemId === 'expeditionMap') {
+                state.totalExpeditionMapsBought = (state.totalExpeditionMapsBought || 0) + 1;
+            }
+            showToast(`Куплено: ${item.name}!`, 'success'); 
+            Object.keys(state.artifacts).forEach(artId => { const artifact = state.artifacts[artId]; const allObtained = Object.values(artifact.components).every(comp => state.specialItems[comp.itemId] > 0); if (allObtained && artifact.status === 'locked') { artifact.status = 'available'; showToast(`Все компоненты для артефакта "${definitions.greatArtifacts[artId].name}" собраны!`, 'levelup'); } }); return state;
         });
     }, [updateState, showToast, canAffordAndPay]);
 
@@ -568,6 +614,11 @@ export function usePlayerActions(
             if (!isMultiLevel && level > 0) { showToast(`Улучшение "${upgrade.name}" уже куплено!`, 'error'); return state; }
             if (isMultiLevel && level >= upgrade.maxLevel) { showToast(`Улучшение "${upgrade.name}" уже на максимальном уровне!`, 'error'); return state; }
             if (type === 'shopUpgrades' && upgrade.requiredShopReputation && state.shopReputation < upgrade.requiredShopReputation) { showToast(`Недостаточно репутации магазина (${upgrade.requiredShopReputation} требуется)!`, 'error'); return state; }
+            if (upgrade.requiredSkill && !state.purchasedSkills[upgrade.requiredSkill]) {
+                showToast(`Требуется навык: '${definitions.skills[upgrade.requiredSkill]?.name}'!`, 'error');
+                return state;
+            }
+
 
             const totalCosts = {};
             if (isMultiLevel) {
@@ -624,6 +675,97 @@ export function usePlayerActions(
         updateState(state => { const questIndex = state.journal.availableQuests.indexOf(questId); if (questIndex > -1) { const questDef = definitions.quests[questId]; state.journal.availableQuests.splice(questIndex, 1); state.journal.activeQuests.push({ id: questId }); showToast(`Задание "${questDef.title}" принято!`, 'info'); } return state; });
     }, [updateState, showToast]);
 
+    const handleClaimMasteryReward = useCallback((rewardId) => {
+        updateState(state => {
+            const rewardDef = definitions.masteryLevelRewards.find(r => r.id === rewardId);
+            if (!rewardDef) return state;
+
+            const isClaimed = state.claimedMasteryLevelRewards.includes(rewardId);
+            const isAvailable = state.masteryLevel >= rewardDef.level;
+
+            if (isClaimed) {
+                showToast("Награда уже получена!", "error");
+                return state;
+            }
+            if (!isAvailable) {
+                showToast("Награда еще не доступна!", "error");
+                return state;
+            }
+
+            // Применяем награду (теперь логика применения в recalculateAllModifiers или здесь для одноразовых)
+            // Здесь мы применяем только если это одноразовый эффект, иначе просто помечаем как взятое
+            // и recalculateAllModifiers позаботится о постоянных бонусах.
+            if (rewardDef.reward) {
+                // Если награда - это ресурсы или другие одноразовые вещи
+                if (rewardDef.reward.sparks) state.sparks += rewardDef.reward.sparks;
+                if (rewardDef.reward.matter) state.matter += rewardDef.reward.matter;
+                if (rewardDef.reward.ironOre) state.ironOre += rewardDef.reward.ironOre;
+                // ... добавьте все остальные прямые ресурсы
+                if (rewardDef.reward.shopShelf) {
+                    for(let i=0; i < rewardDef.reward.shopShelf; i++) {
+                        state.shopShelves.push({ id: `shelf_mastery_lvl_${Date.now()}_${Math.random()}`, itemId: null, customer: null, saleProgress: 0, saleTimer: 0 });
+                    }
+                    showToast(`Получено: +${rewardDef.reward.shopShelf} торговых полок!`, 'success');
+                }
+
+                // Если есть функция apply, вызываем ее (для сложных эффектов)
+                if (typeof rewardDef.reward.apply === 'function') {
+                    rewardDef.reward.apply(state); // Применяет эффекты, которые влияют на eternalAchievementBonuses или другие постоянные вещи
+                }
+            }
+            
+            state.claimedMasteryLevelRewards.push(rewardId);
+            recalculateAllModifiers(state); // Пересчитываем все модификаторы после получения награды
+            showToast(`Награда "${rewardDef.name}" получена!`, "levelup");
+            audioController.play('levelup', 'G6', '2n');
+            return state;
+        });
+    }, [updateState, showToast, recalculateAllModifiers]);
+
+    const handleClaimShopLevelReward = useCallback((rewardId) => {
+        updateState(state => {
+            const levelDef = definitions.shopLevels.find(lvl => lvl.reward?.id === rewardId);
+            if (!levelDef || !levelDef.reward) return state;
+
+            const isClaimed = state.claimedShopLevelRewards.includes(rewardId);
+            const isAvailable = state.shopLevel >= levelDef.level;
+
+            if (isClaimed) {
+                showToast("Награда уже получена!", "error");
+                return state;
+            }
+            if (!isAvailable) {
+                showToast("Награда еще не доступна!", "error");
+                return state;
+            }
+
+            // Применяем награду (теперь логика применения в recalculateAllModifiers или здесь для одноразовых)
+            // Здесь мы применяем только если это одноразовый эффект (как shopShelf), иначе просто помечаем как взятое
+            // и recalculateAllModifiers позаботится о постоянных бонусах.
+            if (levelDef.reward.sparks) state.sparks += levelDef.reward.sparks;
+            if (levelDef.reward.matter) state.matter += levelDef.reward.matter;
+            if (levelDef.reward.inventoryCapacity) state.inventoryCapacity += levelDef.reward.inventoryCapacity;
+
+            if (levelDef.reward.shopShelf) {
+                for(let i=0; i < levelDef.reward.shopShelf; i++) {
+                    state.shopShelves.push({ id: `shelf_shop_lvl_${Date.now()}_${Math.random()}`, itemId: null, customer: null, saleProgress: 0, saleTimer: 0 });
+                }
+                showToast(`Получено: +${levelDef.reward.shopShelf} торговых полок!`, 'success');
+            }
+            
+            // Если есть функция apply, вызываем ее (для сложных эффектов)
+            if (typeof levelDef.reward.apply === 'function') {
+                levelDef.reward.apply(state); // Применяет эффекты, которые влияют на eternalAchievementBonuses или другие постоянные вещи
+            }
+
+            state.claimedShopLevelRewards.push(rewardId);
+            recalculateAllModifiers(state); // Пересчитываем все модификаторы после получения награды
+            showToast(`Награда "${levelDef.name}" получена!`, "levelup");
+            audioController.play('levelup', 'G6', '2n');
+            return state;
+        });
+    }, [updateState, showToast, recalculateAllModifiers]);
+
     const handleResetGame = useCallback(() => {
         if (window.confirm("Вы уверены, что хотите сбросить весь игровой прогресс? Это действие необратимо!")) {
             localStorage.clear();
@@ -666,6 +808,11 @@ export function usePlayerActions(
         newState.eternalSkills = gameStateRef.current.eternalSkills;
         newState.artifacts = JSON.parse(JSON.stringify(gameStateRef.current.artifacts));
         newState.settings = JSON.parse(JSON.stringify(gameStateRef.current.settings));
+        newState.workstations = JSON.parse(JSON.stringify(gameStateRef.current.workstations));
+        newState.claimedMasteryLevelRewards = JSON.parse(JSON.stringify(gameStateRef.current.claimedMasteryLevelRewards));
+        newState.playerName = gameStateRef.current.playerName;
+        newState.claimedShopLevelRewards = JSON.parse(JSON.stringify(gameStateRef.current.claimedShopLevelRewards));
+        newState.eternalAchievementBonuses = JSON.parse(JSON.stringify(gameStateRef.current.eternalAchievementBonuses)); // Сохраняем eternalAchievementBonuses
 
         newState.currentRegion = regionId;
 
@@ -729,6 +876,13 @@ export function usePlayerActions(
         });
     }, [updateState, showToast, recalculateAllModifiers]);
 
+    const handleOpenShopReputationModal = useCallback(() => {
+        setIsShopReputationModalOpen(true);
+    }, [setIsShopReputationModalOpen]);
+    const handleCloseShopReputationModal = useCallback(() => {
+        setIsShopReputationModalOpen(false);
+    }, [setIsShopReputationModalOpen]);
+
 
     const handleStrikeAnvil = useCallback(() => {
         const currentState = gameStateRef.current;
@@ -766,6 +920,7 @@ export function usePlayerActions(
             handleOpenAvatarSelectionModal,
             handleCloseAvatarSelectionModal,
             handleSelectAvatar,
+            handleSetPlayerName,
             handleOpenCreditsModal,
             handleCloseCreditsModal,
             handleSelectRegion,
@@ -791,11 +946,15 @@ export function usePlayerActions(
             handleStartInlay,
             handleStartGraving,
             handleStartQuest,
+            handleClaimMasteryReward,
+            handleClaimShopLevelReward,
             handleResetGame,
             handleStartMission,
             handleClickSale,
             handleStartNewSettlement,
             handleBuyEternalSkill,
+            handleOpenShopReputationModal,
+            handleCloseShopReputationModal,
             
             checkForNewQuests: (state) => checkForNewQuests(state, showToast),
 
@@ -810,6 +969,7 @@ export function usePlayerActions(
         setIsWorking, setCompletedOrderInfo, setIsSpecializationModalOpen,
         setIsWorldMapModalOpen, setIsAchievementRewardModalOpen, setAchievementToDisplay,
         setIsAvatarSelectionModalOpen, setIsCreditsModalOpen,
+        setIsShopReputationModalOpen, // Теперь это состояние здесь
 
         gameStateRef, workTimeoutRef,
 
@@ -817,14 +977,14 @@ export function usePlayerActions(
 
         canAffordAndPay, handleStartMission, handleClickSale, handleCloseInfoModal, handleCloseWorldMapModal,
         handleCloseAchievementRewardModal, handleClaimAchievementReward, handleOpenAvatarSelectionModal,
-        handleCloseAvatarSelectionModal, handleOpenCreditsModal, handleCloseCreditsModal, handleSelectAvatar,
+        handleCloseAvatarSelectionModal, handleOpenCreditsModal, handleCloseCreditsModal, handleSelectAvatar, handleSetPlayerName,
         handleBuySkill, handleSelectSpecialization, handleBuyFactionUpgrade, handleVolumeChange,
         handleMoveItemToShelf, handleRemoveItemFromShelf, handleGenerateNewOrderInQueue, handleAcceptOrder,
         handleStartFreeCraft, handleMineOre, handleSmelt, handleForgeAlloy, handleBuyResource,
         handleSellResource, handleBuySpecialItem, handleInvest, handleBuyUpgrade,
-        handleCraftArtifact, handleStartQuest, handleResetGame, handleStartMission,
+        handleCraftArtifact, handleStartQuest, handleClaimMasteryReward, handleClaimShopLevelReward, handleResetGame, handleStartMission,
         handleStartNewSettlement, handleBuyEternalSkill, handleStartReforge, handleStartInlay, handleStartGraving,
-
+        handleOpenShopReputationModal, handleCloseShopReputationModal,
         coreHandlers,
         handleStrikeAnvil, handleSelectComponent, handleSelectWorkstation
     ]);

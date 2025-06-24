@@ -1,7 +1,7 @@
 // src/components/views/SkillsView.jsx
 import React, { useRef } from 'react';
 import { definitions } from '../../data/definitions';
-import SkillNode from '../ui/cards/SkillNode'; // Обновленный путь
+import SkillNode from '../ui/cards/SkillNode';
 
 const SkillsView = ({ gameState, handlers }) => {
     const scrollContainerRef = useRef(null);
@@ -34,6 +34,7 @@ const SkillsView = ({ gameState, handlers }) => {
                 { id: "row11", skills: ["apprenticeTraining", "qualityControl"] },
                 { id: "row12", skills: ["advancedSmelting", "tradeRoutes"] },
                 { id: "row13", skills: ["guildContracts", "masterworkHammers"] },
+                { id: "row13_new_copper", skills: ["resourceExpert"] } // Добавлен новый навык
             ]
         },
         {
@@ -42,10 +43,10 @@ const SkillsView = ({ gameState, handlers }) => {
                 { id: "row14", skills: ["artOfAlloys"] },
                 { id: "row15", skills: ["riskAssessment", "steadyHand", "masterReforging"] },
                 { id: "row16", skills: ["blueprint_eliteArmor", "blueprint_fineWeapons", "reinforcedStructure", "ancientKnowledge"] },
-                { id: "row17", skills: ["expeditionPlanning", "gildingTechniques", "weaponryPreparation", "repairWorkshop"] },
+                { id: "row17", skills: ["expeditionPlanning", "gildingTechniques", "weaponryPreparation", "repairWorkshop", "durableGear"] }, // Добавлен новый навык
                 { id: "row18", skills: ["legendaryClients", "optimizedSmelting", "efficientCrafting"] },
                 { id: "row19", skills: ["matterAlchemy", "tradeNegotiation", "artisanMentor", "jewelersKit", "universalPincers"] },
-                { id: "row20", skills: ["timeMastery", "blueprint_masterwork", "truePotential", "crossbowMastery", "armorPlating", "precisionChronometry"] },
+                { id: "row20", skills: ["timeMastery", "blueprint_masterwork", "truePotential", "crossbowMastery", "armorPlating", "precisionChronometry", "guildContractsII"] }, // Добавлен новый навык
             ]
         },
         {
@@ -63,6 +64,7 @@ const SkillsView = ({ gameState, handlers }) => {
                 { id: "row30_mithril", skills: ["mithrilEvasion"] },
                 { id: "row31_mithril", skills: ["mithrilArmor"] },
                 { id: "row32_mithril", skills: ["mithrilAttack"] },
+                { id: "row32_new_mithril", skills: ["ancientRuins"] } // Добавлен новый навык
             ]
         },
         {
@@ -82,6 +84,7 @@ const SkillsView = ({ gameState, handlers }) => {
                 { id: "row44_legend", skills: ["legendaryEvasion"] },
                 { id: "row45_legend", skills: ["legendaryArmor"] },
                 { id: "row46_legend", skills: ["legendaryAttack"] },
+                { id: "row46_new_legend", skills: ["secretOperations"] } // Добавлен новый навык
             ]
         }
     ];
@@ -120,6 +123,7 @@ const SkillsView = ({ gameState, handlers }) => {
                         <AgeHeader title={ageGroup.age} />
                         {ageGroup.rows.map((row, rowIndex) => {
                             const renderedRow = renderSkillRow(row, previousRow);
+                            previousRow = row;
                             return (
                                 <React.Fragment key={row.id}>
                                     {renderedRow}

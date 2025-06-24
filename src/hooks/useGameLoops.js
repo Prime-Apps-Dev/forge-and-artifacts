@@ -1,8 +1,8 @@
 // src/hooks/useGameLoops.js
 import { useEffect } from 'react';
-import { startGameLoop, startMarketLoop, startOrderGenerationLoop } from '../logic/gameLogic';
+import { startGameLoop, startMarketLoop, startOrderGenerationLoop } from '../logic/gameLogic'; // Убедитесь, что все экспорты есть
 
-export function useGameLoops(updateState, handlers, showToast) {
+export function useGameLoops(updateState, handlers, showToast, showAchievementRewardModal) {
     useEffect(() => {
         const shopLockInterval = setInterval(() => {
             updateState(state => {
@@ -19,7 +19,8 @@ export function useGameLoops(updateState, handlers, showToast) {
             });
         }, 1000);
 
-        const gameLoopInterval = startGameLoop(updateState, handlers, showToast, handlers.showAchievementRewardModal);
+        // Передаем showAchievementRewardModal и showToast в startGameLoop
+        const gameLoopInterval = startGameLoop(updateState, handlers, showToast, showAchievementRewardModal);
         const marketLoopInterval = startMarketLoop(updateState, showToast);
         const orderGenLoopInterval = startOrderGenerationLoop(handlers.handleGenerateNewOrderInQueue);
 
@@ -31,5 +32,5 @@ export function useGameLoops(updateState, handlers, showToast) {
             clearInterval(marketLoopInterval);
             clearInterval(orderGenLoopInterval);
         };
-    }, [updateState, handlers, showToast]);
+    }, [updateState, handlers, showToast, showAchievementRewardModal]); // Добавлены showAchievementRewardModal в зависимости
 }

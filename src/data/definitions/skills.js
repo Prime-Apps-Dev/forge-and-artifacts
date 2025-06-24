@@ -83,4 +83,49 @@ export const skills = {
     legendaryEvasion: { name: "Уклонение Легенды", description: "Снижает шанс неудачи при улучшении предметов на 10%.", icon: "policy", cost: { matter: 25000, arcaniteIngots: 24, sparks: 250000 }, requires: ["legendaryCritStrike"], apply: (state) => { state.riskModifier = (state.riskModifier || 1.0) * 0.90; } },
     legendaryArmor: { name: "Броня Легенды", description: "Увеличивает эффективность работы подмастерьев на 30%.", icon: "engineering", cost: { matter: 26000, arcaniteIngots: 26, sparks: 260000 }, requires: ["legendaryEvasion"], apply: (state) => { state.passiveIncomeModifier += 0.30; } },
     legendaryAttack: { name: "Атака Легенды", description: "Увеличивает награду в Искрах и Материи еще на 30%.", icon: "attach_money", cost: { matter: 27000, arcaniteIngots: 28, sparks: 270000 }, requires: ["legendaryArmor"], apply: (state) => { state.sparksModifier += 0.30; state.matterModifier += 0.30; } },
+    // НОВЫЙ НАВЫК: Гильдейские Контракты II
+    guildContractsII: {
+        name: "Гильдейские Контракты II",
+        description: "Увеличивает шанс получения фракционных и редких заказов еще больше. Открывает новые типы заданий гильдий.",
+        icon: "handshake",
+        cost: { matter: 2000, sparks: 25000, sparksteelIngots: 50 },
+        requires: ["guildContracts", "truePotential"],
+        apply: (state) => { /* Только для разблокировки квестов, эффект уже в описании */ }
+    },
+    // НОВЫЙ НАВЫК: Прочное Снаряжение
+    durableGear: {
+        name: "Прочное Снаряжение",
+        description: "Позволяет выполнять миссии гильдий, требующие более прочного снаряжения (снижает минимальное качество на 0.5 для миссий).",
+        icon: "backpack",
+        cost: { matter: 1000, ironIngots: 200 },
+        requires: ["expeditionPlanning"],
+        apply: (state) => { state.missionMinQualityReduction = (state.missionMinQualityReduction || 0) + 0.5; }
+    },
+    // НОВЫЙ НАВЫК: Эксперт по Ресурсам
+    resourceExpert: {
+        name: "Эксперт по Ресурсам",
+        description: "Открывает доступ к поручениям гильдии, связанным с доставкой большого количества ресурсов.",
+        icon: "inventory_2",
+        cost: { matter: 1500, copperOre: 100, ironOre: 200 },
+        requires: ["geologicalSurvey"],
+        apply: (state) => { /* Только для разблокировки квестов */ }
+    },
+    // НОВЫЙ НАВЫК: Древние Руины
+    ancientRuins: {
+        name: "Древние Руины",
+        description: "Открывает доступ к миссиям гильдии по исследованию опасных древних руин, где можно найти редкие материалы.",
+        icon: "gavel",
+        cost: { matter: 3000, mithrilIngots: 30, sparks: 40000 },
+        requires: ["mithrilProspecting", "expeditionPlanning"],
+        apply: (state) => { /* Только для разблокировки квестов */ }
+    },
+    // НОВЫЙ НАВЫК: Тайные Операции
+    secretOperations: {
+        name: "Тайные Операции",
+        description: "Открывает доступ к скрытным и рискованным заданиям гильдии, предлагающим необычные награды.",
+        icon: "visibility_off",
+        cost: { matter: 4000, adamantiteIngots: 10, sparks: 60000 },
+        requires: ["riskAssessment", "adamantiteMining"],
+        apply: (state) => { /* Только для разблокировки квестов */ }
+    },
 };

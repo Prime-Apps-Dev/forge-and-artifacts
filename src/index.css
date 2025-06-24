@@ -48,11 +48,20 @@ body {
     animation: toast-fade-out 0.4s ease-out forwards !important;
 }
 
-.interactive-element { transition: transform 0.1s ease, box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease !important; }
-.interactive-element:not(:disabled):active {
-    transform: scale(0.95) !important;
-    transition-duration: 0.05s !important;
+/* Изменено: interactive-element:active теперь не содержит transform, 
+   вместо этого мы будем применять scale к внутреннему элементу или явно управлять */
+.interactive-element { 
+    transition: box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease; 
+    /* Убрано transform и transition-duration отсюда */
 }
+/* Новый класс для внутренней трансформации */
+.interactive-element-scale-inner {
+    transition: transform 0.1s ease; /* Только scale для внутреннего элемента */
+}
+.interactive-element-scale-inner:not(:disabled):active {
+    transform: scale(0.95);
+}
+
 
 .modal-backdrop { animation: fade-in 0.3s ease-out forwards !important; }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
@@ -117,4 +126,66 @@ body {
 
 .img-rounded-corners {
     border-radius: 0.5rem;
+}
+
+/* Стили для выезжающей панели BottomBar */
+/* Удаляем padding-bottom с game-container */
+.game-container {
+    padding-bottom: 1rem; /* Минимальный отступ, чтобы не перекрывать кнопку-переключатель */
+}
+
+/* Стили для кнопки-переключателя BottomBar */
+.bottom-bar-toggle-button {
+    bottom: 24px; /* Поднята на 16px от низа */
+    left: 50%;
+    transform: translateX(-50%); /* Всегда центрируем по X */
+    transition: bottom 0.3s ease-in-out;
+    z-index: 9998; /* Чуть ниже BottomBar, но выше всего остального UI */
+    width: 3rem; /* Задаем явную ширину для квадрата (48px) */
+    height: 3rem; /* Задаем явную высоту для квадрата (48px) */
+    display: flex; /* Делаем flex контейнером */
+    align-items: center; /* Центрируем содержимое по вертикали */
+    justify-content: center; /* Центрируем содержимое по горизонтали */
+    padding: 0; /* Убираем padding, так как размер задан явно */
+    border-radius: 9999px; /* Делаем кнопку круглой */
+}
+
+/* Стили для самой выезжающей панели */
+.bottom-bar-panel {
+    position: fixed;
+    bottom: 24px; /* Поднята на 16px от низа */
+    left: 50%; /* Центрируем по горизонтали */
+    /* Важно: translateX должен быть всегда, а translateY будет изменяться */
+    transform: translateX(-50%) translateY(0); /* Начальная позиция: центрировано по X, не смещено по Y */
+    transition: transform 0.3s ease-in-out; /* Анимируем только transform */
+
+    width: calc(100% - 2rem); /* Ширина 100% минус padding от App.jsx */
+    max-width: 600px; /* Максимальная ширина, как на скриншоте */
+    height: 80px; /* Высота панели */
+    border-radius: 1rem; /* Закругляем со всех сторон */
+    padding: 1rem .5rem; /* Отступы сверху и снизу по 4px, по бокам по 1rem */
+    box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.3); /* Тень для эффекта выезда */
+    z-index: 9999; /* Выше всех UI элементов, кроме модалок и тостов */
+    background-color: rgba(31, 41, 55, 0.7); /* bg-gray-800 с прозрачностью 70% */
+    border: 2px solid #374151; /* border-gray-700 */
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Адаптируем трансформацию для скрытия панели с учетом нового bottom и высоты */
+/* Используем transform: translateY(0) для показанной панели и transform: translateY(calc(100% + 16px)) для скрытой */
+/* Для того чтобы transform: translateX(-50%) всегда оставался, мы применяем его в базовом классе */
+.bottom-bar-panel.translate-y-full {
+    transform: translateX(-50%) translateY(calc(100% + 16px)); /* Сдвигаем на 100% + отступ от низа */
+}
+
+/* Добавлены классы для разделителей */
+.bottom-bar-divider {
+    width: 2px;
+    height: 70%; /* Высота разделителя */
+    background-color: rgba(255, 255, 255, 0.2); /* Светло-серый, полупрозрачный */
+    margin: 0 0.5rem; /* Отступы по бокам */
+    border-radius: 1px;
 }

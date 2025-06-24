@@ -1,8 +1,8 @@
 import React from 'react';
 import { definitions } from '../../data/definitions';
-import { formatNumber, formatCosts } from '../../utils/formatters'; // Теперь formatNumber из formatters
+import { formatNumber, formatCosts } from '../../utils/formatters';
 import { getResourceImageSrc, getReputationLevel, hasReputation } from '../../utils/helpers';
-import TradeableResource from '../ui/cards/TradeableResource'; // Обновленный путь
+import TradeableResource from '../ui/cards/TradeableResource';
 
 const ShopView = ({ gameState, handlers }) => {
     const market = gameState.market;
@@ -12,6 +12,14 @@ const ShopView = ({ gameState, handlers }) => {
     const conflictingFactions = isConflict ? currentEvent.conflictingFactions : [];
 
     const FactionStore = () => {
+        // Filter out actual blueprints for artifacts, they are bought from Court if applicable, not via generic blueprint section
+        const courtSpecialItems = Object.entries(definitions.specialItems).filter(([id, item]) =>
+            item.requiredFaction === 'court' &&
+            ( !item.requiredSkill || gameState.purchasedSkills[item.requiredSkill] ) &&
+            !id.startsWith('blueprint_aegis') && !id.startsWith('blueprint_hammer') && !id.startsWith('blueprint_crown') &&
+            !id.startsWith('blueprint_bastion') && !id.startsWith('blueprint_quill')
+        );
+
         return (
             <div className="mt-8">
                 <h3 className="font-cinzel text-xl text-orange-400 mb-4">Предложения Фракций</h3>
@@ -50,20 +58,21 @@ const ShopView = ({ gameState, handlers }) => {
                         hasReputation(gameState.reputation, 'court', 'honor') && (
                         <div className="p-4 bg-purple-900/20 border border-purple-700 rounded-lg">
                             <h4 className="font-bold text-purple-300 flex items-center gap-2"><span className="material-icons-outlined">account_balance</span>Королевская Сокровищница</h4>
-                                {Object.entries(definitions.specialItems).filter(([id, item]) =>
-                                    item.requiredFaction === 'court' &&
-                                    ( !item.requiredSkill || gameState.purchasedSkills[item.requiredSkill] )
-                                ).map(([id, item]) => (
-                                    <button
-                                        key={id}
-                                        onClick={() => handlers.handleBuySpecialItem(id)}
-                                        disabled={gameState.specialItems[id] > 0 || (item.requiredSkill && !gameState.purchasedSkills[item.requiredSkill]) || Object.entries(item.cost).some(([res, val]) => (gameState[res] || gameState.specialItems[res] || 0) < val)}
-                                        className="w-full text-left p-2 mt-2 bg-black/30 rounded-sm hover:bg-black/50 flex justify-between items-center disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                    <span>{gameState.specialItems[id] > 0 ? "Куплено:" : "Купить:"} {item.name}</span>
-                                    <span className="text-sm" dangerouslySetInnerHTML={{ __html: formatCosts(item.cost, gameState) }}></span>
-                                </button>
-                                ))}
+                                {courtSpecialItems.length > 0 ? (
+                                    courtSpecialItems.map(([id, item]) => (
+                                        <button
+                                            key={id}
+                                            onClick={() => handlers.handleBuySpecialItem(id)}
+                                            disabled={gameState.specialItems[id] > 0 || (item.requiredSkill && !gameState.purchasedSkills[item.requiredSkill]) || Object.entries(item.cost).some(([res, val]) => (gameState[res] || gameState.specialItems[res] || 0) < val)}
+                                            className="w-full text-left p-2 mt-2 bg-black/30 rounded-sm hover:bg-black/50 flex justify-between items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            <span>{gameState.specialItems[id] > 0 ? "Куплено:" : "Купить:"} {item.name}</span>
+                                            <span className="text-sm" dangerouslySetInnerHTML={{ __html: formatCosts(item.cost, gameState) }}></span>
+                                        </button>
+                                    ))
+                                ) : (
+                                    <p className="text-sm text-gray-500 italic">Нет доступных предложений от Двора.</p>
+                                )}
                                 {Object.entries(definitions.specialItems).filter(([id, item]) =>
                                     item.requiredFaction === 'court' &&
                                     item.requiredSkill && !gameState.purchasedSkills[item.requiredSkill]
@@ -78,6 +87,13 @@ const ShopView = ({ gameState, handlers }) => {
             </div>
         )
     }
+
+    const availableBlueprints = Object.entries(definitions.specialItems).filter(([id, item]) =>
+        id.startsWith('blueprint_') && // Только чертежи
+        !item.requiredFaction && // Игнорируем чертежи фракций (они отображаются выше)
+        item.requiredSkill && gameState.purchasedSkills[item.requiredSkill] && // Навык изучен
+        !(gameState.specialItems[id] > 0) // Чертеж еще не куплен
+    );
 
     return (
         <div>
@@ -115,6 +131,26 @@ const ShopView = ({ gameState, handlers }) => {
                 )}
 
             </div>
+
+            {availableBlueprints.length > 0 && (
+                <div className="mt-8">
+                    <h3 className="font-cinzel text-xl text-yellow-400 mb-4">Чертежи</h3>
+                    <div className="space-y-4">
+                        {availableBlueprints.map(([id, item]) => (
+                            <button
+                                key={id}
+                                onClick={() => handlers.handleBuySpecialItem(id)}
+                                disabled={Object.entries(item.cost).some(([res, val]) => (gameState[res] || gameState.specialItems[res] || 0) < val)}
+                                className="w-full text-left p-2 bg-black/30 rounded-sm hover:bg-black/50 flex justify-between items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <span>Купить: {item.name}</span>
+                                <span className="text-sm" dangerouslySetInnerHTML={{ __html: formatCosts(item.cost, gameState) }}></span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             <FactionStore />
         </div>
     );

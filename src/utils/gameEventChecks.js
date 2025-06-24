@@ -14,6 +14,7 @@ export function checkForNewQuests(state, showToast) {
         const trigger = quest.trigger;
         let canStart = false;
 
+        // Проверка условий ТРИГГЕРА
         if (trigger.type === 'reputation' && hasReputation(state.reputation, trigger.factionId, trigger.level)) {
             canStart = true;
         } else if (trigger.type === 'skill' && state.purchasedSkills[trigger.skillId]) {
@@ -52,6 +53,14 @@ export function checkForNewQuests(state, showToast) {
                 }
             }
         }
+        // НОВЫЕ ТРИГГЕРЫ, ДОБАВЛЕННЫЕ В skills.js И quests.js
+        else if (trigger.type === 'matter_spent' && (state.totalMatterSpent || 0) >= trigger.count) {
+            canStart = true;
+        }
+        else if (trigger.type === 'artifact_completed' && state.artifacts[trigger.artifactId]?.status === 'completed') {
+            canStart = true;
+        }
+
 
         if (canStart) {
             state.journal.availableQuests.push(quest.id);

@@ -1,12 +1,12 @@
 // src/App.jsx
-import React, { useState, memo, useRef, useEffect } from 'react';
+import React, { useState, memo, useRef, useEffect, useCallback } from 'react';
 import { useGameState } from './hooks/useGameState';
 import { audioController } from './utils/audioController';
 
 // Импорты компонентов
 import RewardModal from './components/ui/modals/RewardModal';
 import Toast from './components/ui/display/Toast';
-import InventoryModal from './components/ui/modals/InventoryModal'; // Это модальное окно остаётся в modals
+import InventoryModal from './components/ui/modals/InventoryModal';
 import ForgeView from './components/views/ForgeView';
 import MineView from './components/views/MineView';
 import SmelterView from './components/views/SmelterView';
@@ -31,6 +31,10 @@ import AudioVisualizer from './components/effects/AudioVisualizer';
 import AchievementRewardModal from './components/modals/AchievementRewardModal';
 import AvatarSelectionModal from './components/modals/AvatarSelectionModal';
 import CreditsModal from './components/modals/CreditsModal';
+import ShopReputationModal from './components/modals/ShopReputationModal';
+
+// Импортируем ParticleEmitter
+import ParticleEmitter from './components/effects/ParticleEmitter';
 
 const LeftPanelButton = memo(({ viewId, icon, label, onClick, activeView }) => (
     <button onClick={() => onClick(viewId)} className={`interactive-element h-full flex-shrink-0 min-w-max px-4 font-cinzel text-base flex items-center justify-center gap-2 border-b-4 ${activeView === viewId ? 'text-orange-400 border-orange-400 bg-black/20' : 'text-gray-500 border-transparent hover:text-orange-400/70'}`}>
@@ -56,6 +60,7 @@ export default function App() {
         achievementToDisplay,
         isAvatarSelectionModalOpen,
         isCreditsModalOpen,
+        isShopReputationModalOpen,
         handlers,
         removeToast,
         activeInfoModal,
@@ -71,6 +76,32 @@ export default function App() {
 
     const leftTabsRef = useRef(null);
     const rightTabsRef = useRef(null);
+    const forgeAreaRef = useRef(null); // Ссылка на область наковальни
+
+    const toggleBottomBarVisibility = () => {
+        setIsBottomBarVisible(prev => !prev);
+    };
+
+    // Обертка для handleStrikeAnvil для получения координат клика
+    const handleStrikeAnvilWithParticles = useCallback((event) => {
+        if (forgeAreaRef.current) {
+            const rect = forgeAreaRef.current.getBoundingClientRect();
+            // Получаем координаты центра элемента anvil, так как он анимируется
+            const anvilElement = forgeAreaRef.current.querySelector('#forge-area > div'); // Наковальня
+            let x = rect.left + rect.width / 2;
+            let y = rect.top + rect.height / 2;
+
+            if (anvilElement) {
+                const anvilRect = anvilElement.getBoundingClientRect();
+                x = anvilRect.left + anvilRect.width / 2;
+                y = anvilRect.top + anvilRect.height / 2;
+            }
+            handlers.handleStrikeAnvil(x, y); // Передаем координаты в хэндлер
+        } else {
+            handlers.handleStrikeAnvil(window.innerWidth / 2, window.innerHeight / 2); // Дефолт, если ссылка не работает
+        }
+    }, [handlers]);
+
 
     useEffect(() => {
         const handleWheelScroll = (evt, element) => {
@@ -108,11 +139,20 @@ export default function App() {
     return (
         <div onClick={handleInitialGesture} className="relative w-screen h-screen overflow-hidden">
             <AudioVisualizer />
+            <ParticleEmitter /> {/* Добавляем компонент для рендеринга частиц */}
 
             {isSpecializationModalOpen && <SpecializationModal onSelectSpecialization={handlers.handleSelectSpecialization} />}
             {isSettingsOpen && <SettingsModal settings={displayedGameState.settings} onClose={() => setIsSettingsOpen(false)} onVolumeChange={handlers.handleVolumeChange} onResetGame={handlers.handleResetGame} onOpenCredits={handlers.handleOpenCreditsModal} />}
             {isInventoryOpen && <InventoryModal isOpen={isInventoryOpen} onClose={() => setIsInventoryOpen(false)} gameState={displayedGameState} handlers={handlers} />}
             {isProfileModalOpen && <ProfileModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} gameState={displayedGameState} handlers={handlers} />}
+            {isShopReputationModalOpen && (
+                <ShopReputationModal
+                    isOpen={isShopReputationModalOpen}
+                    onClose={handlers.handleCloseShopReputationModal}
+                    gameState={displayedGameState}
+                    handlers={handlers}
+                />
+            )}
             {activeInfoModal && (
                 <InfoModal
                     isOpen={!!activeInfoModal}
@@ -158,6 +198,7 @@ export default function App() {
 
             <div className="game-container flex flex-col lg:flex-row h-screen py-4 px-2 gap-4 text-gray-200 max-w-[1500px] w-full mx-auto lg:mx-3 relative z-10">
                 <div className="left-panel bg-gray-800/80 backdrop-blur-md border-2 border-gray-700 rounded-lg overflow-y-auto w-3/5">
+                    {/* Табы левой панели */}
                     <div ref={leftTabsRef} className="tabs flex items-center border-b-2 border-gray-700 h-16 sticky top-0 z-30 bg-gray-800/80 backdrop-blur-sm">
                         <LeftPanelButton viewId="forge" icon="hardware" label="Кузница" onClick={handleLeftViewChange} activeView={activeLeftView} />
                         <LeftPanelButton viewId="mine" icon="terrain" label="Шахта" onClick={handleLeftViewChange} activeView={activeLeftView} />
@@ -166,10 +207,14 @@ export default function App() {
                         <LeftPanelButton viewId="skills" icon="schema" label="Навыки" onClick={handleLeftViewChange} activeView={activeLeftView} />
                         <LeftPanelButton viewId="artifacts" icon="auto_stories" label="Артефакты" onClick={handleLeftViewChange} activeView={activeLeftView} />
                         <LeftPanelButton viewId="journal" icon="book" label="Журнал" onClick={handleLeftViewChange} activeView={activeLeftView} />
-                        <LeftPanelButton viewId="guild" icon="hub" label="Гильдия" onClick={handleLeftViewChange} activeView={activeLeftView} />
+                        {/* Условный рендеринг для вкладки "Гильдия" */}
+                        {displayedGameState.purchasedSkills.guildContracts && (
+                            <LeftPanelButton viewId="guild" icon="hub" label="Гильдия" onClick={handleLeftViewChange} activeView={activeLeftView} />
+                        )}
                     </div>
                     <div className="p-6">
-                        {activeLeftView === 'forge' && <ForgeView gameState={displayedGameState} isWorking={isWorking} handlers={handlers} />}
+                        {/* Условный рендеринг для всех вкладок левой панели */}
+                        {activeLeftView === 'forge' && <ForgeView gameState={displayedGameState} isWorking={isWorking} handlers={handlers} handleStrikeAnvil={handleStrikeAnvilWithParticles} forgeAreaRef={forgeAreaRef} />}
                         {activeLeftView === 'mine' && <MineView gameState={displayedGameState} handlers={handlers} />}
                         {activeLeftView === 'smelter' && <SmelterView gameState={displayedGameState} handlers={handlers} />}
                         {activeLeftView === 'shop' && <ShopView gameState={displayedGameState} handlers={handlers} />}
@@ -200,26 +245,30 @@ export default function App() {
                 </div>
             </div>
 
-            <BottomBar
-                gameState={displayedGameState}
-                onToggleInventoryModal={() => setIsInventoryOpen(true)}
-                onToggleSettingsModal={() => setIsSettingsOpen(true)}
-                onToggleProfileModal={() => setIsProfileModalOpen(true)}
-                isBottomBarVisible={isBottomBarVisible}
-                onToggleBottomBarVisibility={() => setIsBottomBarVisible(!isBottomBarVisible)}
-            />
+            {/* Выезжающая панель BottomBar */}
+            <div className={`bottom-bar-panel transition-transform duration-300 ease-in-out ${isBottomBarVisible ? 'translate-y-0' : 'translate-y-full'}`}>
+                <BottomBar
+                    gameState={displayedGameState}
+                    onToggleInventoryModal={() => setIsInventoryOpen(true)}
+                    onToggleSettingsModal={() => setIsSettingsOpen(true)}
+                    onToggleProfileModal={() => setIsProfileModalOpen(true)}
+                    onToggleBottomBarVisibility={toggleBottomBarVisibility}
+                />
+            </div>
 
+            {/* Кнопка-переключатель для BottomBar, отображается только когда панель скрыта */}
             {!isBottomBarVisible && (
                 <button
-                    onClick={() => setIsBottomBarVisible(true)}
-                    className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30
-                               p-2 rounded-full
+                    onClick={toggleBottomBarVisibility}
+                    className="fixed bottom-bar-toggle-button
                                bg-gray-900/70 border border-gray-700 backdrop-blur-md
-                               interactive-element hover:bg-gray-800/80 focus:outline-none
-                               transition-all duration-300 ease-in-out pointer-events-auto"
+                               pointer-events-auto hover:bg-gray-800/80 focus:outline-none"
                     title="Показать панель"
                 >
-                    <span className="material-icons-outlined text-gray-400 text-2xl">keyboard_arrow_up</span>
+                    {/* Обертка для масштабирования, которая не будет влиять на позицию */}
+                    <div className="flex items-center justify-center w-full h-full rounded-full interactive-element-scale-inner">
+                        <span className="material-icons-outlined text-gray-400 text-2xl">keyboard_arrow_up</span>
+                    </div>
                 </button>
             )}
 

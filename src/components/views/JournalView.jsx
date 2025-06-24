@@ -1,9 +1,87 @@
 import React from 'react';
 import { definitions } from '../../data/definitions';
 
-const QuestCard = ({ quest, onAccept, progress, type }) => {
+const QuestCard = ({ quest, onAccept, progress, type, gameState }) => { // Добавлен gameState
     const faction = definitions.factions[quest.factionId];
-    const targetItem = quest.target.type === 'craft' ? definitions.items[quest.target.itemId] : null;
+    
+    let targetDescription = '';
+    let currentProgress = progress;
+
+    switch (quest.target.type) {
+        case 'craft':
+            const targetItem = definitions.items[quest.target.itemId];
+            targetDescription = `Создать ${quest.target.count} x "${targetItem.name}"`;
+            break;
+        case 'inlay':
+            targetDescription = `Инкрустировать ${quest.target.count} предмет(ов)`;
+            break;
+        case 'risky_order':
+            targetDescription = `Выполнить ${quest.target.count} рискованных заказа(ов)`;
+            break;
+        case 'unique_items':
+            targetDescription = `Собрать ${quest.target.count} уникальных предмета(ов)`;
+            currentProgress = new Set(gameState.inventory.map(item => item.itemKey)).size; // Пересчитываем для уникальных предметов
+            break;
+        case 'totalOre':
+            targetDescription = `Накопить ${quest.target.count} ед. руды`;
+            currentProgress = (gameState.ironOre || 0) + (gameState.copperOre || 0) + (gameState.mithrilOre || 0) + (gameState.adamantiteOre || 0); // Пересчитываем для всей руды
+            break;
+        case 'totalIngotsSmelted':
+            targetDescription = `Переплавить ${quest.target.count} слитков`;
+            currentProgress = gameState.totalIngotsSmelted || 0;
+            break;
+        case 'totalClicks':
+            targetDescription = `Нанести ${quest.target.count} ударов по наковальне`;
+            currentProgress = gameState.totalClicks || 0;
+            break;
+        case 'totalSparks':
+            targetDescription = `Заработать ${quest.target.count} искр`;
+            currentProgress = gameState.totalSparksEarned || 0;
+            break;
+        case 'totalMatterSpent':
+            targetDescription = `Потратить ${quest.target.count} материи`;
+            currentProgress = gameState.totalMatterSpent || 0;
+            break;
+        case 'grave':
+            targetDescription = `Гравировать ${quest.target.count} предмет(ов)`;
+            break;
+        // НОВЫЕ ТИПЫ ЦЕЛЕЙ
+        case 'complex_order':
+            targetDescription = `Выполнить ${quest.target.count} сложны${quest.target.count === 1 ? 'й' : 'х'} заказ${quest.target.count === 1 ? '' : 'ов'}`;
+            break;
+        case 'craft_quality':
+            const qualityItemType = quest.target.itemType === 'any' ? 'любого типа' : definitions.items?.[Object.keys(definitions.items).find(key => definitions.items[key].itemType === quest.target.itemType)]?.name || quest.target.itemType; // Попытка найти имя для типа
+            targetDescription = `Создать ${quest.target.count} ${qualityItemType} с качеством не ниже ${quest.target.minQuality.toFixed(1)}`;
+            break;
+        case 'deliver_resources':
+            const resourceNames = quest.target.resources.map(resId => definitions.resources?.[resId]?.name || resId.replace('Ore', ' руды').replace('Ingots', ' слитков')).join(' или ');
+            targetDescription = `Доставить ${quest.target.count} ед. ${resourceNames}`;
+            // Для deliver_resources, прогресс будет храниться в questProgress как общая сумма доставленного
+            currentProgress = gameState.journal.questProgress[quest.id] || 0;
+            break;
+        case 'risky_order_consecutive':
+            targetDescription = `Успешно выполнить ${quest.target.count} рискованных заказов подряд`;
+            currentProgress = gameState.consecutiveRiskyOrders || 0; // Прогресс для этого типа хранится отдельно
+            break;
+        case 'craft_item_tag':
+            targetDescription = `Создать ${quest.target.count} предмет(ов) с тегом "${quest.target.itemTag}"`;
+            break;
+        case 'inlay_item_tag':
+            targetDescription = `Инкрустировать ${quest.target.count} предмет(ов) с тегом "${quest.target.itemTag}"`;
+            break;
+        case 'matter_spent': // Уже есть totalMatterSpent, но квест может требовать конкретный
+            targetDescription = `Потратить ${quest.target.count} материи`;
+            currentProgress = gameState.totalMatterSpent || 0; // Предполагаем, что триггер уже сработал
+            break;
+        case 'artifact_completed':
+            const artifactDef = definitions.greatArtifacts[quest.target.artifactId];
+            targetDescription = `Создать артефакт "${artifactDef.name}"`;
+            currentProgress = gameState.artifacts[quest.target.artifactId]?.status === 'completed' ? 1 : 0; // 0 или 1
+            break;
+        default:
+            targetDescription = 'Особое задание';
+            break;
+    }
 
     return (
         <div className={`p-4 bg-black/30 border-2 rounded-lg border-${faction.color.replace('500', '700')}`}>
@@ -12,8 +90,8 @@ const QuestCard = ({ quest, onAccept, progress, type }) => {
             <div className="mt-2 pt-2 border-t border-gray-700/50">
                 <p className="text-sm text-gray-300">
                     <span className="font-bold">Цель: </span> 
-                    {targetItem ? `Создать ${quest.target.count} x "${targetItem.name}"` : 'Особое задание'}
-                    {type === 'active' && ` (${progress}/${quest.target.count})`}
+                    {targetDescription}
+                    {type === 'active' && ` (${currentProgress}/${quest.target.count})`}
                 </p>
             </div>
             {type === 'available' && (
@@ -25,7 +103,7 @@ const QuestCard = ({ quest, onAccept, progress, type }) => {
     )
 };
 
-const JournalView = ({ gameState, onStartQuest }) => {
+const JournalView = ({ gameState, handlers }) => { // Изменено на handlers
     const { availableQuests, activeQuests, completedQuests, questProgress } = gameState.journal;
 
     const renderEmptyState = (text) => (
@@ -50,7 +128,7 @@ const JournalView = ({ gameState, onStartQuest }) => {
                         {activeQuests.length > 0 
                             ? activeQuests.map(q => {
                                 const questDef = definitions.quests[q.id];
-                                return <QuestCard key={q.id} quest={questDef} progress={questProgress[q.id] || 0} type="active" />
+                                return <QuestCard key={q.id} quest={questDef} progress={questProgress[q.id] || 0} type="active" gameState={gameState} />
                             })
                             : renderEmptyState("Нет активных заданий.")
                         }
@@ -63,7 +141,7 @@ const JournalView = ({ gameState, onStartQuest }) => {
                         {availableQuests.length > 0
                             ? availableQuests.map(id => {
                                 const questDef = definitions.quests[id];
-                                return <QuestCard key={id} quest={questDef} onAccept={onStartQuest} type="available" />
+                                return <QuestCard key={id} quest={questDef} onAccept={handlers.handleStartQuest} type="available" gameState={gameState} /> // Передаем handlers.handleStartQuest
                             })
                             : renderEmptyState("Нет доступных заданий. Повышайте репутацию и изучайте навыки!")
                         }
