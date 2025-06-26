@@ -23,15 +23,18 @@ const ActiveProjectDisplay = memo(() => {
     
     const playerItemDef = definitions.items[activePlayerProject.itemKey];
     const activePlayerComponent = playerItemDef ? playerItemDef.components.find(c => c.id === activePlayerProject.activeComponentId) : null;
+    
+    // Безопасное получение изображения клиента
+    const clientFaceImg = gameState.activeOrder?.client?.faceImg || IMAGE_PATHS.CLIENTS.SHADOWY_FIGURE;
 
     return (
         <>
             {gameState.activeOrder && (
                 <div className="flex items-start gap-4 mb-2">
-                    <img src={gameState.activeOrder.client.faceImg} alt="Лицо клиента" className="w-16 h-16 rounded-full border-2 border-gray-600" />
+                    <img src={clientFaceImg} alt="Лицо клиента" className="w-16 h-16 rounded-full border-2 border-gray-600" />
                     <div className="grow">
                         <h3 className="font-cinzel text-lg">{playerItemDef?.name || 'Загрузка...'}</h3>
-                        <p className="text-sm text-gray-400">Клиент: <span className="font-semibold text-white">{gameState.activeOrder.client.name}</span></p>
+                        <p className="text-sm text-gray-400">Клиент: <span className="font-semibold text-white">{gameState.activeOrder?.client?.name || 'Неизвестный'}</span></p>
                         <div className="text-xs text-gray-500 flex items-center gap-4 mt-1">
                             <span>Награда:</span>
                             <div className="flex items-center gap-1"><span className="material-icons-outlined text-yellow-400 text-sm">bolt</span><span className="font-bold text-gray-300">{formatNumber(gameState.activeOrder.rewards.sparks)}</span></div>
@@ -90,12 +93,12 @@ const WorkstationSelector = memo(() => {
         if (activeGraving) return 'workbench';
         if (activePlayerProject) {
             const itemDef = definitions.items[activePlayerProject.itemKey];
-            const activeComponent = itemDef.components.find(c => c.id === activePlayerProject.activeComponentId);
+            const activeComponent = itemDef?.components.find(c => c.id === activePlayerProject.activeComponentId);
             if (activeComponent) return activeComponent.workstation;
         }
         if (isEpicCraft) {
             const artifactDef = definitions.greatArtifacts[currentEpicOrder.artifactId];
-            const epicStageDef = artifactDef.epicOrder.find(s => s.stage === currentEpicOrder.currentStage);
+            const epicStageDef = artifactDef?.epicOrder.find(s => s.stage === currentEpicOrder.currentStage);
             if (epicStageDef) return epicStageDef.workstation;
         }
         return null;
