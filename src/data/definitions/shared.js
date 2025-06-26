@@ -7,7 +7,6 @@ export const sharedDefinitions = {
         adventurers: { name: 'Лига Авантюристов', color: 'green-500', icon: 'explore' },
         court: { name: 'Королевский Двор', color: 'purple-500', icon: 'account_balance' }
     },
-
     reputationLevels: [
         { id: 'distrust', name: 'Недоверие', threshold: 0 },
         { id: 'neutrality', name: 'Нейтралитет', threshold: 100 },
@@ -15,38 +14,10 @@ export const sharedDefinitions = {
         { id: 'honor', name: 'Почет', threshold: 500 },
         { id: 'exalted', name: 'Превознесение', threshold: 1000 },
     ],
-
     workstations: {
-        anvil: {
-            name: "Наковальня", icon: "hardware",
-            maxLevel: 100, // Максимальный уровень
-            baseXpToNextLevel: 100, // Начальное XP для следующего уровня
-            xpToNextLevelMultiplier: 1.1, // Множитель для следующего уровня
-            bonusesPerLevel: {
-                progressPerClick: 0.1, // +0.1 к прогрессу за клик
-                critChance: 0.001, // +0.1% к шансу крита
-            }
-        },
-        workbench: {
-            name: "Верстак", icon: "handyman",
-            maxLevel: 100,
-            baseXpToNextLevel: 100,
-            xpToNextLevelMultiplier: 1.1,
-            bonusesPerLevel: {
-                componentCostReduction: 0.05, // -0.05 к стоимости компонентов (для предметов со стоимостью в материи, искрах)
-                matterModifier: 0.001, // +0.1% к материи от заказов
-            }
-        },
-        grindstone: {
-            name: "Точильный станок", icon: "healing",
-            maxLevel: 100,
-            baseXpToNextLevel: 100,
-            xpToNextLevelMultiplier: 1.1,
-            bonusesPerLevel: {
-                critBonus: 0.05, // +0.05 к множителю крит. бонуса
-                smeltingSpeedModifier: 0.001, // +0.1% к скорости плавки
-            }
-        }
+        anvil: { name: "Наковальня", icon: "hardware", maxLevel: 100, baseXpToNextLevel: 100, xpToNextLevelMultiplier: 1.1, bonusesPerLevel: { progressPerClick: 0.1, critChance: 0.001, } },
+        workbench: { name: "Верстак", icon: "handyman", maxLevel: 100, baseXpToNextLevel: 100, xpToNextLevelMultiplier: 1.1, bonusesPerLevel: { componentCostReduction: 0.05, matterModifier: 0.001, } },
+        grindstone: { name: "Точильный станок", icon: "healing", maxLevel: 100, baseXpToNextLevel: 100, xpToNextLevelMultiplier: 1.1, bonusesPerLevel: { critBonus: 0.05, smeltingSpeedModifier: 0.001, } }
     },
 
     clients: [
@@ -69,12 +40,16 @@ export const sharedDefinitions = {
     ],
 
     worldEvents: [
-        { id: 'drought', type: 'market', message: "Засуха в южных провинциях! Поставки руды затруднены.", effects: { ironOre: { buy: 1.25, sell: 1.15 }, copperOre: { buy: 1.25, sell: 1.15 }}},
-        { id: 'tournament', type: 'market', message: "Королевский турнир! Спрос на оружие и броню взлетел до небес.", effects: { ironIngots: { sell: 1.20 }, bronzeIngots: { sell: 1.25 }}},
-        { id: 'good_harvest', type: 'market', message: "Отличный урожай, караваны идут без задержек. Цены на сырье снижены.", effects: { ironOre: { buy: 0.85 }, copperOre: { buy: 0.85 }}},
-        { id: 'merchants_vs_adventurers', type: 'faction_conflict', message: 'Торговая Гильдия обвиняет Авантюристов в пиратстве! Отношения накалены, торговля с обеими фракциями затруднена.', conflictingFactions: ['merchants', 'adventurers']},
-        { id: 'court_vs_merchants', type: 'faction_conflict', message: 'Королевский Двор вводит новые налоги, что злит Гильдию Торговцев. Сотрудничество с ними временно приостановлено.', conflictingFactions: ['court', 'merchants']},
-        { id: 'adventurers_vs_court', type: 'faction_conflict', message: 'Лига Авантюристов недовольна запретом Короны на исследование древних руин. Услуги обеих фракций недоступны.', conflictingFactions: ['adventurers', 'court']},
+        { id: 'drought', name: 'Засуха', type: 'market', duration: 300, icon: 'water_drop', message: "Засуха в южных провинциях! Поставки руды затруднены.", effects: { ironOre: { buy: 1.25, sell: 1.15 }, copperOre: { buy: 1.25, sell: 1.15 }}},
+        { id: 'tournament', name: 'Королевский турнир', type: 'market', duration: 600, icon: 'emoji_events', message: "Королевский турнир! Спрос на оружие и броню взлетел до небес.", effects: { ironIngots: { sell: 1.20 }, bronzeIngots: { sell: 1.25 }, sparksteelIngots: { sell: 1.30 }}},
+        { id: 'good_harvest', name: 'Хороший урожай', type: 'market', duration: 400, icon: 'grass', message: "Отличный урожай, караваны идут без задержек. Цены на сырье снижены.", effects: { ironOre: { buy: 0.85 }, copperOre: { buy: 0.85 }}},
+        { id: 'heavy_rain', name: 'Ливень', type: 'weather_event', duration: 300, icon: 'thunderstorm', message: 'Сильный ливень затрудняет работу под открытым небом.', effects: { progressPerClick: -1 } },
+        { id: 'heatwave', name: 'Засуха', type: 'weather_event', duration: 450, icon: 'wb_sunny', message: 'Жара плавит даже камень! Плавильня работает медленнее.', effects: { smeltingSpeedModifier: -0.15 } },
+        { id: 'mana_storm', name: 'Магическая буря', type: 'cataclysm', duration: 600, icon: 'bolt', message: 'Магическая буря! Материя повсюду, но точность страдает.', effects: { matterModifier: 0.25, critChance: -0.10 } },
+        { id: 'earthquake', name: 'Землетрясение', type: 'cataclysm', duration: 200, icon: 'volcano', message: 'Землетрясение вскрыло новые жилы, но напугало торговцев.', effects: { orePerClick: 1, marketBuyModifier: 0.10 } },
+        { id: 'merchants_vs_adventurers', name: 'Конфликт: Торговцы и Авантюристы', type: 'faction_conflict', duration: 900, icon: 'swords', message: 'Торговая Гильдия обвиняет Авантюристов в пиратстве! Отношения накалены, торговля с обеими фракциями затруднена.', conflictingFactions: ['merchants', 'adventurers']},
+        { id: 'court_vs_merchants', name: 'Конфликт: Двор и Торговцы', type: 'faction_conflict', duration: 900, icon: 'balance', message: 'Королевский Двор вводит новые налоги, что злит Гильдию Торговцев. Сотрудничество с ними временно приостановлено.', conflictingFactions: ['court', 'merchants']},
+        { id: 'adventurers_vs_court', name: 'Конфликт: Авантюристы и Двор', type: 'faction_conflict', duration: 900, icon: 'gavel', message: 'Лига Авантюристов недовольна запретом Короны на исследование древних руин. Услуги обеих фракций недоступны.', conflictingFactions: ['adventurers', 'court']},
     ],
 
     missions: {

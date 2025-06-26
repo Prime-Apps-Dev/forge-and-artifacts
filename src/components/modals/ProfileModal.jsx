@@ -1,15 +1,15 @@
 // src/components/modals/ProfileModal.jsx
 import React, { useState, useMemo } from 'react';
-import { formatNumber } from '../../utils/formatters';
-import { definitions } from '../../data/definitions';
+import { formatNumber } from '../../utils/formatters.jsx';
+import { definitions } from '../../data/definitions/index.js';
 import AchievementsPanel from '../panels/AchievementsPanel';
 import StatsPanel from '../panels/StatsPanel';
 import Tooltip from '../ui/display/Tooltip';
 import { IMAGE_PATHS } from '../../constants/paths';
+import { useGame } from '../../context/GameContext.jsx';
+import Button from '../ui/buttons/Button.jsx';
 
-// Новый компонент для прогресс-бара в виде слитков
 const IngotProgressBar = ({ progressPercentage, currentXp, xpToNextLevel }) => {
-    // Список доступных слитков для отображения
     const ingotImages = useMemo(() => [
         IMAGE_PATHS.INGOTS.IRON,
         IMAGE_PATHS.INGOTS.COPPER,
@@ -20,9 +20,8 @@ const IngotProgressBar = ({ progressPercentage, currentXp, xpToNextLevel }) => {
         IMAGE_PATHS.INGOTS.ARCANITE,
     ], []);
 
-    const numIngots = 10; // Общее количество слитков в прогресс-баре
+    const numIngots = 10;
 
-    // Функция для получения изображения слитка без двух одинаковых подряд
     const getNextIngotImage = (lastImage) => {
         let newImage = lastImage;
         if (ingotImages.length > 1) {
@@ -50,8 +49,7 @@ const IngotProgressBar = ({ progressPercentage, currentXp, xpToNextLevel }) => {
 
 
     return (
-        // Увеличена высота и убран фон (bg-gray-800 rounded-full)
-        <div className="flex items-center justify-center gap-0.5 w-full relative h-12"> {/* Увеличена высота до h-12 */}
+        <div className="flex items-center justify-center gap-0.5 w-full relative h-12">
             {ingotSequence.map((src, index) => {
                 const ingotStartPercent = (index / numIngots) * 100;
                 const ingotEndPercent = ((index + 1) / numIngots) * 100;
@@ -67,14 +65,12 @@ const IngotProgressBar = ({ progressPercentage, currentXp, xpToNextLevel }) => {
 
                 return (
                     <div key={index} className="relative h-full w-full flex-1">
-                        {/* Базовое серое изображение */}
                         <img
                             src={src}
                             alt="Слиток (серый)"
                             className="w-full h-full object-contain"
-                            style={{ filter: 'grayscale(100%)' }} // Полностью серый
+                            style={{ filter: 'grayscale(100%)' }}
                         />
-                        {/* Цветное наложение, которое будет обрезаться */}
                         <img
                             src={src}
                             alt="Слиток (цветной)"
@@ -87,7 +83,6 @@ const IngotProgressBar = ({ progressPercentage, currentXp, xpToNextLevel }) => {
                     </div>
                 );
             })}
-            {/* Текст XP внутри шкалы */}
             <span className="absolute text-sm font-bold text-white z-10" style={{ fontSize: '12px' }}>
                 {formatNumber(currentXp, true)} / {formatNumber(xpToNextLevel, true)} XP
             </span>
@@ -96,7 +91,8 @@ const IngotProgressBar = ({ progressPercentage, currentXp, xpToNextLevel }) => {
 };
 
 
-const ProfileModal = ({ isOpen, onClose, gameState, handlers }) => {
+const ProfileModal = ({ isOpen, onClose }) => {
+    const { displayedGameState: gameState, handlers } = useGame();
     if (!isOpen) return null;
 
     const [activeTab, setActiveTab] = useState('profile');
@@ -105,27 +101,23 @@ const ProfileModal = ({ isOpen, onClose, gameState, handlers }) => {
 
     const experienceProgress = (gameState.masteryXPToNextLevel > 0) ? (gameState.masteryXP / gameState.masteryXPToNextLevel) * 100 : 100;
     
-    // Получаем текущее звание игрока
-    const getPlayerRank = (level) => {
-        let rank = definitions.playerRanks[0]; // По умолчанию - первое звание
+    const playerRankName = useMemo(() => {
+        let rank = definitions.playerRanks[0];
         for (let i = definitions.playerRanks.length - 1; i >= 0; i--) {
-            if (level >= definitions.playerRanks[i].level) {
+            if (gameState.masteryLevel >= definitions.playerRanks[i].level) {
                 rank = definitions.playerRanks[i];
                 break;
             }
         }
         return rank.name;
-    };
+    }, [gameState.masteryLevel]);
 
-    const playerRankName = getPlayerRank(gameState.masteryLevel);
-
-    const allArtifactsCompleted = Object.values(gameState.artifacts).every(artifact => artifact.status === 'completed');
+    const allArtifactsCompleted = useMemo(() => 
+        Object.values(gameState.artifacts).every(artifact => artifact.status === 'completed'),
+        [gameState.artifacts]
+    );
 
     const currentAvatarSrc = definitions.avatars[gameState.playerAvatarId]?.src || IMAGE_PATHS.AVATARS.DEFAULT_MALE;
-
-    const handleToggleView = (tabName) => {
-        setActiveTab(tabName);
-    };
 
     const handleSaveName = () => {
         if (newName.trim() !== '') {
@@ -153,39 +145,17 @@ const ProfileModal = ({ isOpen, onClose, gameState, handlers }) => {
                          'Награды Мастерства'}
                     </h2>
                     <div className="flex items-center gap-2">
-                        {/* Кнопка для репутации магазина */}
                         <Tooltip text="Репутация магазина">
-                            <button
-                                onClick={handlers.handleOpenShopReputationModal}
-                                className="interactive-element p-2 rounded-lg material-icons-outlined text-gray-400 hover:text-white"
-                            >
-                                store
-                            </button>
+                            <button onClick={handlers.handleOpenShopReputationModal} className="interactive-element p-2 rounded-lg material-icons-outlined text-gray-400 hover:text-white">store</button>
                         </Tooltip>
-                        {/* Кнопки переключения вкладок */}
                         <Tooltip text="Показать профиль">
-                            <button
-                                onClick={() => handleToggleView('profile')}
-                                className={`interactive-element p-2 rounded-lg material-icons-outlined ${activeTab === 'profile' ? 'text-yellow-400' : 'text-gray-400 hover:text-white'}`}
-                            >
-                                person
-                            </button>
+                            <button onClick={() => setActiveTab('profile')} className={`interactive-element p-2 rounded-lg material-icons-outlined ${activeTab === 'profile' ? 'text-yellow-400' : 'text-gray-400 hover:text-white'}`}>person</button>
                         </Tooltip>
                         <Tooltip text="Показать достижения">
-                            <button
-                                onClick={() => handleToggleView('achievements')}
-                                className={`interactive-element p-2 rounded-lg material-icons-outlined ${activeTab === 'achievements' ? 'text-yellow-400' : 'text-gray-400 hover:text-white'}`}
-                            >
-                                emoji_events
-                            </button>
+                            <button onClick={() => setActiveTab('achievements')} className={`interactive-element p-2 rounded-lg material-icons-outlined ${activeTab === 'achievements' ? 'text-yellow-400' : 'text-gray-400 hover:text-white'}`}>emoji_events</button>
                         </Tooltip>
                         <Tooltip text="Показать награды мастерства">
-                            <button
-                                onClick={() => handleToggleView('mastery_rewards')}
-                                className={`interactive-element p-2 rounded-lg material-icons-outlined ${activeTab === 'mastery_rewards' ? 'text-yellow-400' : 'text-gray-400 hover:text-white'}`}
-                            >
-                                military_tech
-                            </button>
+                            <button onClick={() => setActiveTab('mastery_rewards')} className={`interactive-element p-2 rounded-lg material-icons-outlined ${activeTab === 'mastery_rewards' ? 'text-yellow-400' : 'text-gray-400 hover:text-white'}`}>military_tech</button>
                         </Tooltip>
                         <button onClick={onClose} className="text-gray-400 hover:text-white material-icons-outlined">close</button>
                     </div>
@@ -199,25 +169,14 @@ const ProfileModal = ({ isOpen, onClose, gameState, handlers }) => {
                                     <div className="relative w-24 h-24 rounded-full overflow-hidden bg-gray-800 border-2 border-yellow-500 shadow-lg">
                                         <img src={currentAvatarSrc} alt="Аватар Мастера" className="object-cover w-full h-full" />
                                     </div>
-                                    <button
-                                        onClick={handlers.handleOpenAvatarSelectionModal}
-                                        className="interactive-element mt-2 text-xs bg-gray-700 text-white px-3 py-1 rounded-full hover:bg-gray-600"
-                                    >
+                                    <button onClick={handlers.handleOpenAvatarSelectionModal} className="interactive-element mt-2 text-xs bg-gray-700 text-white px-3 py-1 rounded-full hover:bg-gray-600">
                                         Сменить аватар
                                     </button>
                                 </div>
-
                                 <div className="flex-1 flex flex-col items-start pt-2">
                                     <div className="flex items-baseline gap-2 mb-0">
                                         {editingName ? (
-                                            <input
-                                                type="text"
-                                                value={newName}
-                                                onChange={(e) => setNewName(e.target.value)}
-                                                onKeyDown={handleKeyDown}
-                                                className="bg-gray-700 text-white text-xl p-1 rounded outline-none focus:ring-2 focus:ring-orange-500"
-                                                maxLength={20}
-                                            />
+                                            <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} onKeyDown={handleKeyDown} className="bg-gray-700 text-white text-xl p-1 rounded outline-none focus:ring-2 focus:ring-orange-500" maxLength={20}/>
                                         ) : (
                                             <p className="font-cinzel text-2xl font-bold text-white">{gameState.playerName}</p>
                                         )}
@@ -227,70 +186,35 @@ const ProfileModal = ({ isOpen, onClose, gameState, handlers }) => {
                                             <button onClick={() => setEditingName(true)} className="interactive-element material-icons-outlined text-gray-400 hover:text-white text-xl">edit</button>
                                         )}
                                     </div>
-                                    
-                                    {/* Звание игрока: обычный шрифт, прижат к имени, шрифт text-base, отступ mt-0.5 */}
                                     <p className="text-base text-gray-400 mt-0.5 mb-2">Звание: <span className="font-bold text-white">{playerRankName}</span></p>
-
-                                    <div className="flex items-center gap-3 w-full"> {/* items-center и увеличен gap для размещения уровня */}
-                                        {/* Уровень игрока слева от шкалы */}
-                                        <span className="font-cinzel text-5xl font-bold text-yellow-400 leading-none flex-shrink-0">
-                                            {gameState.masteryLevel}
-                                        </span>
+                                    <div className="flex items-center gap-3 w-full">
+                                        <span className="font-cinzel text-5xl font-bold text-yellow-400 leading-none flex-shrink-0">{gameState.masteryLevel}</span>
                                         <Tooltip text={`Ваш текущий опыт: ${formatNumber(gameState.masteryXP, true)} / ${formatNumber(gameState.masteryXPToNextLevel, true)} XP`}>
-                                            <div className="relative flex-1 h-12 flex items-center justify-center"> {/* Убран border и bg-gray-800 rounded-full, увеличен h */}
-                                                {/* ИНТЕГРАЦИЯ НОВОГО ПРОГРЕСС-БАРА СО СЛИТКАМИ */}
-                                                <IngotProgressBar
-                                                    progressPercentage={experienceProgress}
-                                                    currentXp={gameState.masteryXP}
-                                                    xpToNextLevel={gameState.masteryXPToNextLevel}
-                                                />
+                                            <div className="relative flex-1 h-12 flex items-center justify-center">
+                                                <IngotProgressBar progressPercentage={experienceProgress} currentXp={gameState.masteryXP} xpToNextLevel={gameState.masteryXPToNextLevel} />
                                             </div>
                                         </Tooltip>
                                     </div>
-
-                                    {gameState.specialization && definitions.specializations[gameState.specialization] && (
-                                        <div className="flex items-center gap-2 mt-4">
-                                            <span className="material-icons-outlined text-orange-400 text-3xl">{definitions.specializations[gameState.specialization].icon}</span>
-                                            <div>
-                                                <p className="text-gray-400 text-sm">Специализация:</p>
-                                                <p className="font-cinzel text-xl font-bold text-white">{definitions.specializations[gameState.specialization].name}</p>
-                                            </div>
-                                        </div>
-                                    )}
                                 </div>
                             </div>
-
                             <div className="bg-black/30 p-4 rounded-md mb-6 border border-gray-700 text-center">
                                 <h3 className="font-cinzel text-xl text-yellow-400 mb-3">Наследие Мастера</h3>
                                 {allArtifactsCompleted ? (
-                                    <button
-                                        onClick={handlers.handleStartNewSettlement}
-                                        className="interactive-element w-full bg-orange-600 text-black font-bold py-2 px-4 rounded-lg hover:bg-orange-500"
-                                    >
-                                        Основать новую мастерскую
-                                    </button>
+                                    <Button onClick={handlers.handleStartNewSettlement}>Основать новую мастерскую</Button>
                                 ) : (
                                     <Tooltip text="Создайте все Великие Артефакты, чтобы разблокировать эту возможность.">
-                                        <button
-                                            disabled
-                                            className="w-full bg-gray-600 text-gray-400 font-bold py-2 px-4 rounded-lg cursor-not-allowed opacity-70"
-                                        >
-                                            Основать новую мастерскую (Требуется: Все Артефакты)
-                                        </button>
+                                        <div> {/* Обертка для Tooltip, чтобы он работал на disabled кнопке */}
+                                            <Button disabled={true}>Основать новую мастерскую (Требуется: Все Артефакты)</Button>
+                                        </div>
                                     </Tooltip>
                                 )}
                                 <p className="text-gray-500 text-sm mt-2">После переселения вы получите Осколки Памяти и откроете новые возможности.</p>
                             </div>
-
-                            <StatsPanel gameState={gameState} />
+                            <StatsPanel />
                         </>
                     )}
 
-                    {activeTab === 'achievements' && (
-                         <div className="mt-6 mx-auto w-full max-w-full px-2">
-                            <AchievementsPanel gameState={gameState} />
-                        </div>
-                    )}
+                    {activeTab === 'achievements' && <AchievementsPanel />}
 
                     {activeTab === 'mastery_rewards' && (
                         <div className="mt-6 mx-auto w-full max-w-full px-2">
@@ -383,9 +307,9 @@ const ProfileModal = ({ isOpen, onClose, gameState, handlers }) => {
                     )}
                 </div>
 
-                <button onClick={onClose} className="interactive-element mt-6 w-full bg-orange-600 text-black font-bold py-2 px-4 rounded-lg hover:bg-orange-500">
+                <Button onClick={onClose} className="mt-6">
                     Закрыть
-                </button>
+                </Button>
             </div>
         </div>
     );

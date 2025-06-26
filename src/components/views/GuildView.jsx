@@ -1,33 +1,32 @@
+// src/components/views/GuildView.jsx
 import React, { useState, useMemo, useEffect } from 'react';
-import { definitions } from '../../data/definitions';
-import { formatNumber } from '../../utils/formatters';
+import { definitions } from '../../data/definitions/index.js';
+import { formatNumber } from '../../utils/formatters.jsx';
 import { getItemImageSrc } from '../../utils/helpers';
+import { useGame } from '../../context/GameContext.jsx';
+import Button from '../ui/buttons/Button.jsx';
 
-const MissionRequirement = ({ req, inventory, onSelectGear, selectedItemId, allSelectedGear }) => {
+const MissionRequirement = ({ req, onSelectGear, selectedItemId, allSelectedGear }) => {
+    const { displayedGameState: gameState } = useGame();
     const itemDef = definitions.items?.[req.itemKey];
     if (!itemDef) return null;
 
     const suitableItems = useMemo(() => {
         const otherSelectedIds = Object.values(allSelectedGear).filter(id => id !== selectedItemId);
-
-        return inventory.filter(item =>
+        return gameState.inventory.filter(item =>
             item.location === 'inventory' &&
             item.itemKey === req.itemKey &&
             item.quality >= req.minQuality &&
             !otherSelectedIds.includes(item.uniqueId)
         );
-    }, [inventory, req, selectedItemId, allSelectedGear]);
+    }, [gameState.inventory, req, selectedItemId, allSelectedGear]);
 
-    const currentlySelectedItem = inventory.find(item => item.uniqueId === selectedItemId);
+    const currentlySelectedItem = gameState.inventory.find(item => item.uniqueId === selectedItemId);
 
     return (
         <div className={`flex flex-col gap-2 bg-gray-900/50 p-2 rounded-md border ${currentlySelectedItem ? 'border-green-500' : 'border-gray-700'}`}>
             <div className="flex items-center gap-2">
-                <img
-                    src={getItemImageSrc(req.itemKey, 32)}
-                    alt={itemDef.name}
-                    className="w-8 h-8 object-contain"
-                />
+                <img src={getItemImageSrc(req.itemKey, 32)} alt={itemDef.name} className="w-8 h-8 object-contain" />
                 <div className="text-sm">
                     <p className="text-white">{itemDef.name}</p>
                     <p className="text-xs text-gray-400">Качество не ниже: {req.minQuality.toFixed(1)}</p>
@@ -40,10 +39,7 @@ const MissionRequirement = ({ req, inventory, onSelectGear, selectedItemId, allS
                     <button onClick={() => onSelectGear(null)} className="text-red-400 hover:text-red-300 text-xs">(отменить)</button>
                 </div>
             ) : (
-                <select
-                    onChange={(e) => onSelectGear(e.target.value || null)}
-                    className="bg-gray-800 border border-gray-600 text-white text-xs rounded-md p-1 w-full focus:outline-none focus:border-orange-500"
-                >
+                <select onChange={(e) => onSelectGear(e.target.value || null)} className="bg-gray-800 border border-gray-600 text-white text-xs rounded-md p-1 w-full focus:outline-none focus:border-orange-500">
                     <option value="">{suitableItems.length > 0 ? 'Выбрать предмет...' : 'Нет подходящих предметов'}</option>
                     {suitableItems.map(item => (
                         <option key={item.uniqueId} value={item.uniqueId}>
@@ -56,10 +52,10 @@ const MissionRequirement = ({ req, inventory, onSelectGear, selectedItemId, allS
     );
 };
 
-const MissionCard = ({ mission, gameState, handlers }) => {
+const MissionCard = ({ mission }) => {
+    const { handlers } = useGame();
     const [selectedGear, setSelectedGear] = useState({});
 
-    // Reset selectedGear when mission changes
     useEffect(() => {
         setSelectedGear({});
     }, [mission.id]);
@@ -75,16 +71,11 @@ const MissionCard = ({ mission, gameState, handlers }) => {
     const handleSelectGear = (uniqueReqKey, itemUniqueId) => {
         setSelectedGear(prev => {
             const newSelection = { ...prev };
-            // Check if the itemUniqueId is already selected for a *different* slot
-            const isAlreadySelected = Object.entries(newSelection).some(([key, value]) => 
-                key !== uniqueReqKey && value === itemUniqueId
-            );
-
+            const isAlreadySelected = Object.entries(newSelection).some(([key, value]) => key !== uniqueReqKey && value === itemUniqueId);
             if (itemUniqueId && isAlreadySelected) {
                 handlers.showToast("Этот предмет уже выбран для другого слота!", "error");
                 return prev;
             }
-
             if (itemUniqueId) {
                 newSelection[uniqueReqKey] = itemUniqueId;
             } else {
@@ -94,7 +85,6 @@ const MissionCard = ({ mission, gameState, handlers }) => {
         });
     };
     
-    // Check if all required slots are filled with an item
     const allRequirementsMet = expandedRequirements.every(req => selectedGear[req.uniqueReqKey]);
 
     const handlePrepareExpedition = () => {
@@ -103,14 +93,13 @@ const MissionCard = ({ mission, gameState, handlers }) => {
             return;
         }
         handlers.handleStartMission(mission.id, selectedGear);
-        setSelectedGear({}); // Clear selection after starting mission
+        setSelectedGear({});
     };
 
     return (
         <div className="bg-black/20 p-4 rounded-lg border border-gray-700 flex flex-col">
             <h3 className="font-cinzel text-lg text-orange-400">{mission.name}</h3>
             <p className="text-sm text-gray-400 my-2 grow">{mission.description}</p>
-            
             <div className="my-2">
                 <h4 className="font-bold text-sm text-gray-300 mb-2">Требуемое снаряжение:</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -118,7 +107,6 @@ const MissionCard = ({ mission, gameState, handlers }) => {
                         <MissionRequirement
                             key={req.uniqueReqKey}
                             req={req}
-                            inventory={gameState.inventory}
                             onSelectGear={(itemUniqueId) => handleSelectGear(req.uniqueReqKey, itemUniqueId)}
                             selectedItemId={selectedGear[req.uniqueReqKey]}
                             allSelectedGear={selectedGear}
@@ -126,7 +114,6 @@ const MissionCard = ({ mission, gameState, handlers }) => {
                     ))}
                 </div>
             </div>
-
             <div className="mt-3 pt-3 border-t border-gray-700/50">
                 <h4 className="font-bold text-sm text-gray-300 mb-2">Базовая награда:</h4>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
@@ -136,20 +123,13 @@ const MissionCard = ({ mission, gameState, handlers }) => {
                                 <p key={factionId} className="text-purple-400">+{repValue} реп. ({definitions.factions?.[factionId]?.name || factionId})</p>
                             ));
                         }
-                        return (
-                             <p key={key} className="text-yellow-400">+{formatNumber(value)} {key}</p>
-                        )
+                        return <p key={key} className="text-yellow-400">+{formatNumber(value)} {key}</p>;
                     })}
                 </div>
             </div>
-            
-            <button
-                onClick={handlePrepareExpedition}
-                disabled={!allRequirementsMet}
-                className="interactive-element w-full mt-4 bg-orange-800/80 text-white font-bold py-2 px-4 rounded-md hover:enabled:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+            <Button onClick={handlePrepareExpedition} disabled={!allRequirementsMet} className="mt-4">
                 {allRequirementsMet ? 'Отправить экспедицию' : 'Снаряжение не готово'}
-            </button>
+            </Button>
         </div>
     );
 };
@@ -166,7 +146,6 @@ const ActiveMission = ({ mission }) => {
             const remaining = Math.max(0, endTime - Date.now());
             setTimeLeft(remaining);
         };
-
         updateTimer();
         const interval = setInterval(updateTimer, 1000);
         return () => clearInterval(interval);
@@ -180,13 +159,17 @@ const ActiveMission = ({ mission }) => {
             <p className="font-bold text-yellow-400">{missionDef.name}</p>
             <p className="text-sm text-gray-300">Возвращение через: <span className="font-mono">{minutes}:{seconds}</span></p>
         </div>
-    )
+    );
 }
 
-const GuildView = ({ gameState, handlers }) => {
-    const availableMissions = Object.values(definitions.missions).filter(
-        missionDef => !gameState.activeMissions.some(active => active.missionId === missionDef.id)
-    );
+const GuildView = () => {
+    const { displayedGameState: gameState } = useGame();
+    
+    const availableMissions = useMemo(() => {
+        return Object.values(definitions.missions).filter(
+            missionDef => !gameState.activeMissions.some(active => active.missionId === missionDef.id)
+        );
+    }, [gameState.activeMissions]);
 
     return (
         <div>
@@ -211,7 +194,7 @@ const GuildView = ({ gameState, handlers }) => {
                 {availableMissions.length > 0 ? (
                     <div className="space-y-4">
                         {availableMissions.map(mission => (
-                            <MissionCard key={mission.id} mission={mission} gameState={gameState} handlers={handlers} />
+                            <MissionCard key={mission.id} mission={mission} />
                         ))}
                     </div>
                 ) : (

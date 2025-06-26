@@ -1,4 +1,4 @@
-// src/components/ui/Tooltip.jsx
+// src/components/ui/display/Tooltip.jsx
 import React from 'react';
 
 const Tooltip = ({ text, children }) => {

@@ -1,15 +1,24 @@
-import React from 'react';
-import { definitions } from '../../../data/definitions';
+// src/components/ui/modals/InventoryModal.jsx
+import React, { useMemo } from 'react';
+import { definitions } from '../../../data/definitions/index.js';
 import InventoryItemCard from '../cards/InventoryItemCard';
+import { useGame } from '../../../context/GameContext.jsx';
+import Button from '../buttons/Button.jsx';
 
-const InventoryModal = ({ isOpen, onClose, gameState, handlers }) => {
+const InventoryModal = ({ isOpen, onClose }) => {
+    const { displayedGameState: gameState, handlers } = useGame();
+
     if (!isOpen) return null;
 
     const { inventory, inventoryCapacity } = gameState;
 
-    const itemsOnStock = inventory.filter(item => item.location === 'inventory');
+    const itemsOnStock = useMemo(() => 
+        inventory.filter(item => item.location === 'inventory'),
+        [inventory]
+    );
+    
     const isAnyActiveProject = !!gameState.activeOrder || !!gameState.activeFreeCraft || !!gameState.currentEpicOrder || !!gameState.activeReforge || !!gameState.activeInlay || !!gameState.activeGraving;
-    const hasGravingSkill = gameState.purchasedSkills.masterGraving; // Проверяем навык гравировки
+    const hasGravingSkill = gameState.purchasedSkills.masterGraving;
     const hasGem = gameState.specialItems.gem > 0;
 
     return (
@@ -36,10 +45,6 @@ const InventoryModal = ({ isOpen, onClose, gameState, handlers }) => {
                                 ) : 0;
                                 const currentSlotsUsed = (item.inlaySlots || []).length;
                                 const hasAvailableSlot = maxSlots > currentSlotsUsed;
-
-                                // Проверка, может ли предмет быть гравирован
-                                // Логика: если у предмета есть слоты для инкрустации (и, соответственно, место для гравировки)
-                                // ИЛИ если в items.js есть свойство gravingAvailable: true для этого предмета
                                 const isGravingTarget = itemDef.hasInlaySlots || itemDef.gravingAvailable; 
 
                                 return (
@@ -52,8 +57,8 @@ const InventoryModal = ({ isOpen, onClose, gameState, handlers }) => {
                                         showReforgeButton={gameState.purchasedSkills.masterReforging && item.quality < 10.0}
                                         onInlay={handlers.handleStartInlay}
                                         showInlayButton={hasGem && itemDef.hasInlaySlots && hasAvailableSlot}
-                                        onGraving={handlers.handleStartGraving} // Передаем обработчик гравировки
-                                        showGravingButton={hasGravingSkill && isGravingTarget} // Показываем кнопку, если есть навык и предмет гравируем
+                                        onGraving={handlers.handleStartGraving}
+                                        showGravingButton={hasGravingSkill && isGravingTarget}
                                         isAnyActiveProject={isAnyActiveProject}
                                     />
                                 );
@@ -66,9 +71,9 @@ const InventoryModal = ({ isOpen, onClose, gameState, handlers }) => {
                     )}
                 </div>
 
-                <button onClick={onClose} className="interactive-element mt-6 w-full bg-orange-600 text-black font-bold py-2 px-4 rounded-lg hover:bg-orange-500">
+                <Button onClick={onClose} className="mt-6">
                     Закрыть
-                </button>
+                </Button>
             </div>
         </div>
     );

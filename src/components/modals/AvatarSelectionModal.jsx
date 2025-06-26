@@ -1,14 +1,15 @@
 // src/components/modals/AvatarSelectionModal.jsx
 import React from 'react';
-import { definitions } from '../../data/definitions';
-import Tooltip from '../ui/display/Tooltip';
+import { definitions } from '../../data/definitions/index.js';
+import { useGame } from '../../context/GameContext.jsx';
+import Button from '../ui/buttons/Button.jsx';
 
-const AvatarSelectionModal = ({ isOpen, onClose, gameState, onSelectAvatar }) => {
+const AvatarSelectionModal = ({ isOpen, onClose }) => {
+    const { displayedGameState: gameState, handlers } = useGame();
+
     if (!isOpen) return null;
 
-    const availableAvatars = Object.values(definitions.avatars).filter(avatar => {
-        return true;
-    });
+    const availableAvatars = Object.values(definitions.avatars);
 
     return (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 modal-backdrop" onClick={onClose}>
@@ -30,7 +31,7 @@ const AvatarSelectionModal = ({ isOpen, onClose, gameState, onSelectAvatar }) =>
                                 interactive-element cursor-pointer
                                 ${gameState.playerAvatarId === avatar.id ? 'border-yellow-500 shadow-lg' : 'border-gray-700 hover:border-orange-500'}
                             `}
-                            onClick={() => onSelectAvatar(avatar.id)}
+                            onClick={() => handlers.handleSelectAvatar(avatar.id)}
                         >
                             <img src={avatar.src} alt={avatar.name} className="w-24 h-24 object-cover rounded-full mb-2" />
                             <p className="text-white text-sm font-bold">{avatar.name}</p>
@@ -41,9 +42,9 @@ const AvatarSelectionModal = ({ isOpen, onClose, gameState, onSelectAvatar }) =>
                     ))}
                 </div>
 
-                <button onClick={onClose} className="interactive-element mt-6 w-full bg-orange-600 text-black font-bold py-2 px-4 rounded-lg hover:bg-orange-500">
+                <Button onClick={onClose} className="mt-6">
                     Закрыть
-                </button>
+                </Button>
             </div>
         </div>
     );

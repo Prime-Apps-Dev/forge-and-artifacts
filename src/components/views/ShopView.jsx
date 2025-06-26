@@ -1,24 +1,38 @@
-import React from 'react';
-import { definitions } from '../../data/definitions';
-import { formatNumber, formatCosts } from '../../utils/formatters';
-import { getResourceImageSrc, getReputationLevel, hasReputation } from '../../utils/helpers';
+// src/components/views/ShopView.jsx
+import React, { useMemo } from 'react'; // Добавляем useMemo
+import { definitions } from '../../data/definitions/index.js';
+import { formatCostsJsx } from '../../utils/formatters.jsx';
+import { hasReputation } from '../../utils/helpers';
 import TradeableResource from '../ui/cards/TradeableResource';
+import { useGame } from '../../context/GameContext.jsx'; // Используем контекст
 
-const ShopView = ({ gameState, handlers }) => {
+const ShopView = () => {
+    const { displayedGameState: gameState, handlers } = useGame(); // Получаем всё из контекста
+
     const market = gameState.market;
-
     const currentEvent = gameState.market.worldEvent;
     const isConflict = currentEvent.type === 'faction_conflict';
     const conflictingFactions = isConflict ? currentEvent.conflictingFactions : [];
 
-    const FactionStore = () => {
-        // Filter out actual blueprints for artifacts, they are bought from Court if applicable, not via generic blueprint section
-        const courtSpecialItems = Object.entries(definitions.specialItems).filter(([id, item]) =>
-            item.requiredFaction === 'court' &&
-            ( !item.requiredSkill || gameState.purchasedSkills[item.requiredSkill] ) &&
-            !id.startsWith('blueprint_aegis') && !id.startsWith('blueprint_hammer') && !id.startsWith('blueprint_crown') &&
-            !id.startsWith('blueprint_bastion') && !id.startsWith('blueprint_quill')
+    // Оборачиваем вычисление доступных чертежей в useMemo
+    const availableBlueprints = useMemo(() => {
+        return Object.entries(definitions.specialItems).filter(([id, item]) =>
+            id.includes('blueprint') &&
+            !item.requiredFaction &&
+            item.requiredSkill && gameState.purchasedSkills[item.requiredSkill] &&
+            !(gameState.specialItems[id] > 0)
         );
+    }, [gameState.purchasedSkills, gameState.specialItems]);
+
+    const FactionStore = () => {
+        const courtSpecialItems = useMemo(() => {
+            return Object.entries(definitions.specialItems).filter(([id, item]) =>
+                item.requiredFaction === 'court' &&
+                (!item.requiredSkill || gameState.purchasedSkills[item.requiredSkill]) &&
+                !id.startsWith('blueprint_aegis') && !id.startsWith('blueprint_hammer') && !id.startsWith('blueprint_crown') &&
+                !id.startsWith('blueprint_bastion') && !id.startsWith('blueprint_quill')
+            );
+        }, [gameState.purchasedSkills]);
 
         return (
             <div className="mt-8">
@@ -32,7 +46,7 @@ const ShopView = ({ gameState, handlers }) => {
                             <h4 className="font-bold text-yellow-300 flex items-center gap-2"><span className="material-icons-outlined">monetization_on</span>Инвестиции Гильдии</h4>
                             <p className="text-sm text-yellow-400/80 my-2">Инвестируйте в торговые пути для пассивного дохода.</p>
                             <button onClick={handlers.handleInvest} disabled={gameState.investments.merchants} className="w-full text-left p-2 bg-black/30 rounded-sm hover:bg-black/50 disabled:opacity-50 disabled:cursor-not-allowed">
-                                {gameState.investments.merchants ? "Инвестиция сделана" : `Инвестировать ${formatNumber(25000)} искр`}
+                                {gameState.investments.merchants ? "Инвестиция сделана" : `Инвестировать 25,000 искр`}
                             </button>
                         </div>
                     ))}
@@ -48,7 +62,7 @@ const ShopView = ({ gameState, handlers }) => {
                                 className="w-full text-left p-2 mt-2 bg-black/30 rounded-sm hover:bg-black/50 flex justify-between items-center disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <span>Купить: Карта вылазки</span>
-                                <span className="text-sm" dangerouslySetInnerHTML={{ __html: formatCosts(definitions.specialItems.expeditionMap.cost, gameState) }}></span>
+                                <span className="text-sm flex gap-2">{formatCostsJsx(definitions.specialItems.expeditionMap.cost, gameState)}</span>
                             </button>
                         </div>
                     ))}
@@ -67,19 +81,11 @@ const ShopView = ({ gameState, handlers }) => {
                                             className="w-full text-left p-2 mt-2 bg-black/30 rounded-sm hover:bg-black/50 flex justify-between items-center disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             <span>{gameState.specialItems[id] > 0 ? "Куплено:" : "Купить:"} {item.name}</span>
-                                            <span className="text-sm" dangerouslySetInnerHTML={{ __html: formatCosts(item.cost, gameState) }}></span>
+                                            <span className="text-sm flex gap-2">{formatCostsJsx(item.cost, gameState)}</span>
                                         </button>
                                     ))
                                 ) : (
                                     <p className="text-sm text-gray-500 italic">Нет доступных предложений от Двора.</p>
-                                )}
-                                {Object.entries(definitions.specialItems).filter(([id, item]) =>
-                                    item.requiredFaction === 'court' &&
-                                    item.requiredSkill && !gameState.purchasedSkills[item.requiredSkill]
-                                ).length > 0 && (
-                                    <p className="text-sm text-gray-500 italic mt-2">
-                                        Изучите необходимые навыки, чтобы разблокировать все чертежи.
-                                    </p>
                                 )}
                         </div>
                     ))}
@@ -87,13 +93,6 @@ const ShopView = ({ gameState, handlers }) => {
             </div>
         )
     }
-
-    const availableBlueprints = Object.entries(definitions.specialItems).filter(([id, item]) =>
-        id.startsWith('blueprint_') && // Только чертежи
-        !item.requiredFaction && // Игнорируем чертежи фракций (они отображаются выше)
-        item.requiredSkill && gameState.purchasedSkills[item.requiredSkill] && // Навык изучен
-        !(gameState.specialItems[id] > 0) // Чертеж еще не куплен
-    );
 
     return (
         <div>
@@ -106,35 +105,24 @@ const ShopView = ({ gameState, handlers }) => {
             </div>
             <h3 className="font-cinzel text-xl text-orange-400 mb-4">Рынок Ресурсов</h3>
             <div className="flex flex-col gap-4">
-                <TradeableResource resourceId="ironOre" name={definitions.resources.ironOre.name} icon="lens" iconClass="text-gray-400" gameState={gameState} onBuy={handlers.handleBuyResource} onSell={handlers.handleSellResource} />
-                <TradeableResource resourceId="ironIngots" name={definitions.resources.ironIngots.name} icon="view_in_ar" iconClass="text-gray-300" gameState={gameState} onBuy={handlers.handleBuyResource} onSell={handlers.handleSellResource} />
-
+                <TradeableResource resourceId="ironOre" name={definitions.resources.ironOre.name} icon="lens" iconClass="text-gray-400" />
+                <TradeableResource resourceId="ironIngots" name={definitions.resources.ironIngots.name} icon="view_in_ar" iconClass="text-gray-300" />
                 <hr className="border-gray-700 my-2" />
-
                 {gameState.purchasedSkills.findCopper && (
                     <>
-                        <TradeableResource resourceId="copperOre" name={definitions.resources.copperOre.name} icon="filter_alt" iconClass="text-orange-400" gameState={gameState} onBuy={handlers.handleBuyResource} onSell={handlers.handleSellResource} />
-                        <TradeableResource resourceId="copperIngots" name={definitions.resources.copperIngots.name} icon="view_in_ar" iconClass="text-orange-400" gameState={gameState} onBuy={handlers.handleBuyResource} onSell={handlers.handleSellResource} />
+                        <TradeableResource resourceId="copperOre" name={definitions.resources.copperOre.name} icon="filter_alt" iconClass="text-orange-400" />
+                        <TradeableResource resourceId="copperIngots" name={definitions.resources.copperIngots.name} icon="view_in_ar" iconClass="text-orange-400" />
                     </>
                 )}
-                {gameState.purchasedSkills.artOfAlloys && (
-                    <TradeableResource resourceId="bronzeIngots" name={definitions.resources.bronzeIngots.name} icon="shield" iconClass="text-orange-600" gameState={gameState} onBuy={handlers.handleBuyResource} onSell={handlers.handleSellResource} />
-                )}
-                {gameState.purchasedSkills.mithrilProspecting && (
-                    <TradeableResource resourceId="mithrilIngots" name={definitions.resources.mithrilIngots.name} icon="shield_moon" iconClass="text-cyan-300" gameState={gameState} onBuy={handlers.handleBuyResource} onSell={handlers.handleSellResource} />
-                )}
-                {gameState.purchasedSkills.adamantiteMining && (
-                    <TradeableResource resourceId="adamantiteIngots" name={definitions.resources.adamantiteIngots.name} icon="security" iconClass="text-indigo-300" gameState={gameState} onBuy={handlers.handleBuyResource} onSell={handlers.handleSellResource} />
-                )}
-                {gameState.purchasedSkills.arcaneMetallurgy && (
-                    <TradeableResource resourceId="arcaniteIngots" name={definitions.resources.arcaniteIngots.name} icon="auto_fix_high" iconClass="text-fuchsia-500" gameState={gameState} onBuy={handlers.handleBuyResource} onSell={handlers.handleSellResource} />
-                )}
-
+                {gameState.purchasedSkills.artOfAlloys && <TradeableResource resourceId="bronzeIngots" name={definitions.resources.bronzeIngots.name} icon="shield" iconClass="text-orange-600" />}
+                {gameState.purchasedSkills.mithrilProspecting && <TradeableResource resourceId="mithrilIngots" name={definitions.resources.mithrilIngots.name} icon="shield_moon" iconClass="text-cyan-300" />}
+                {gameState.purchasedSkills.adamantiteMining && <TradeableResource resourceId="adamantiteIngots" name={definitions.resources.adamantiteIngots.name} icon="security" iconClass="text-indigo-300" />}
+                {gameState.purchasedSkills.arcaneMetallurgy && <TradeableResource resourceId="arcaniteIngots" name={definitions.resources.arcaniteIngots.name} icon="auto_fix_high" iconClass="text-fuchsia-500" />}
             </div>
 
             {availableBlueprints.length > 0 && (
                 <div className="mt-8">
-                    <h3 className="font-cinzel text-xl text-yellow-400 mb-4">Чертежи</h3>
+                    <h3 className="font-cinzel text-xl text-yellow-400 mb-4">Чертежи для покупки</h3>
                     <div className="space-y-4">
                         {availableBlueprints.map(([id, item]) => (
                             <button
@@ -144,7 +132,7 @@ const ShopView = ({ gameState, handlers }) => {
                                 className="w-full text-left p-2 bg-black/30 rounded-sm hover:bg-black/50 flex justify-between items-center disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <span>Купить: {item.name}</span>
-                                <span className="text-sm" dangerouslySetInnerHTML={{ __html: formatCosts(item.cost, gameState) }}></span>
+                                <span className="text-sm flex gap-2">{formatCostsJsx(item.cost, gameState)}</span>
                             </button>
                         ))}
                     </div>

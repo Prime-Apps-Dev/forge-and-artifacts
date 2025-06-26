@@ -1,9 +1,13 @@
+// src/components/panels/FactionsPanel.jsx
 import React from 'react';
-import { definitions } from '../../data/definitions';
-import FactionReputation from '../ui/cards/FactionReputation'; // Обновленный путь
-import FactionUpgradeButton from '../ui/buttons/FactionUpgradeButton'; // Обновленный путь
+import { definitions } from '../../data/definitions/index.js';
+import FactionReputation from '../ui/cards/FactionReputation';
+import FactionUpgradeButton from '../ui/buttons/FactionUpgradeButton';
+import { useGame } from '../../context/GameContext.jsx';
 
-const FactionsPanel = ({ gameState, onBuyFactionUpgrade }) => {
+const FactionsPanel = () => {
+    const { displayedGameState: gameState } = useGame();
+
     const upgradesByFaction = Object.values(definitions.factionUpgrades).reduce((acc, upgrade) => {
         if (!acc[upgrade.factionId]) {
             acc[upgrade.factionId] = [];
@@ -27,8 +31,7 @@ const FactionsPanel = ({ gameState, onBuyFactionUpgrade }) => {
 
                     return (
                         <div key={factionId} className={`p-4 rounded-lg border ${isInConflict ? 'bg-red-900/20 border-red-700' : 'bg-black/20 border-gray-800'}`}>
-                            <FactionReputation factionId={factionId} gameState={gameState} />
-
+                            <FactionReputation factionId={factionId} />
                             <div className="mt-4 pt-4 border-t border-gray-700 space-y-3">
                                 <h4 className="font-bold text-gray-300">Доступные улучшения:</h4>
                                 {isInConflict ? (
@@ -39,8 +42,6 @@ const FactionsPanel = ({ gameState, onBuyFactionUpgrade }) => {
                                             <FactionUpgradeButton 
                                                 key={upgrade.id}
                                                 upgradeId={upgrade.id}
-                                                gameState={gameState}
-                                                onBuyFactionUpgrade={onBuyFactionUpgrade}
                                             />
                                         ))
                                      ) : (

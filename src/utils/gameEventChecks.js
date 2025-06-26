@@ -1,8 +1,38 @@
 // src/utils/gameEventChecks.js
-import { definitions } from '../data/definitions.js';
+import { definitions } from '../data/definitions/index.js';
 import { hasReputation } from './helpers.js';
 
 export function checkForNewQuests(state, showToast) {
+    // Это максимально защитная проверка и инициализация.
+    // Она гарантирует, что state.journal и его необходимые внутренние свойства
+    // всегда будут массивами/объектами, даже если они каким-то образом приходят undefined/null.
+    if (!state) {
+        console.error("checkForNewQuests: 'state' не определен. Пропускаем проверку заданий.");
+        return;
+    }
+
+    if (!state.journal) {
+        // Если journal не определен/null, инициализируем его стандартной структурой.
+        // Это восстановит объект journal на лету.
+        state.journal = {
+            availableQuests: [],
+            activeQuests: [],
+            completedQuests: [],
+            unlockedRecipes: [], // Инициализируем и другие ожидаемые свойства
+            questProgress: {}    // Инициализируем и другие ожидаемые свойства
+        };
+        console.warn("checkForNewQuests: 'state.journal' был не определен и инициализирован по умолчанию.");
+    }
+
+    // Дополнительные проверки, чтобы убедиться, что все массивы внутри journal также инициализированы,
+    // даже если journal существовал, но его под-свойства были утеряны (менее вероятно, но для пуленепробиваемости).
+    state.journal.availableQuests = state.journal.availableQuests || [];
+    state.journal.activeQuests = state.journal.activeQuests || [];
+    state.journal.completedQuests = state.journal.completedQuests || [];
+    state.journal.unlockedRecipes = state.journal.unlockedRecipes || [];
+    state.journal.questProgress = state.journal.questProgress || {};
+
+
     Object.values(definitions.quests).forEach(quest => {
         if (state.journal.availableQuests.includes(quest.id) ||
             state.journal.activeQuests.some(activeQuest => activeQuest.id === quest.id) ||
@@ -53,7 +83,6 @@ export function checkForNewQuests(state, showToast) {
                 }
             }
         }
-        // НОВЫЕ ТРИГГЕРЫ, ДОБАВЛЕННЫЕ В skills.js И quests.js
         else if (trigger.type === 'matter_spent' && (state.totalMatterSpent || 0) >= trigger.count) {
             canStart = true;
         }

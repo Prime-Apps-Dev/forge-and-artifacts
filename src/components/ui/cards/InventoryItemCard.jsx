@@ -1,8 +1,9 @@
-// src/components/ui/InventoryItemCard.jsx
+// src/components/ui/cards/InventoryItemCard.jsx
 import React from 'react';
-import { definitions } from '../../../data/definitions';
+import { definitions } from '../../../data/definitions/index.js';
 import Tooltip from '../display/Tooltip';
 import { getItemImageSrc } from '../../../utils/helpers';
+import Button from '../buttons/Button.jsx';
 
 const InventoryItemCard = ({ item, onAction, actionLabel, onReforge, showReforgeButton, onInlay, showInlayButton, onGraving, showGravingButton, isAnyActiveProject }) => {
     const itemDef = definitions.items?.[item.itemKey];
@@ -60,40 +61,41 @@ const InventoryItemCard = ({ item, onAction, actionLabel, onReforge, showReforge
 
             <div className="flex flex-col mt-auto w-full gap-1 p-1">
                 {onAction && (
-                    <button
+                    <Button
                         onClick={onAction}
                         disabled={actionButtonDisabled}
-                        className="text-xs interactive-element w-32 bg-orange-800/80 text-white font-bold py-1 px-2 rounded-md hover:enabled:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="text-xs w-32 py-1 px-2"
                     >
                         {actionLabel}
-                    </button>
+                    </Button>
                 )}
                 {canReforge && actionLabel !== "Перековать" && (
-                    <button
+                    <Button
                         onClick={() => onReforge(item.uniqueId)}
                         disabled={reforgeButtonDisabled}
-                        className="text-xs interactive-element w-32 bg-blue-800/80 text-white font-bold py-1 px-2 rounded-md hover:enabled:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="text-xs w-32 py-1 px-2 bg-blue-800/80 hover:enabled:bg-blue-700"
                     >
                         Перековать
-                    </button>
+                    </Button>
                 )}
                 {canInlay && actionLabel !== "Инкрустировать" && (
-                    <button
+                    <Button
                         onClick={() => onInlay(item.uniqueId, 'gem')}
                         disabled={inlayButtonDisabled}
-                        className="text-xs interactive-element w-32 bg-purple-800/80 text-white font-bold py-1 px-2 rounded-md hover:enabled:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="text-xs w-32 py-1 px-2 bg-purple-800/80 hover:enabled:bg-purple-700"
                     >
                         Инкрустировать
-                    </button>
+                    </Button>
                 )}
                 {canGrave && actionLabel !== "Гравировать" && (
-                    <button
+                    <Button
                         onClick={() => onGraving(item.uniqueId)}
                         disabled={gravingButtonDisabled}
-                        className="text-xs interactive-element w-32 bg-green-800/80 text-white font-bold py-1 px-2 rounded-md hover:enabled:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        variant="success"
+                        className="text-xs w-32 py-1 px-2 bg-green-800/80 hover:enabled:bg-green-700"
                     >
                         Гравировать
-                    </button>
+                    </Button>
                 )}
             </div>
         </div>

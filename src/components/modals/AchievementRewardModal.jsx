@@ -1,8 +1,11 @@
 // src/components/modals/AchievementRewardModal.jsx
 import React from 'react';
-import Tooltip from '../ui/display/Tooltip'; // Обновленный путь
+import Button from '../ui/buttons/Button.jsx';
+import { useGame } from '../../context/GameContext.jsx';
 
-const AchievementRewardModal = ({ isOpen, onClose, achievement, onClaimReward }) => {
+const AchievementRewardModal = ({ isOpen, onClose, achievement }) => {
+    const { handlers } = useGame();
+
     if (!isOpen || !achievement) return null;
 
     const achievementImgSrc = achievement.icon;
@@ -11,6 +14,12 @@ const AchievementRewardModal = ({ isOpen, onClose, achievement, onClaimReward })
     if (achievement.effectName) {
         rewardDescriptionText = `Получена награда: ${achievement.effectName}!`;
     }
+
+    // Обертка для вызова обработчика из контекста
+    const handleClaim = () => {
+        handlers.handleClaimAchievementReward(achievement.id, rewardDescriptionText);
+        onClose(); // Закрываем модальное окно после получения награды
+    };
 
     return (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 modal-backdrop" onClick={onClose}>
@@ -50,16 +59,16 @@ const AchievementRewardModal = ({ isOpen, onClose, achievement, onClaimReward })
                             </p>
                         )}
                     </div>
-                    
                     <p className="text-gray-400 text-sm mt-4 italic">{achievement.description}</p>
                 </div>
-                
-                <button
-                    onClick={() => onClaimReward(achievement.id, rewardDescriptionText)}
-                    className="interactive-element mt-4 w-full bg-orange-600 text-black font-bold py-2 px-4 rounded-lg hover:bg-orange-500"
+
+                <Button
+                    onClick={handleClaim}
+                    variant="primary"
+                    className="mt-4"
                 >
                     Получить награду
-                </button>
+                </Button>
             </div>
         </div>
     );

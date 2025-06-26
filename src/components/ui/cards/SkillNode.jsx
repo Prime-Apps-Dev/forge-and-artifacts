@@ -1,10 +1,12 @@
 // src/components/ui/SkillNode.jsx
 import React, { memo } from 'react';
-import { definitions } from '../../../data/definitions';
-import { formatCosts } from '../../../utils/formatters';
+import { definitions } from '../../../data/definitions/index.js';
+import { formatCostsJsx } from '../../../utils/formatters.jsx';
 import Tooltip from '../display/Tooltip';
+import { useGame } from '../../../context/GameContext.jsx';
 
-const SkillNode = memo(({ skillId, gameState, onBuySkill }) => {
+const SkillNode = memo(({ skillId }) => {
+    const { displayedGameState: gameState, handlers } = useGame();
     const skill = definitions.skills[skillId];
     if (!skill) return null;
 
@@ -48,7 +50,6 @@ const SkillNode = memo(({ skillId, gameState, onBuySkill }) => {
         canAfford = false;
     }
 
-
     const isLocked = !requirementsMet || isLockedByFirstPlaythrough;
     const isPurchasable = !isPurchased && !isLocked && canAfford;
 
@@ -76,9 +77,8 @@ const SkillNode = memo(({ skillId, gameState, onBuySkill }) => {
             <div
                 className={`interactive-element w-48 h-56 p-3 border-2 rounded-lg text-center flex flex-col transition-all duration-200 ${nodeClass}`}
                 onClick={() => {
-                    if (!isPurchased && !isLocked) {
-                        onBuySkill(skillId);
-                    } else if (isLockedByFirstPlaythrough) {
+                    if (isPurchasable) {
+                        handlers.handleBuySkill(skillId);
                     }
                 }}
             >
@@ -89,19 +89,19 @@ const SkillNode = memo(({ skillId, gameState, onBuySkill }) => {
                 <p className="text-xs text-gray-400 my-1 overflow-y-auto flex-grow">
                     {skill.description}
                 </p>
-                {
-                    isPurchased ? (
-                        <span className="font-bold mt-1 text-sm">Изучено</span>
-                    ) : isLockedByFirstPlaythrough ? (
-                        <span className="font-bold mt-1 text-sm text-red-400">После Переселения</span>
-                    ) : (
-                        <div className='mt-1 text-sm flex flex-col items-start w-full' dangerouslySetInnerHTML={{ __html: formatCosts(displayCosts, gameState) }}></div>
-                    )
-                }
+                {isPurchased ? (
+                    <span className="font-bold mt-1 text-sm">Изучено</span>
+                ) : isLockedByFirstPlaythrough ? (
+                    <span className="font-bold mt-1 text-sm text-red-400">После Переселения</span>
+                ) : (
+                    <div className='mt-1 text-sm flex flex-col items-start w-full'>
+                        {formatCostsJsx(displayCosts, gameState)}
+                    </div>
+                )}
                 {isOffSpec && !isPurchased && <div className='text-xs text-indigo-400'>(Вне специализации)</div>}
             </div>
         </Tooltip>
-    )
+    );
 });
 
 export default SkillNode;

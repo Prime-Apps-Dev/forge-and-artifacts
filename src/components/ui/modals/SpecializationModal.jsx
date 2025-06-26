@@ -1,6 +1,6 @@
 // src/components/ui/SpecializationModal.jsx
 import React from 'react';
-import { definitions } from '../../../data/definitions';
+import { definitions } from '../../../data/definitions/index.js';
 
 const SpecializationCard = ({ spec, onSelect }) => (
     <div className="flex flex-col text-center p-4 border-2 border-gray-700 rounded-lg bg-black/20">

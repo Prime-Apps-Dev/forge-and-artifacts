@@ -1,8 +1,12 @@
+// src/components/ui/cards/OrderQueueCard.jsx
 import React, { useState, useEffect, memo } from 'react';
-import { definitions } from '../../../data/definitions';
-import { formatNumber } from '../../../utils/formatters';
+import { definitions } from '../../../data/definitions/index.js';
+import { formatNumber } from '../../../utils/formatters.jsx';
+import { useGame } from '../../../context/GameContext.jsx';
+import Button from '../buttons/Button.jsx';
 
-const OrderQueueCard = memo(({ order, onAccept, isDisabled }) => {
+const OrderQueueCard = memo(({ order, isDisabled }) => {
+    const { handlers } = useGame();
     const itemDef = definitions.items[order.itemKey];
     const faction = order.factionId ? definitions.factions[order.factionId] : null;
 
@@ -56,13 +60,14 @@ const OrderQueueCard = memo(({ order, onAccept, isDisabled }) => {
                     </p>
                 </div>
             </div>
-            <button
-                onClick={() => onAccept(order.id)}
+            <Button
+                onClick={() => handlers.handleAcceptOrder(order.id)}
                 disabled={isDisabled || timeLeft <= 0}
-                className="interactive-element w-full mt-3 bg-green-800/80 text-white font-bold py-2 px-4 rounded-md hover:enabled:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                variant="success"
+                className="mt-3"
             >
                 {timeLeft <= 0 ? 'Истек срок' : (isDisabled ? 'Вы заняты' : 'Принять заказ')}
-            </button>
+            </Button>
         </div>
     );
 });

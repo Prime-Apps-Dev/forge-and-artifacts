@@ -1,5 +1,6 @@
 /* src/index.css */
 @import 'tailwindcss';
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 
 body {
     font-family: 'Roboto', sans-serif !important;
@@ -10,13 +11,17 @@ body {
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
+    /* Добавьте эти свойства для всего тела */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
 }
-@import url('https://fonts.googleapis.com/css2?family=Dela+Gothic+One&display=swap');
 
 .font-cinzel {
-    font-family: "Dela Gothic One", sans-serif !important;
-    font-weight: 700 !important;
-    font-style: normal !important;
+    font-family: "Inter", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 700;
+    font-style: normal;
 }
 .text-shadow-glow {
     text-shadow: 0 0 8px var(--accent-glow-color, #e67e22) !important;
@@ -48,24 +53,16 @@ body {
     animation: toast-fade-out 0.4s ease-out forwards !important;
 }
 
-/* Изменено: interactive-element:active теперь не содержит transform, 
-   вместо этого мы будем применять scale к внутреннему элементу или явно управлять */
-.interactive-element { 
-    transition: box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease; 
-    /* Убрано transform и transition-duration отсюда */
+/* ИЗМЕНЕНО: interactive-element теперь включает transform и transition для него */
+.interactive-element {
+    transition: box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, transform 0.1s ease; /* Добавлен transform в transition */
 }
-/* Новый класс для внутренней трансформации */
-.interactive-element-scale-inner {
-    transition: transform 0.1s ease; /* Только scale для внутреннего элемента */
-}
-.interactive-element-scale-inner:not(:disabled):active {
+
+/* ДОБАВЛЕНО: transform на сам interactive-element при активном состоянии */
+.interactive-element:not(:disabled):active {
     transform: scale(0.95);
 }
 
-
-.modal-backdrop { animation: fade-in 0.3s ease-out forwards !important; }
-@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-.modal-content { animation: fade-in-up 0.4s ease-out forwards !important; }
 
 @keyframes anvil-strike {
   0% { transform: translateY(0); }
@@ -165,13 +162,24 @@ body {
     border-radius: 1rem; /* Закругляем со всех сторон */
     padding: 1rem .5rem; /* Отступы сверху и снизу по 4px, по бокам по 1rem */
     box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.3); /* Тень для эффекта выезда */
-    z-index: 9999; /* Выше всех UI элементов, кроме модалок и тостов */
+    z-index: 10; /* Выше всех UI элементов, кроме модалок и тостов */
     background-color: rgba(31, 41, 55, 0.7); /* bg-gray-800 с прозрачностью 70% */
     border: 2px solid #374151; /* border-gray-700 */
     backdrop-filter: blur(8px);
     display: flex;
     align-items: center;
     justify-content: space-between;
+}
+
+.tabs, .left-panel, .right-panel, .overflow-y-auto {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+.tabs::-webkit-scrollbar,
+.left-panel::-webkit-scrollbar,
+.right-panel::-webkit-scrollbar,
+.overflow-y-auto::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, and Opera */
 }
 
 /* Адаптируем трансформацию для скрытия панели с учетом нового bottom и высоты */

@@ -1,6 +1,6 @@
 // src/components/modals/CreditsModal.jsx
-
 import React from 'react';
+import Button from '../ui/buttons/Button.jsx';
 
 const CreditsModal = ({ isOpen, onClose }) => {
     if (!isOpen) return null;
@@ -18,67 +18,34 @@ const CreditsModal = ({ isOpen, onClose }) => {
 
                 <div className="grow overflow-y-auto pr-2 text-gray-300 text-sm leading-relaxed">
                     <p className="mb-4">Мы выражаем огромную благодарность следующим авторам за их вклад в создание атмосферы Forge & Artifacts:</p>
-
                     <h3 className="font-cinzel text-xl text-yellow-400 mb-2">Музыкальные Треки (Pixabay Content License)</h3>
                     <ul className="list-disc list-inside ml-4 space-y-2 mb-6">
-                        <li>
-                            "Cithare Medieval 1" by LioN_X (https://pixabay.com/music/acoustic-guitars-cithare-medieval-1-307558/)
-                        </li>
-                        <li>
-                            "Fantasy Medieval Ambient" by Coma-Media (https://pixabay.com/music/ambient-fantasy-medieval-ambient-237371/)
-                        </li>
-                        <li>
-                            "Fantasy Medieval Mystery Ambient" by Coma-Media (https://pixabay.com/music/ambient-fantasy-medieval-mystery-ambient-292418/)
-                        </li>
-                        <li>
-                            "Medieval Ambient" by RomanBelov (https://pixabay.com/music/ambient-medieval-ambient-236809/)
-                        </li>
-                        <li>
-                            "Medieval Background" by Music_Unlimited (https://pixabay.com/music/medieval-background-196571/)
-                        </li>
-                        <li>
-                            "Medieval Background" by Coma-Media (https://pixabay.com/music/meditation-medieval-background-351307/)
-                        </li>
-                        <li>
-                            "Medieval City Tavern Ambient" by Music_Unlimited (https://pixabay.com/music/city-medieval-citytavern-ambient-235876/)
-                        </li>
-                        <li>
-                            "Medieval Track" by RomanBelov (https://pixabay.com/music/classical-medieval-track-161051/)
-                        </li>
-                        <li>
-                            "The Ballad of My Sweet Fair Maiden (Medieval style music)" by Lexin_Music (https://pixabay.com/music/country-folk-the-ballad-of-my-sweet-fair-maiden-medieval-style-music-358306/)
-                        </li>
+                        <li>"Cithare Medieval 1" by LioN_X</li>
+                        <li>"Fantasy Medieval Ambient" by Coma-Media</li>
+                        <li>"Fantasy Medieval Mystery Ambient" by Coma-Media</li>
+                        <li>"Medieval Ambient" by RomanBelov</li>
+                        <li>"Medieval Background" by Music_Unlimited</li>
+                        <li>"Medieval Background" by Coma-Media</li>
+                        <li>"Medieval City Tavern Ambient" by Music_Unlimited</li>
+                        <li>"Medieval Track" by RomanBelov</li>
+                        <li>"The Ballad of My Sweet Fair Maiden" by Lexin_Music</li>
                     </ul>
-
                     <h3 className="font-cinzel text-xl text-yellow-400 mb-2">Иконки и Ассеты</h3>
                     <ul className="list-disc list-inside ml-4 space-y-2 mb-6">
-                        <li>
-                            Material Icons Outlined by Google (https://fonts.google.com/icons)
-                        </li>
-                        <li>
-                            Изображения-заглушки (Placeholders) от Placehold.co (https://placehold.co)
-                        </li>
+                        <li>Material Icons Outlined by Google</li>
+                        <li>Изображения-заглушки (Placeholders) от Placehold.co</li>
                     </ul>
-
                     <h3 className="font-cinzel text-xl text-yellow-400 mb-2">Разработка</h3>
                     <ul className="list-disc list-inside ml-4 space-y-2 mb-6">
                         <li>Игра разработана: [Ваше Имя / Название Студии]</li>
                         <li>Инструменты: React, Vite, Tailwind CSS, Tone.js</li>
                         <li>Особая благодарность: Модели Gemini за помощь в разработке.</li>
                     </ul>
-
-                    <p className="text-gray-400 italic mt-6">
-                        Вся музыка, используемая в игре, лицензирована под Pixabay Content License. <br/>
-                        Полную информацию о лицензировании ищите на сайте Pixabay.
-                    </p>
                 </div>
 
-                <button
-                    onClick={onClose}
-                    className="interactive-element mt-6 w-full bg-orange-600 text-black font-bold py-2 px-4 rounded-lg hover:bg-orange-500"
-                >
+                <Button onClick={onClose} className="mt-6">
                     Закрыть
-                </button>
+                </Button>
             </div>
         </div>
     );

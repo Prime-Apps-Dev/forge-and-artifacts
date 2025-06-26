@@ -1,4 +1,6 @@
+// src/components/modals/InfoModal.jsx
 import React from 'react';
+import Button from '../ui/buttons/Button.jsx';
 
 const InfoModal = ({ isOpen, onClose, title, image, message, buttonText }) => {
     if (!isOpen) return null;
@@ -17,12 +19,9 @@ const InfoModal = ({ isOpen, onClose, title, image, message, buttonText }) => {
                 )}
                 <p className="text-gray-300 mb-6">{message}</p>
 
-                <button
-                    onClick={onClose}
-                    className="interactive-element mt-4 w-full bg-orange-600 text-black font-bold py-2 px-4 rounded-lg hover:bg-orange-500"
-                >
+                <Button onClick={onClose} className="mt-4">
                     {buttonText || "Закрыть"}
-                </button>
+                </Button>
             </div>
         </div>
     );

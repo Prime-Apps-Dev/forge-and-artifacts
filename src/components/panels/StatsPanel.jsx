@@ -1,6 +1,7 @@
+// src/components/panels/StatsPanel.jsx
 import React from 'react';
+import { useGame } from '../../context/GameContext.jsx';
 
-// Вспомогательный компонент для отображения одной характеристики
 const StatRow = ({ label, value, unit = '' }) => (
     <div className="flex justify-between text-sm py-1 border-b border-gray-800">
         <span className="text-gray-400">{label}:</span>
@@ -8,8 +9,9 @@ const StatRow = ({ label, value, unit = '' }) => (
     </div>
 );
 
-const StatsPanel = ({ gameState }) => {
-    // Форматируем некоторые значения для лучшего отображения
+const StatsPanel = () => {
+    const { displayedGameState: gameState } = useGame();
+    
     const critChancePercent = (gameState.critChance * 100).toFixed(1);
     const sparksModifierPercent = ((gameState.sparksModifier - 1) * 100).toFixed(0);
     const matterModifierPercent = ((gameState.matterModifier - 1) * 100).toFixed(0);
@@ -22,7 +24,7 @@ const StatsPanel = ({ gameState }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
                 <div>
                     <h4 className="font-bold text-orange-400 mt-2 mb-1">Производство</h4>
-                    <StatRow label="Сила удара" value={gameState.progressPerClick} />
+                    <StatRow label="Сила удара" value={gameState.progressPerClick.toFixed(1)} />
                     <StatRow label="Добыча руды за клик" value={gameState.orePerClick} />
                     <StatRow label="Шанс крит. удара" value={critChancePercent} unit="%" />
                     <StatRow label="Бонус крит. удара" value={gameState.critBonus.toFixed(1)} unit="x" />

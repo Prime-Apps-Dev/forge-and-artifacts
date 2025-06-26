@@ -1,11 +1,12 @@
-// src/components/ui/EternalSkillNode.jsx
-
+// src/components/ui/cards/EternalSkillNode.jsx
 import React, { memo } from 'react';
-import { definitions } from '../../../data/definitions';
-import { formatNumber } from '../../../utils/formatters';
-import Tooltip from '../display/Tooltip'; // ИЗМЕНЕНО: Исправлен путь к Tooltip
+import { definitions } from '../../../data/definitions/index.js';
+import { formatNumber } from '../../../utils/formatters.jsx';
+import Tooltip from '../display/Tooltip';
+import { useGame } from '../../../context/GameContext.jsx';
 
-const EternalSkillNode = memo(({ skillId, gameState, onBuyEternalSkill }) => {
+const EternalSkillNode = memo(({ skillId }) => {
+    const { displayedGameState: gameState, handlers } = useGame();
     const skill = definitions.eternalSkills[skillId];
     if (!skill) return null;
 
@@ -58,7 +59,7 @@ const EternalSkillNode = memo(({ skillId, gameState, onBuyEternalSkill }) => {
                 className={`interactive-element w-48 h-56 p-3 border-2 rounded-lg text-center flex flex-col transition-all duration-200 ${nodeClass}`}
                 onClick={() => {
                     if (isPurchasable) {
-                        onBuyEternalSkill(skillId);
+                        handlers.handleBuyEternalSkill(skillId);
                     }
                 }}
             >
@@ -87,7 +88,7 @@ const EternalSkillNode = memo(({ skillId, gameState, onBuyEternalSkill }) => {
                 }
             </div>
         </Tooltip>
-    )
+    );
 });
 
 export default EternalSkillNode;

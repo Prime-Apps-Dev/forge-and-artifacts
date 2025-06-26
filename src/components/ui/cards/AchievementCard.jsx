@@ -1,9 +1,9 @@
-// src/components/ui/AchievementCard.jsx
+// src/components/ui/cards/AchievementCard.jsx
 import React, { memo } from 'react';
-import { formatNumber } from '../../../utils/formatters';
+import { formatNumber } from '../../../utils/formatters.jsx';
 import Tooltip from '../display/Tooltip';
 
-const AchievementCard = memo(({ achievement, status, index }) => {
+const AchievementCard = memo(({ achievement, status }) => {
     const progressPercentage = status.target > 0 ? (status.current / status.target) * 100 : 0;
     const isComplete = status.isComplete;
 
@@ -19,17 +19,13 @@ const AchievementCard = memo(({ achievement, status, index }) => {
                 border-2 transition-all duration-200 ease-in-out
                 transform-gpu
                 z-10
-                
                 ${isComplete ? 'border-green-500 shadow-md shadow-green-500/20' : 'border-gray-700'}
-                
                 hover:scale-105
                 hover:border-orange-500
                 hover:shadow-xl hover:shadow-orange-500/20
                 hover:z-20
-                
                 backdrop-filter backdrop-blur-md
                 bg-opacity-80
-
             `}>
                 <div className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-md flex-shrink-0">
                     <img
@@ -70,7 +66,7 @@ const AchievementCard = memo(({ achievement, status, index }) => {
                             style={{ width: `${progressPercentage}%` }}
                         ></div>
                         <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white z-10">
-                            {formatNumber(status.current)} / {formatNumber(status.target)}
+                            {formatNumber(status.current, true)} / {formatNumber(status.target, true)}
                         </span>
                     </div>
                 )}

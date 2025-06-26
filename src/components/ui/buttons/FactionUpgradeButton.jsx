@@ -1,11 +1,13 @@
-// src/components/ui/FactionUpgradeButton.jsx
+// src/components/ui/buttons/FactionUpgradeButton.jsx
 import React from 'react';
-import { definitions } from '../../../data/definitions';
-import { formatCosts, formatNumber } from '../../../utils/formatters';
+import { definitions } from '../../../data/definitions/index.js';
+import { formatCostsJsx } from '../../../utils/formatters.jsx';
 import { hasReputation } from '../../../utils/helpers';
-import Tooltip from '../display/Tooltip'; // ИЗМЕНЕНО: Исправлен путь к Tooltip
+import Tooltip from '../display/Tooltip';
+import { useGame } from '../../../context/GameContext.jsx';
 
-const FactionUpgradeButton = React.memo(({ upgradeId, gameState, onBuyFactionUpgrade }) => {
+const FactionUpgradeButton = React.memo(({ upgradeId }) => {
+    const { displayedGameState: gameState, handlers } = useGame();
     const upgrade = definitions.factionUpgrades[upgradeId];
     if (!upgrade) return null;
 
@@ -21,17 +23,17 @@ const FactionUpgradeButton = React.memo(({ upgradeId, gameState, onBuyFactionUpg
             </div>
         );
     }
-    
+
     const displayCosts = { ...upgrade.cost };
     let isDisabled = false;
-    let buttonText = '';
+    let buttonContent = null;
 
     const meetsRep = hasReputation(gameState.reputation, upgrade.factionId, upgrade.requiredRep);
-    
+
     if (!meetsRep) {
         const repName = definitions.reputationLevels.find(r => r.id === upgrade.requiredRep).name;
         isDisabled = true;
-        buttonText = `Нужно: ${repName}`;
+        buttonContent = `Нужно: ${repName}`;
     } else {
         for (const resourceType in displayCosts) {
             const costAmount = displayCosts[resourceType];
@@ -42,24 +44,24 @@ const FactionUpgradeButton = React.memo(({ upgradeId, gameState, onBuyFactionUpg
                 break;
             }
         }
-        if (!isDisabled) {
-            buttonText = `<div class="flex items-center justify-center gap-1">${formatCosts(displayCosts, gameState)}</div>`;
-        } else {
-            buttonText = `<div class="flex items-center justify-center gap-1 opacity-50">${formatCosts(displayCosts, gameState)}</div>`;
-        }
+        
+        buttonContent = (
+            <div className={`flex items-center justify-center gap-2 ${isDisabled ? 'opacity-50' : ''}`}>
+                {formatCostsJsx(displayCosts, gameState)}
+            </div>
+        );
     }
-
 
     return (
         <div className="bg-black/20 border border-gray-700 p-3 rounded-lg text-left w-full">
             <h4 className="font-bold text-orange-300">{upgrade.name}</h4>
             <p className="text-sm text-gray-400 my-1">{upgrade.description}</p>
-            <button 
-                onClick={() => onBuyFactionUpgrade(upgradeId)}
+            <button
+                onClick={() => handlers.handleBuyFactionUpgrade(upgradeId)}
                 disabled={isDisabled}
                 className="interactive-element w-full text-center mt-2 bg-orange-800/70 text-white font-bold px-4 py-2 rounded-md hover:enabled:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-               <span dangerouslySetInnerHTML={{__html: buttonText}}></span>
+               {buttonContent}
             </button>
         </div>
     );

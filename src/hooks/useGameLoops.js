@@ -1,36 +1,34 @@
 // src/hooks/useGameLoops.js
-import { useEffect } from 'react';
-import { startGameLoop, startMarketLoop, startOrderGenerationLoop } from '../logic/gameLogic'; // Убедитесь, что все экспорты есть
+import { useEffect, useRef } from 'react';
+import { startGameLoop, startMarketLoop, startOrderGenerationLoop, generateNewOrder } from '../logic/gameLogic';
 
-export function useGameLoops(updateState, handlers, showToast, showAchievementRewardModal) {
+export function useGameLoops(updateState, handlers, showToast, showAchievementRewardModal, assetsLoaded) {
+    const gameLoopIntervalRef = useRef(null);
+    const marketLoopIntervalRef = useRef(null);
+    const orderGenerationIntervalRef = useRef(null);
+
     useEffect(() => {
-        const shopLockInterval = setInterval(() => {
-            updateState(state => {
-                if (state.isShopLocked && Date.now() > state.shopLockEndTime) {
-                    state.isShopLocked = false;
-                    state.shopLockEndTime = 0;
-                    showToast("Ваш магазин разблокирован!", "success");
-                }
-                if (state.isShopLocked && state.shopLockEndTime === 0) {
-                     state.isShopLocked = false;
-                     showToast("Ваш магазин был разблокирован из-за ошибки в данных!", "info");
-                }
-                return state;
-            });
-        }, 1000);
+        if (gameLoopIntervalRef.current) {
+            return;
+        }
 
-        // Передаем showAchievementRewardModal и showToast в startGameLoop
-        const gameLoopInterval = startGameLoop(updateState, handlers, showToast, showAchievementRewardModal);
-        const marketLoopInterval = startMarketLoop(updateState, showToast);
-        const orderGenLoopInterval = startOrderGenerationLoop(handlers.handleGenerateNewOrderInQueue);
-
-        updateState(state => { handlers.checkForNewQuests(state); return state; });
+        if (assetsLoaded) {
+            console.log("Game loops starting...");
+            gameLoopIntervalRef.current = startGameLoop(updateState, handlers, showToast, showAchievementRewardModal);
+            marketLoopIntervalRef.current = startMarketLoop(updateState, showToast);
+            orderGenerationIntervalRef.current = startOrderGenerationLoop(updateState, generateNewOrder, handlers.checkForNewQuests, showToast);
+        }
 
         return () => {
-            clearInterval(shopLockInterval);
-            clearInterval(gameLoopInterval);
-            clearInterval(marketLoopInterval);
-            clearInterval(orderGenLoopInterval);
+            if (gameLoopIntervalRef.current) {
+                console.log("Game loops cleaning up...");
+                clearInterval(gameLoopIntervalRef.current);
+                clearInterval(marketLoopIntervalRef.current);
+                clearInterval(orderGenerationIntervalRef.current);
+                gameLoopIntervalRef.current = null;
+                marketLoopIntervalRef.current = null;
+                orderGenerationIntervalRef.current = null;
+            }
         };
-    }, [updateState, handlers, showToast, showAchievementRewardModal]); // Добавлены showAchievementRewardModal в зависимости
+    }, [assetsLoaded, updateState, handlers, showToast, showAchievementRewardModal]);
 }

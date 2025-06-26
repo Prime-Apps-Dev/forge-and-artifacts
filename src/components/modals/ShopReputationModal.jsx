@@ -1,14 +1,39 @@
 // src/components/modals/ShopReputationModal.jsx
 import React from 'react';
-import { definitions } from '../../data/definitions';
-import { formatNumber } from '../../utils/formatters';
+import { definitions } from '../../data/definitions/index.js';
+import { formatNumber } from '../../utils/formatters.jsx';
 import Tooltip from '../ui/display/Tooltip';
+import { useGame } from '../../context/GameContext.jsx';
+import Button from '../ui/buttons/Button.jsx';
 
-const ShopReputationModal = ({ isOpen, onClose, gameState, handlers }) => {
+const ShopReputationModal = ({ isOpen, onClose }) => {
+    const { displayedGameState: gameState, handlers } = useGame();
+
     if (!isOpen) return null;
 
+    // ИСПРАВЛЕНИЕ: Добавляем подстраховку на случай, если уровень превышает определенные значения.
+    // Мы берем либо текущий уровень, либо последний из доступных.
+    const currentShopLevelDef = 
+        definitions.shopLevels.find(lvl => lvl.level === gameState.shopLevel) || 
+        definitions.shopLevels[definitions.shopLevels.length - 1];
+
     const shopXPProgress = gameState.shopXPToNextLevel > 0 ? (gameState.shopXP / gameState.shopXPToNextLevel) * 100 : 100;
-    const currentShopLevelDef = definitions.shopLevels.find(lvl => lvl.level === gameState.shopLevel) || definitions.shopLevels[0];
+
+    const formatRewardDetails = (rewardObject) => {
+        if (!rewardObject) return '';
+        return Object.entries(rewardObject).map(([key, value]) => {
+            if (key === 'id' || key === 'apply' || key === 'icon') return null;
+            if (key === 'shopShelf') return `${value} полка(и)`;
+            if (key === 'sparks') return `${formatNumber(value)} искр`;
+            if (key === 'matter') return `${formatNumber(value)} материи`;
+            if (key === 'playerShopSalesSpeedModifier') return `+${(value*100).toFixed(0)}% скорости продаж`;
+            if (key === 'tipChanceModifier') return `+${(value*100).toFixed(0)}% к шансу чаевых`;
+            if (key === 'marketBuyModifier') return `-${(value*100).toFixed(0)}% к цене покупки`;
+            if (key === 'marketTradeSpeedModifier') return `+${(value*100).toFixed(0)}% к скорости торговли`;
+            if (key === 'inventoryCapacity') return `+${value} инвентаря`;
+            return null;
+        }).filter(Boolean).join(', ');
+    };
 
     return (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 modal-backdrop" onClick={onClose}>
@@ -78,22 +103,6 @@ const ShopReputationModal = ({ isOpen, onClose, gameState, handlers }) => {
                                     rewardStatusText = `Ур. ${levelDef.level}`;
                                 }
                                 
-                                const formatRewardDetails = (rewardObject) => {
-                                    if (!rewardObject) return '';
-                                    return Object.entries(rewardObject).map(([key, value]) => {
-                                        if (key === 'id' || key === 'apply' || key === 'icon') return null; // Пропускаем внутренние поля
-                                        if (key === 'shopShelf') return `${value} полка(и)`;
-                                        if (key === 'sparks') return `${formatNumber(value)} искр`;
-                                        if (key === 'matter') return `${formatNumber(value)} материи`;
-                                        if (key === 'playerShopSalesSpeedModifier') return `+${(value*100).toFixed(0)}% скорости продаж`;
-                                        if (key === 'tipChanceModifier') return `+${(value*100).toFixed(0)}% к шансу чаевых`;
-                                        if (key === 'marketBuyModifier') return `-${(value*100).toFixed(0)}% к цене покупки`;
-                                        if (key === 'marketTradeSpeedModifier') return `+${(value*100).toFixed(0)}% к скорости торговли`;
-                                        if (key === 'inventoryCapacity') return `+${value} инвентаря`;
-                                        return null;
-                                    }).filter(Boolean).join(', ');
-                                };
-
                                 return (
                                     <div key={levelDef.level} className={`p-3 rounded-lg border flex items-center gap-3
                                         ${isClaimed ? 'bg-green-900/20 border-green-700' : isAvailable ? 'bg-yellow-900/20 border-yellow-700' : 'bg-gray-800/20 border-gray-700'}`}>
@@ -112,12 +121,12 @@ const ShopReputationModal = ({ isOpen, onClose, gameState, handlers }) => {
                                         <div className="flex-shrink-0 text-right">
                                             <p className={`font-bold ${statusColor}`}>{rewardStatusText}</p>
                                             {isAvailable && (
-                                                <button
+                                                <Button
                                                     onClick={() => handlers.handleClaimShopLevelReward(levelDef.reward.id)}
-                                                    className="interactive-element mt-1 bg-orange-600 text-black font-bold py-1 px-3 rounded-lg text-sm hover:bg-orange-500"
+                                                    className="mt-1 py-1 px-3 text-sm"
                                                 >
                                                     Забрать
-                                                </button>
+                                                </Button>
                                             )}
                                         </div>
                                     </div>
@@ -127,12 +136,9 @@ const ShopReputationModal = ({ isOpen, onClose, gameState, handlers }) => {
                     </div>
                 </div>
 
-                <button
-                    onClick={onClose}
-                    className="interactive-element mt-6 w-full bg-orange-600 text-black font-bold py-2 px-4 rounded-lg hover:bg-orange-500"
-                >
+                <Button onClick={onClose} className="mt-6">
                     Закрыть
-                </button>
+                </Button>
             </div>
         </div>
     );

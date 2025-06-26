@@ -1,9 +1,11 @@
-// src/components/ui/ComponentItem.jsx
+// src/components/ui/cards/ComponentItem.jsx
 import React, { memo } from 'react';
-import { definitions } from '../../../data/definitions';
-import { formatNumber } from '../../../utils/formatters'; // Теперь formatNumber из formatters
+import { definitions } from '../../../data/definitions/index.js';
+import { useGame } from '../../../context/GameContext.jsx';
 
-const ComponentItem = memo(({ component, orderState, gameState, onSelectComponent }) => {
+const ComponentItem = memo(({ component, orderState }) => {
+    const { displayedGameState: gameState, handlers } = useGame();
+
     const progress = orderState.componentProgress[component.id] || 0;
     const isComplete = progress >= component.progress;
     const isActive = orderState.activeComponentId === component.id;
@@ -13,17 +15,17 @@ const ComponentItem = memo(({ component, orderState, gameState, onSelectComponen
         return (orderState.componentProgress[reqId] || 0) >= (requiredComponentDef?.progress || 0);
     });
 
-    const canSelect = onSelectComponent && !isComplete && dependenciesMet;
+    const canSelect = !isComplete && dependenciesMet;
 
     let classes = "p-2 border-l-4 transition-colors duration-200 ";
-    if(isComplete) {
+    if (isComplete) {
         classes += "border-green-500 bg-green-500/10";
     } else if (isActive) {
         classes += "border-orange-500 bg-orange-500/20";
     } else if (canSelect) {
         classes += "border-gray-500 hover:bg-gray-700/50 cursor-pointer";
     } else {
-         classes += "border-gray-800 filter grayscale opacity-60 cursor-not-allowed";
+        classes += "border-gray-800 filter grayscale opacity-60 cursor-not-allowed";
     }
 
     const costString = component.cost ? Object.entries(component.cost).map(([key, value]) => {
@@ -33,7 +35,7 @@ const ComponentItem = memo(({ component, orderState, gameState, onSelectComponen
     }).join(', ') : 'Бесплатно';
 
     return (
-        <div className={classes} onClick={() => canSelect && onSelectComponent(component.id)}>
+        <div className={classes} onClick={() => canSelect && handlers.handleSelectComponent(component.id)}>
             <div className="flex justify-between items-center text-sm">
                 <div className="flex items-center gap-2">
                     <span className="material-icons-outlined text-base text-gray-500">{definitions.workstations[component.workstation].icon}</span>

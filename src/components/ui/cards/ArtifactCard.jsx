@@ -1,17 +1,13 @@
-// src/components/ui/ArtifactCard.jsx
+// src/components/ui/cards/ArtifactCard.jsx
 import React from 'react';
-import SvgIcon from '../display/SvgIcon';
-import { definitions } from '../../../data/definitions';
-import Tooltip from '../display/Tooltip';
 import { getArtifactImageSrc } from '../../../utils/helpers';
+import { useGame } from '../../../context/GameContext.jsx';
+import Button from '../buttons/Button.jsx';
 
-const ArtifactCard = React.memo(({ artifact, id, onCraftArtifact, isFirstPlaythrough }) => {
-    const checkCanCraft = (currentArtifact) => {
-        return Object.values(currentArtifact.components).every(c => c.obtained);
-    };
+const ArtifactCard = React.memo(({ artifact, id }) => {
+    const { handlers } = useGame();
 
-    const canCraft = checkCanCraft(artifact) && artifact.status === 'available';
-
+    const canCraft = Object.values(artifact.components).every(c => c.obtained) && artifact.status === 'available';
     const artifactImgSrc = getArtifactImageSrc(id, 64);
 
     return (
@@ -30,15 +26,15 @@ const ArtifactCard = React.memo(({ artifact, id, onCraftArtifact, isFirstPlaythr
                     </div>
                 ))}
             </div>
-            <button
-                onClick={() => onCraftArtifact(id)}
-                disabled={!canCraft || artifact.status !== 'available'}
-                className="mt-4 w-full bg-orange-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:enabled:bg-orange-500"
+            <Button
+                onClick={() => handlers.handleCraftArtifact(id)}
+                disabled={!canCraft}
+                className="mt-4"
             >
                 {artifact.status === 'completed' && 'Создан'}
                 {artifact.status === 'available' && 'Создать Артефакт'}
                 {artifact.status === 'locked' && 'Компоненты не найдены'}
-            </button>
+            </Button>
         </div>
     );
 });

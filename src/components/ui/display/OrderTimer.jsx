@@ -1,5 +1,5 @@
 import React, { useState, useEffect, memo } from 'react';
-import { formatNumber } from '../../../utils/formatters';
+import { formatNumber } from '../../../utils/formatters.jsx';
 
 const OrderTimer = memo(({ order }) => {
     const [time, setTime] = useState(0);

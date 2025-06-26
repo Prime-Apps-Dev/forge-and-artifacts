@@ -1,18 +1,22 @@
-// src/components/modals/RewardModal.jsx
+// src/components/ui/modals/RewardModal.jsx
 import React from 'react';
-import { formatNumber } from '../../../utils/formatters'; // Теперь formatNumber из formatters
-import { definitions } from '../../../data/definitions';
+import { formatNumber } from '../../../utils/formatters.jsx';
+import { definitions } from '../../../data/definitions/index.js';
 import { getArtifactImageSrc } from '../../../utils/helpers';
+import Button from '../buttons/Button.jsx';
+import { useGame } from '../../../context/GameContext.jsx';
 
-const RewardModal = ({ orderInfo, onClose }) => {
+const RewardModal = ({ orderInfo }) => {
+    const { handlers } = useGame();
+
     if (!orderInfo) return null;
 
     if (orderInfo.isArtifact) {
         const artifact = definitions.greatArtifacts[orderInfo.artifactId];
         const artifactImgSrc = getArtifactImageSrc(orderInfo.artifactId, 80);
         return (
-            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 modal-backdrop">
-                <div className="bg-gray-900 border-4 border-yellow-500 rounded-lg shadow-2xl p-8 w-full max-w-lg text-center modal-content">
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 modal-backdrop" onClick={handlers.handleCloseRewardModal}>
+                <div className="bg-gray-900 border-4 border-yellow-500 rounded-lg shadow-2xl p-8 w-full max-w-lg text-center modal-content" onClick={e => e.stopPropagation()}>
                     <h2 className={`font-cinzel text-3xl mb-4 flex items-center justify-center gap-3 text-yellow-300 text-shadow-glow`}>
                         <span className="material-icons-outlined text-4xl">workspace_premium</span> Шедевр Создан!
                     </h2>
@@ -25,10 +29,9 @@ const RewardModal = ({ orderInfo, onClose }) => {
                         <h4 className="font-bold text-lg text-yellow-400">Получен постоянный бонус:</h4>
                         <p className="text-gray-300">{artifact.description}</p>
                     </div>
-
-                    <button onClick={onClose} className="interactive-element mt-8 w-full bg-yellow-500 text-black font-bold py-3 px-4 rounded-lg hover:bg-yellow-600 text-lg">
+                    <Button onClick={handlers.handleCloseRewardModal} className="mt-8 bg-yellow-500 hover:enabled:bg-yellow-600 text-lg">
                         Вечная Слава!
-                    </button>
+                    </Button>
                 </div>
             </div>
         )
@@ -43,8 +46,8 @@ const RewardModal = ({ orderInfo, onClose }) => {
     const currentTier = tierInfo[tier];
 
     return (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 modal-backdrop">
-            <div className="bg-gray-800 border-2 border-orange-500 rounded-lg shadow-lg p-6 w-full max-w-md text-center modal-content">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 modal-backdrop" onClick={handlers.handleCloseRewardModal}>
+            <div className="bg-gray-800 border-2 border-orange-500 rounded-lg shadow-lg p-6 w-full max-w-md text-center modal-content" onClick={e => e.stopPropagation()}>
                 <h2 className={`font-cinzel text-2xl mb-2 flex items-center justify-center gap-2 ${currentTier.color}`}>
                     <span className="material-icons-outlined">{currentTier.icon}</span> {currentTier.text}
                 </h2>
@@ -79,10 +82,9 @@ const RewardModal = ({ orderInfo, onClose }) => {
                         </div>
                     )}
                 </div>
-
-                <button onClick={onClose} className="interactive-element mt-6 w-full bg-orange-500 text-black font-bold py-2 px-4 rounded-lg hover:bg-orange-600">
+                <Button onClick={handlers.handleCloseRewardModal} className="mt-6">
                     Отлично!
-                </button>
+                </Button>
             </div>
         </div>
     );

@@ -1,9 +1,7 @@
 // src/App.jsx
 import React, { useState, memo, useRef, useEffect, useCallback } from 'react';
-import { useGameState } from './hooks/useGameState';
+import { useGame } from './context/GameContext.jsx';
 import { audioController } from './utils/audioController';
-
-// Импорты компонентов
 import RewardModal from './components/ui/modals/RewardModal';
 import Toast from './components/ui/display/Toast';
 import InventoryModal from './components/ui/modals/InventoryModal';
@@ -20,7 +18,7 @@ import UpgradeShop from './components/panels/UpgradeShop';
 import PersonnelView from './components/panels/PersonnelView';
 import FactionsPanel from './components/panels/FactionsPanel';
 import PlayerShopPanel from './components/panels/PlayerShopPanel';
-import BottomBar from './components/layout/BottomBar';
+import BottomBar, { WorldEventIndicator } from './components/layout/BottomBar';
 import ProfileModal from './components/modals/ProfileModal';
 import InfoModal from './components/modals/InfoModal';
 import SettingsModal from './components/modals/SettingsModal';
@@ -31,10 +29,27 @@ import AudioVisualizer from './components/effects/AudioVisualizer';
 import AchievementRewardModal from './components/modals/AchievementRewardModal';
 import AvatarSelectionModal from './components/modals/AvatarSelectionModal';
 import CreditsModal from './components/modals/CreditsModal';
-import ShopReputationModal from './components/modals/ShopReputationModal';
-
-// Импортируем ParticleEmitter
+import HirePersonnelModal from './components/modals/HirePersonnelModal';
 import ParticleEmitter from './components/effects/ParticleEmitter';
+import LoadingScreen from './components/LoadingScreen';
+import ShopReputationModal from './components/modals/ShopReputationModal.jsx';
+
+const useHorizontalScroll = () => {
+    const elRef = useRef();
+    useEffect(() => {
+        const el = elRef.current;
+        if (el) {
+            const onWheel = (e) => {
+                if (e.deltaY == 0) return;
+                e.preventDefault();
+                el.scrollLeft += e.deltaY;
+            };
+            el.addEventListener('wheel', onWheel);
+            return () => el.removeEventListener('wheel', onWheel);
+        }
+    }, []);
+    return elRef;
+};
 
 const LeftPanelButton = memo(({ viewId, icon, label, onClick, activeView }) => (
     <button onClick={() => onClick(viewId)} className={`interactive-element h-full flex-shrink-0 min-w-max px-4 font-cinzel text-base flex items-center justify-center gap-2 border-b-4 ${activeView === viewId ? 'text-orange-400 border-orange-400 bg-black/20' : 'text-gray-500 border-transparent hover:text-orange-400/70'}`}>
@@ -50,22 +65,12 @@ const RightPanelButton = memo(({ viewId, icon, label, onClick, activeView }) => 
 
 export default function App() {
     const {
-        displayedGameState,
-        isWorking,
-        toasts,
-        completedOrderInfo,
-        isSpecializationModalOpen,
-        isWorldMapModalOpen,
-        isAchievementRewardModalOpen,
-        achievementToDisplay,
-        isAvatarSelectionModalOpen,
-        isCreditsModalOpen,
-        isShopReputationModalOpen,
-        handlers,
-        removeToast,
-        activeInfoModal,
-        handleInitialGesture,
-    } = useGameState();
+        displayedGameState, toasts, completedOrderInfo, isSpecializationModalOpen,
+        isWorldMapModalOpen, isAchievementRewardModalOpen, achievementToDisplay,
+        isAvatarSelectionModalOpen, isCreditsModalOpen, isShopReputationModalOpen,
+        isHirePersonnelModalOpen, handlers, removeToast, activeInfoModal,
+        handleInitialGesture, assetsLoaded, loadProgress,
+    } = useGame();
 
     const [activeLeftView, setActiveLeftView] = useState('forge');
     const [activeRightView, setActiveRightView] = useState('resources');
@@ -73,133 +78,39 @@ export default function App() {
     const [isInventoryOpen, setIsInventoryOpen] = useState(false);
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
     const [isBottomBarVisible, setIsBottomBarVisible] = useState(true);
+    
+    const leftTabsRef = useHorizontalScroll();
+    const rightTabsRef = useHorizontalScroll();
 
-    const leftTabsRef = useRef(null);
-    const rightTabsRef = useRef(null);
-    const forgeAreaRef = useRef(null); // Ссылка на область наковальни
-
-    const toggleBottomBarVisibility = () => {
-        setIsBottomBarVisible(prev => !prev);
-    };
-
-    // Обертка для handleStrikeAnvil для получения координат клика
-    const handleStrikeAnvilWithParticles = useCallback((event) => {
-        if (forgeAreaRef.current) {
-            const rect = forgeAreaRef.current.getBoundingClientRect();
-            // Получаем координаты центра элемента anvil, так как он анимируется
-            const anvilElement = forgeAreaRef.current.querySelector('#forge-area > div'); // Наковальня
-            let x = rect.left + rect.width / 2;
-            let y = rect.top + rect.height / 2;
-
-            if (anvilElement) {
-                const anvilRect = anvilElement.getBoundingClientRect();
-                x = anvilRect.left + anvilRect.width / 2;
-                y = anvilRect.top + anvilRect.height / 2;
-            }
-            handlers.handleStrikeAnvil(x, y); // Передаем координаты в хэндлер
-        } else {
-            handlers.handleStrikeAnvil(window.innerWidth / 2, window.innerHeight / 2); // Дефолт, если ссылка не работает
-        }
-    }, [handlers]);
-
-
-    useEffect(() => {
-        const handleWheelScroll = (evt, element) => {
-            if (element) {
-                evt.preventDefault();
-                element.scrollLeft += evt.deltaY;
-            }
-        };
-        const leftTabsElement = leftTabsRef.current;
-        const rightTabsElement = rightTabsRef.current;
-        
-        const leftWheelHandler = (e) => handleWheelScroll(e, leftTabsElement);
-        if (leftTabsElement) {
-            leftTabsElement.addEventListener('wheel', leftWheelHandler, { passive: false });
-        }
-
-        const rightWheelHandler = (e) => handleWheelScroll(e, rightTabsElement);
-        if (rightTabsElement) {
-            rightTabsElement.addEventListener('wheel', rightWheelHandler, { passive: false });
-        }
-
-        return () => {
-            if (leftTabsElement) {
-                leftTabsElement.removeEventListener('wheel', leftWheelHandler);
-            }
-            if (rightTabsElement) {
-                rightTabsElement.removeEventListener('wheel', rightWheelHandler);
-            }
-        };
-    }, []);
-
+    const toggleBottomBarVisibility = () => setIsBottomBarVisible(prev => !prev);
     const handleLeftViewChange = (viewId) => { audioController.play('click', 'C4', '16n'); setActiveLeftView(viewId); };
     const handleRightViewChange = (viewId) => { audioController.play('click', 'C4', '16n'); setActiveRightView(viewId); };
+    
+    if (!assetsLoaded) {
+        return <LoadingScreen progress={loadProgress} />;
+    }
 
     return (
         <div onClick={handleInitialGesture} className="relative w-screen h-screen overflow-hidden">
             <AudioVisualizer />
-            <ParticleEmitter /> {/* Добавляем компонент для рендеринга частиц */}
+            <ParticleEmitter />
 
             {isSpecializationModalOpen && <SpecializationModal onSelectSpecialization={handlers.handleSelectSpecialization} />}
-            {isSettingsOpen && <SettingsModal settings={displayedGameState.settings} onClose={() => setIsSettingsOpen(false)} onVolumeChange={handlers.handleVolumeChange} onResetGame={handlers.handleResetGame} onOpenCredits={handlers.handleOpenCreditsModal} />}
-            {isInventoryOpen && <InventoryModal isOpen={isInventoryOpen} onClose={() => setIsInventoryOpen(false)} gameState={displayedGameState} handlers={handlers} />}
-            {isProfileModalOpen && <ProfileModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} gameState={displayedGameState} handlers={handlers} />}
-            {isShopReputationModalOpen && (
-                <ShopReputationModal
-                    isOpen={isShopReputationModalOpen}
-                    onClose={handlers.handleCloseShopReputationModal}
-                    gameState={displayedGameState}
-                    handlers={handlers}
-                />
-            )}
-            {activeInfoModal && (
-                <InfoModal
-                    isOpen={!!activeInfoModal}
-                    onClose={handlers.handleCloseInfoModal}
-                    title={activeInfoModal.title}
-                    image={activeInfoModal.image}
-                    message={activeInfoModal.message}
-                    buttonText={activeInfoModal.buttonText}
-                />
-            )}
-            <RewardModal orderInfo={completedOrderInfo} onClose={handlers.handleCloseRewardModal} />
-
-            {isWorldMapModalOpen && (
-                <WorldMapModal
-                    isOpen={isWorldMapModalOpen}
-                    onClose={handlers.handleCloseWorldMapModal}
-                    gameState={displayedGameState}
-                    onSelectRegion={handlers.handleSelectRegion}
-                />
-            )}
-            {isAchievementRewardModalOpen && achievementToDisplay && (
-                <AchievementRewardModal
-                    isOpen={isAchievementRewardModalOpen}
-                    onClose={handlers.handleCloseAchievementRewardModal}
-                    achievement={achievementToDisplay}
-                    onClaimReward={handlers.handleClaimAchievementReward}
-                />
-            )}
-            {isAvatarSelectionModalOpen && (
-                <AvatarSelectionModal
-                    isOpen={isAvatarSelectionModalOpen}
-                    onClose={handlers.handleCloseAvatarSelectionModal}
-                    gameState={displayedGameState}
-                    onSelectAvatar={handlers.handleSelectAvatar}
-                />
-            )}
-            {isCreditsModalOpen && (
-                <CreditsModal
-                    isOpen={isCreditsModalOpen}
-                    onClose={handlers.handleCloseCreditsModal}
-                />
-            )}
+            {isSettingsOpen && <SettingsModal onClose={() => setIsSettingsOpen(false)} />}
+            {isInventoryOpen && <InventoryModal isOpen={isInventoryOpen} onClose={() => setIsInventoryOpen(false)} />}
+            {isProfileModalOpen && <ProfileModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} />}
+            {isShopReputationModalOpen && <ShopReputationModal isOpen={isShopReputationModalOpen} onClose={handlers.handleCloseShopReputationModal} />}
+            {isHirePersonnelModalOpen && <HirePersonnelModal isOpen={isHirePersonnelModalOpen} onClose={handlers.handleCloseHirePersonnelModal} />}
+            {activeInfoModal && <InfoModal isOpen={!!activeInfoModal} onClose={handlers.handleCloseInfoModal} {...activeInfoModal} />}
+            <RewardModal orderInfo={completedOrderInfo} />
+            {isWorldMapModalOpen && <WorldMapModal isOpen={isWorldMapModalOpen} onClose={handlers.handleCloseWorldMapModal} />}
+            {isAchievementRewardModalOpen && achievementToDisplay && <AchievementRewardModal isOpen={isAchievementRewardModalOpen} onClose={handlers.handleCloseAchievementRewardModal} achievement={achievementToDisplay} />}
+            {isAvatarSelectionModalOpen && <AvatarSelectionModal isOpen={isAvatarSelectionModalOpen} onClose={handlers.handleCloseAvatarSelectionModal} />}
+            {isCreditsModalOpen && <CreditsModal isOpen={isCreditsModalOpen} onClose={handlers.handleCloseCreditsModal} />}
 
             <div className="game-container flex flex-col lg:flex-row h-screen py-4 px-2 gap-4 text-gray-200 max-w-[1500px] w-full mx-auto lg:mx-3 relative z-10">
                 <div className="left-panel bg-gray-800/80 backdrop-blur-md border-2 border-gray-700 rounded-lg overflow-y-auto w-3/5">
-                    {/* Табы левой панели */}
-                    <div ref={leftTabsRef} className="tabs flex items-center border-b-2 border-gray-700 h-16 sticky top-0 z-30 bg-gray-800/80 backdrop-blur-sm">
+                    <div ref={leftTabsRef} className="tabs flex items-center border-b-2 border-gray-700 h-16 sticky top-0 z-30 bg-gray-800/80 backdrop-blur-sm overflow-x-auto">
                         <LeftPanelButton viewId="forge" icon="hardware" label="Кузница" onClick={handleLeftViewChange} activeView={activeLeftView} />
                         <LeftPanelButton viewId="mine" icon="terrain" label="Шахта" onClick={handleLeftViewChange} activeView={activeLeftView} />
                         <LeftPanelButton viewId="smelter" icon="fireplace" label="Плавильня" onClick={handleLeftViewChange} activeView={activeLeftView} />
@@ -207,75 +118,59 @@ export default function App() {
                         <LeftPanelButton viewId="skills" icon="schema" label="Навыки" onClick={handleLeftViewChange} activeView={activeLeftView} />
                         <LeftPanelButton viewId="artifacts" icon="auto_stories" label="Артефакты" onClick={handleLeftViewChange} activeView={activeLeftView} />
                         <LeftPanelButton viewId="journal" icon="book" label="Журнал" onClick={handleLeftViewChange} activeView={activeLeftView} />
-                        {/* Условный рендеринг для вкладки "Гильдия" */}
                         {displayedGameState.purchasedSkills.guildContracts && (
                             <LeftPanelButton viewId="guild" icon="hub" label="Гильдия" onClick={handleLeftViewChange} activeView={activeLeftView} />
                         )}
                     </div>
                     <div className="p-6">
-                        {/* Условный рендеринг для всех вкладок левой панели */}
-                        {activeLeftView === 'forge' && <ForgeView gameState={displayedGameState} isWorking={isWorking} handlers={handlers} handleStrikeAnvil={handleStrikeAnvilWithParticles} forgeAreaRef={forgeAreaRef} />}
-                        {activeLeftView === 'mine' && <MineView gameState={displayedGameState} handlers={handlers} />}
-                        {activeLeftView === 'smelter' && <SmelterView gameState={displayedGameState} handlers={handlers} />}
-                        {activeLeftView === 'shop' && <ShopView gameState={displayedGameState} handlers={handlers} />}
-                        {activeLeftView === 'skills' && <SkillsView gameState={displayedGameState} handlers={handlers} />}
-                        {activeLeftView === 'artifacts' && <ArtifactsView gameState={displayedGameState} handlers={handlers} />}
-                        {activeLeftView === 'journal' && <JournalView gameState={displayedGameState} handlers={handlers} />}
-                        {activeLeftView === 'guild' && <GuildView gameState={displayedGameState} handlers={handlers} />}
+                        {activeLeftView === 'forge' && <ForgeView />}
+                        {activeLeftView === 'mine' && <MineView />}
+                        {activeLeftView === 'smelter' && <SmelterView />}
+                        {activeLeftView === 'shop' && <ShopView />}
+                        {activeLeftView === 'skills' && <SkillsView />}
+                        {activeLeftView === 'artifacts' && <ArtifactsView />}
+                        {activeLeftView === 'journal' && <JournalView />}
+                        {activeLeftView === 'guild' && <GuildView />}
                     </div>
                 </div>
 
                 <div className="right-panel bg-gray-800/80 backdrop-blur-md border-2 border-gray-700 rounded-lg overflow-y-auto w-2/5">
-                    <div ref={rightTabsRef} className="tabs flex items-center border-b-2 border-gray-700 h-14 sticky top-0 z-30 bg-gray-800/80 backdrop-blur-sm">
-                            <RightPanelButton viewId="resources" icon="inventory" label="Ресурсы" onClick={handleRightViewChange} activeView={activeRightView} />
-                            <RightPanelButton viewId="playerShop" icon="shopping_bag" label="Мой магазин" onClick={handleRightViewChange} activeView={activeRightView} />
-                            <RightPanelButton viewId="upgrades" icon="storefront" label="Улучшения" onClick={handleRightViewChange} activeView={activeRightView} />
-                            <RightPanelButton viewId="personnel" icon="engineering" label="Персонал" onClick={handleRightViewChange} activeView={activeRightView} />
-                            <RightPanelButton viewId="factions" icon="groups" label="Фракции" onClick={handleRightViewChange} activeView={activeRightView} />
-                            <RightPanelButton viewId="eternalSkills" icon="psychology" label="Вечные Навыки" onClick={handleRightViewChange} activeView={activeRightView} />
+                    <div ref={rightTabsRef} className="tabs flex items-center border-b-2 border-gray-700 h-14 sticky top-0 z-30 bg-gray-800/80 backdrop-blur-sm overflow-x-auto">
+                        <RightPanelButton viewId="resources" icon="inventory" label="Ресурсы" onClick={handleRightViewChange} activeView={activeRightView} />
+                        <RightPanelButton viewId="playerShop" icon="shopping_bag" label="Мой магазин" onClick={handleRightViewChange} activeView={activeRightView} />
+                        <RightPanelButton viewId="upgrades" icon="storefront" label="Улучшения" onClick={handleRightViewChange} activeView={activeRightView} />
+                        <RightPanelButton viewId="personnel" icon="engineering" label="Персонал" onClick={handleRightViewChange} activeView={activeRightView} />
+                        <RightPanelButton viewId="factions" icon="groups" label="Фракции" onClick={handleRightViewChange} activeView={activeRightView} />
+                        <RightPanelButton viewId="eternalSkills" icon="psychology" label="Вечные Навыки" onClick={handleRightViewChange} activeView={activeRightView} />
                     </div>
                     <div className="p-6">
-                        {activeRightView === 'resources' && <ResourcePanel gameState={displayedGameState} />}
-                        {activeRightView === 'upgrades' && <UpgradeShop gameState={displayedGameState} handlers={handlers} />}
-                        {activeRightView === 'personnel' && <PersonnelView gameState={displayedGameState} handlers={handlers} />}
-                        {activeRightView === 'factions' && <FactionsPanel gameState={displayedGameState} handlers={handlers} />}
-                        {activeRightView === 'playerShop' && <PlayerShopPanel gameState={displayedGameState} handlers={handlers} />}
-                        {activeRightView === 'eternalSkills' && <EternalSkillsView gameState={displayedGameState} handlers={handlers} />}
+                        {activeRightView === 'resources' && <ResourcePanel />}
+                        {activeRightView === 'playerShop' && <PlayerShopPanel />}
+                        {activeRightView === 'upgrades' && <UpgradeShop />}
+                        {activeRightView === 'personnel' && <PersonnelView />}
+                        {activeRightView === 'factions' && <FactionsPanel />}
+                        {activeRightView === 'eternalSkills' && <EternalSkillsView />}
                     </div>
                 </div>
             </div>
 
-            {/* Выезжающая панель BottomBar */}
             <div className={`bottom-bar-panel transition-transform duration-300 ease-in-out ${isBottomBarVisible ? 'translate-y-0' : 'translate-y-full'}`}>
-                <BottomBar
-                    gameState={displayedGameState}
-                    onToggleInventoryModal={() => setIsInventoryOpen(true)}
-                    onToggleSettingsModal={() => setIsSettingsOpen(true)}
-                    onToggleProfileModal={() => setIsProfileModalOpen(true)}
-                    onToggleBottomBarVisibility={toggleBottomBarVisibility}
-                />
+                <BottomBar onToggleInventoryModal={() => setIsInventoryOpen(true)} onToggleSettingsModal={() => setIsSettingsOpen(true)} onToggleProfileModal={() => setIsProfileModalOpen(true)} onToggleBottomBarVisibility={toggleBottomBarVisibility} />
+            </div>
+            
+            <div className={`fixed left-1/2 -translate-x-1/2 transition-all duration-300 ease-in-out z-20 ${isBottomBarVisible ? 'bottom-[112px]' : 'bottom-6'}`}>
+                <div className="flex items-center gap-4">
+                    {!isBottomBarVisible && (
+                        <button onClick={toggleBottomBarVisibility} className="bg-gray-900/70 border border-gray-700 backdrop-blur-md pointer-events-auto hover:bg-gray-800/80 focus:outline-none w-12 h-12 flex items-center justify-center rounded-full" title="Показать панель">
+                            <span className="material-icons-outlined text-gray-400 text-2xl">keyboard_arrow_up</span>
+                        </button>
+                    )}
+                    <WorldEventIndicator />
+                </div>
             </div>
 
-            {/* Кнопка-переключатель для BottomBar, отображается только когда панель скрыта */}
-            {!isBottomBarVisible && (
-                <button
-                    onClick={toggleBottomBarVisibility}
-                    className="fixed bottom-bar-toggle-button
-                               bg-gray-900/70 border border-gray-700 backdrop-blur-md
-                               pointer-events-auto hover:bg-gray-800/80 focus:outline-none"
-                    title="Показать панель"
-                >
-                    {/* Обертка для масштабирования, которая не будет влиять на позицию */}
-                    <div className="flex items-center justify-center w-full h-full rounded-full interactive-element-scale-inner">
-                        <span className="material-icons-outlined text-gray-400 text-2xl">keyboard_arrow_up</span>
-                    </div>
-                </button>
-            )}
-
             <div className="toast-container">
-                    {toasts.map(toast => (
-                        <Toast key={toast.id} id={toast.id} message={toast.message} type={toast.type} onRemove={removeToast} />
-                    ))}
+                {toasts.map(toast => <Toast key={toast.id} id={toast.id} message={toast.message} type={toast.type} onRemove={removeToast} />)}
             </div>
         </div>
     );

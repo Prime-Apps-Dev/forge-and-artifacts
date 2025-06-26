@@ -24,6 +24,7 @@ export const skills = {
     apprenticeTraining: { name: "Тренировка подмастерьев", description: "Эффективность всех подмастерьев увеличена на 15%.", icon: "engineering", cost: { matter: 400, sparks: 3500, ironIngots: 150 }, requires: ["copperProspecting", "crucibleRefinement"], apply: (state) => { state.passiveIncomeModifier += 0.15; }, requiredSpecialization: 'engineer' },
     qualityControl: { name: "Контроль качества", description: "Увеличивает шанс критического удара еще на 5%.", icon: "verified", cost: { matter: 450, copperIngots: 30 }, requires: ["crucibleRefinement"], apply: (state) => { state.critChance += 0.05; } },
     advancedSmelting: { name: "Продвинутая плавка", description: "Сокращает время плавки всех слитков на 20%.", icon: "local_fire_department", cost: { matter: 500, copperIngots: 50 }, requires: ["apprenticeTraining"], apply: (state) => { state.smeltingSpeedModifier += 0.2; } },
+    smeltingAutomation: { name: "Автоматизация плавки", description: "Разблокирует очередь плавки, позволяя ставить до 3 предметов на автоматическую переплавку.", icon: "queue", cost: { matter: 750, sparks: 4500, copperIngots: 70 }, requires: ["advancedSmelting"], apply: (state) => { state.smeltingQueueCapacity = (state.smeltingQueueCapacity || 0) + 3; } },
     tradeRoutes: { name: "Торговые пути", description: "Увеличивает награду в Искрах и Материи еще на 15%.", icon: "alt_route", cost: { matter: 550, sparks: 4000, copperIngots: 60 }, requires: ["qualityControl"], apply: (state) => { state.sparksModifier += 0.15; state.matterModifier += 0.15; } },
     guildContracts: { name: "Контракты Гильдии", description: "Ваша репутация растет! Увеличивает шанс получения фракционных и редких заказов.", icon: "request_quote", cost: { matter: 600, sparks: 5000, copperIngots: 80 }, requires: ["tradeRoutes"], apply: (state) => {} },
     masterworkHammers: { name: "Мастерские молоты", description: "Увеличивает бонус критического удара на 5 ед.", icon: "build_circle", cost: { matter: 700, copperIngots: 100 }, requires: ["advancedSmelting", "guildContracts"], apply: (state) => { state.critBonus += 5; } },
@@ -44,6 +45,7 @@ export const skills = {
     matterAlchemy: { name: "Катализ Материи", description: "Изучение химических реакций, позволяющее извлекать больше чистой материи из побочных продуктов ковки (+20%).", icon: "bubble_chart", cost: { matter: 1300, sparksteelIngots: 20, sparks: 16000 }, requires: ["legendaryClients"], apply: (state) => { state.matterModifier += 0.2; } },
     tradeNegotiation: { name: "Торговые переговоры", description: "Улучшает отношения с торговцами, снижая цены на покупку и увеличивая на продажу на 5%.", icon: "storefront", cost: { matter: 1400, sparks: 18000, sparksteelIngots: 25 }, requires: ["optimizedSmelting"], apply: (state) => {} },
     artisanMentor: { name: "Наставник-Ремесленник", description: "Значительно увеличивает эффективность работы подмастерьев на 20%.", icon: "school", cost: { matter: 1500, sparksteelIngots: 30, sparks: 19000 }, requires: ["efficientCrafting"], apply: (state) => { state.passiveIncomeModifier += 0.2; } },
+    specializedToolmaking: { name: "Специализированные Инструменты", description: "Открывает чертежи для создания точных механизмов и измерительных приборов.", icon: "build_circle", cost: { matter: 1450, sparks: 18500, sparksteelIngots: 28 }, requires: ["artisanMentor", "tradeNegotiation"], apply: (state) => {} },
     timeMastery: { name: "Мастерство Времени", description: "Увеличивает золотые и серебряные лимиты времени на заказах на 10%.", icon: "hourglass_empty", cost: { matter: 1600, sparks: 20000, sparksteelIngots: 35 }, requires: ["matterAlchemy"], apply: (state) => { state.timeLimitModifier += 0.1; } },
     blueprint_masterwork: { name: "Чертеж: Шедевры", description: "Позволяет создавать величайшие изделия, требующие редких материалов.", icon: "auto_stories", cost: { matter: 1800, sparksteelIngots: 40, sparks: 22000 }, requires: ["tradeNegotiation"], apply: (state) => {} },
     truePotential: { name: "Истинный потенциал", description: "Ваша ковка становится еще совершеннее, увеличивая прогресс за клик на 3 и шанс крита на 5%.", icon: "bolt", cost: { matter: 2000, sparksteelIngots: 50, sparks: 25000 }, requires: ["artisanMentor"], apply: (state) => { state.progressPerClick += 3; state.critChance += 0.05; } },
@@ -83,49 +85,13 @@ export const skills = {
     legendaryEvasion: { name: "Уклонение Легенды", description: "Снижает шанс неудачи при улучшении предметов на 10%.", icon: "policy", cost: { matter: 25000, arcaniteIngots: 24, sparks: 250000 }, requires: ["legendaryCritStrike"], apply: (state) => { state.riskModifier = (state.riskModifier || 1.0) * 0.90; } },
     legendaryArmor: { name: "Броня Легенды", description: "Увеличивает эффективность работы подмастерьев на 30%.", icon: "engineering", cost: { matter: 26000, arcaniteIngots: 26, sparks: 260000 }, requires: ["legendaryEvasion"], apply: (state) => { state.passiveIncomeModifier += 0.30; } },
     legendaryAttack: { name: "Атака Легенды", description: "Увеличивает награду в Искрах и Материи еще на 30%.", icon: "attach_money", cost: { matter: 27000, arcaniteIngots: 28, sparks: 270000 }, requires: ["legendaryArmor"], apply: (state) => { state.sparksModifier += 0.30; state.matterModifier += 0.30; } },
-    // НОВЫЙ НАВЫК: Гильдейские Контракты II
-    guildContractsII: {
-        name: "Гильдейские Контракты II",
-        description: "Увеличивает шанс получения фракционных и редких заказов еще больше. Открывает новые типы заданий гильдий.",
-        icon: "handshake",
-        cost: { matter: 2000, sparks: 25000, sparksteelIngots: 50 },
-        requires: ["guildContracts", "truePotential"],
-        apply: (state) => { /* Только для разблокировки квестов, эффект уже в описании */ }
-    },
-    // НОВЫЙ НАВЫК: Прочное Снаряжение
-    durableGear: {
-        name: "Прочное Снаряжение",
-        description: "Позволяет выполнять миссии гильдий, требующие более прочного снаряжения (снижает минимальное качество на 0.5 для миссий).",
-        icon: "backpack",
-        cost: { matter: 1000, ironIngots: 200 },
-        requires: ["expeditionPlanning"],
-        apply: (state) => { state.missionMinQualityReduction = (state.missionMinQualityReduction || 0) + 0.5; }
-    },
-    // НОВЫЙ НАВЫК: Эксперт по Ресурсам
-    resourceExpert: {
-        name: "Эксперт по Ресурсам",
-        description: "Открывает доступ к поручениям гильдии, связанным с доставкой большого количества ресурсов.",
-        icon: "inventory_2",
-        cost: { matter: 1500, copperOre: 100, ironOre: 200 },
-        requires: ["geologicalSurvey"],
-        apply: (state) => { /* Только для разблокировки квестов */ }
-    },
-    // НОВЫЙ НАВЫК: Древние Руины
-    ancientRuins: {
-        name: "Древние Руины",
-        description: "Открывает доступ к миссиям гильдии по исследованию опасных древних руин, где можно найти редкие материалы.",
-        icon: "gavel",
-        cost: { matter: 3000, mithrilIngots: 30, sparks: 40000 },
-        requires: ["mithrilProspecting", "expeditionPlanning"],
-        apply: (state) => { /* Только для разблокировки квестов */ }
-    },
-    // НОВЫЙ НАВЫК: Тайные Операции
-    secretOperations: {
-        name: "Тайные Операции",
-        description: "Открывает доступ к скрытным и рискованным заданиям гильдии, предлагающим необычные награды.",
-        icon: "visibility_off",
-        cost: { matter: 4000, adamantiteIngots: 10, sparks: 60000 },
-        requires: ["riskAssessment", "adamantiteMining"],
-        apply: (state) => { /* Только для разблокировки квестов */ }
-    },
+    guildContractsII: { name: "Гильдейские Контракты II", description: "Гильдия Торговцев признает ваше влияние. Открывает доступ к особым поручениям.", icon: "handshake", cost: { matter: 2000, sparks: 25000, sparksteelIngots: 50 }, requires: ["guildContracts", "truePotential"], apply: (state) => {} },
+    durableGear: { name: "Прочное Снаряжение", description: "Позволяет выполнять миссии гильдий, требующие более прочного снаряжения.", icon: "backpack", cost: { matter: 1000, ironIngots: 200 }, requires: ["expeditionPlanning"], apply: (state) => { state.missionMinQualityReduction = (state.missionMinQualityReduction || 0) + 0.5; } },
+    resourceExpert: { name: "Эксперт по Ресурсам", description: "Открывает доступ к поручениям гильдии, связанным с доставкой большого количества ресурсов.", icon: "inventory_2", cost: { matter: 1500, copperOre: 100, ironOre: 200 }, requires: ["geologicalSurvey"], apply: (state) => {} },
+    ancientRuins: { name: "Древние Руины", description: "Открывает доступ к миссиям гильдии по исследованию опасных древних руин, где можно найти редкие материалы.", icon: "gavel", cost: { matter: 3000, mithrilIngots: 30, sparks: 40000 }, requires: ["mithrilProspecting", "expeditionPlanning"], apply: (state) => {} },
+    secretOperations: { name: "Тайные Операции", description: "Открывает доступ к скрытным и рискованным заданиям гильдии, предлагающим необычные награды.", icon: "visibility_off", cost: { matter: 4000, adamantiteIngots: 10, sparks: 60000 }, requires: ["riskAssessment", "adamantiteMining"], apply: (state) => {} },
+    unlockTrader: { name: "Торговые Представители", description: "Открывает возможность нанимать Торговцев для автоматической продажи товаров в вашей лавке.", icon: "storefront", cost: { matter: 800, sparks: 7000, copperIngots: 100 }, requires: ["tradeRoutes"], apply: (state) => {} },
+    unlockManager: { name: "Управление Мастерской", description: "Открывает возможность нанимать Управителей для оптимизации расходов на персонал.", icon: "manage_accounts", cost: { matter: 1500, sparks: 15000, bronzeIngots: 80 }, requires: ["efficientCrafting"], apply: (state) => {} },
+    unlockEngineer: { name: "Высшая Инженерия", description: "Открывает возможность нанимать Инженеров, которые повышают эффективность вашего ручного труда.", icon: "build", cost: { matter: 1800, sparks: 20000, sparksteelIngots: 20 }, requires: ["optimizedSmelting"], apply: (state) => {} },
+    unlockAssistant: { name: "Личные Помощники", description: "Открывает возможность нанимать Ассистентов, которые улучшают взаимодействие с клиентами.", icon: "person_add", cost: { matter: 3000, sparks: 35000, mithrilIngots: 50 }, requires: ["mithrilProspecting"], apply: (state) => {} }
 };

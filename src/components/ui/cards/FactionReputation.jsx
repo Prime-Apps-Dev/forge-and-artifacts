@@ -1,9 +1,13 @@
+// src/components/ui/cards/FactionReputation.jsx
 import React from 'react';
-import { definitions } from '../../../data/definitions'; // Импортируем definitions
-import { formatNumber } from '../../../utils/formatters';
+import { definitions } from '../../../data/definitions/index.js';
+import { formatNumber } from '../../../utils/formatters.jsx';
 import { getReputationLevel } from '../../../utils/helpers';
+import { useGame } from '../../../context/GameContext.jsx';
 
-const FactionReputation = React.memo(({ factionId, gameState }) => { // Добавляем gameState
+const FactionReputation = React.memo(({ factionId }) => {
+    const { displayedGameState: gameState } = useGame();
+
     const faction = definitions.factions[factionId];
     const reputation = gameState.reputation[factionId];
     const currentLevel = getReputationLevel(reputation);
@@ -32,7 +36,7 @@ const FactionReputation = React.memo(({ factionId, gameState }) => { // Доба
                 ></div>
             </div>
              <div className="text-right text-xs text-gray-400 mt-1">
-                 {formatNumber(reputation)} / {formatNumber(progressToNext)}
+                 {formatNumber(reputation, true)} / {formatNumber(progressToNext, true)}
              </div>
         </div>
     );

@@ -1,9 +1,13 @@
-// src/components/ui/FreeCraftRecipeCard.jsx
+// src/components/ui/cards/FreeCraftRecipeCard.jsx
 import React from 'react';
 import { getItemImageSrc } from '../../../utils/helpers';
-import { definitions } from '../../../data/definitions'; // Импортируем definitions
+import { definitions } from '../../../data/definitions/index.js';
+import { useGame } from '../../../context/GameContext.jsx';
+import Button from '../buttons/Button.jsx';
 
-const FreeCraftRecipeCard = ({ itemDef, itemKey, onCraft, isDisabled, gameState }) => { // Добавлен gameState
+const FreeCraftRecipeCard = ({ itemDef, itemKey, isDisabled }) => {
+    const { displayedGameState: gameState, handlers } = useGame();
+    
     const blueprintRequired = itemDef.blueprintId && !(gameState.specialItems[itemDef.blueprintId] > 0);
     const actualIsDisabled = isDisabled || blueprintRequired;
 
@@ -22,13 +26,13 @@ const FreeCraftRecipeCard = ({ itemDef, itemKey, onCraft, isDisabled, gameState 
                 className="w-16 h-16 object-contain mb-2 img-rounded-corners"
             />
             <h4 className="font-bold text-base text-white mt-2 grow">{itemDef.name}</h4>
-            <button
-                onClick={() => onCraft(itemKey)}
+            <Button
+                onClick={() => handlers.handleStartFreeCraft(itemKey)}
                 disabled={actualIsDisabled}
-                className="interactive-element w-full mt-3 bg-orange-800/80 text-white font-bold py-2 px-4 rounded-md hover:enabled:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="mt-3 bg-orange-800/80 hover:enabled:bg-orange-700"
             >
                 {actualIsDisabled ? (blueprintRequired ? 'Нужен чертеж' : 'Вы заняты') : 'Создать'}
-            </button>
+            </Button>
         </div>
     );
 };

@@ -1,14 +1,14 @@
 // src/components/ui/TradeableResource.jsx
 import React, { useState } from 'react';
-import { definitions } from '../../../data/definitions';
-import { formatNumber } from '../../../utils/formatters'; // Теперь formatNumber из formatters
-import { getResourceImageSrc, getReputationLevel } from '../../../utils/helpers'; 
+import { definitions } from '../../../data/definitions/index.js';
+import { formatNumber } from '../../../utils/formatters.jsx';
+import { getResourceImageSrc, getReputationLevel } from '../../../utils/helpers';
 import SvgIcon from '../display/SvgIcon';
+import { useGame } from '../../../context/GameContext.jsx';
 
-const TradeableResource = React.memo(({ resourceId, name, icon, iconClass, gameState, onBuy, onSell }) => {
-    if (!gameState || !gameState.market || !gameState.market.prices) {
-        return null;
-    }
+const TradeableResource = React.memo(({ resourceId, name, icon, iconClass }) => {
+    const { displayedGameState: gameState, handlers } = useGame();
+    if (!gameState || !gameState.market || !gameState.market.prices) return null;
 
     const [multiplier, setMultiplier] = useState(1);
 
@@ -75,12 +75,12 @@ const TradeableResource = React.memo(({ resourceId, name, icon, iconClass, gameS
                     x{multiplier}
                 </button>
 
-                <button onClick={() => onBuy(resourceId, unitBuyPrice, multiplier)} className="interactive-element flex flex-col items-center p-2 rounded-md bg-red-800/50 hover:bg-red-800/80 w-24">
+                <button onClick={() => handlers.handleBuyResource(resourceId, unitBuyPrice, multiplier)} className="interactive-element flex flex-col items-center p-2 rounded-md bg-red-800/50 hover:bg-red-800/80 w-24">
                     <span className="font-bold">Купить</span>
                     <span className="text-xs">за {formatNumber(totalBuyPrice)} искр</span>
                 </button>
 
-                <button onClick={() => canSell && onSell(resourceId, unitSellPrice, multiplier)} disabled={!canSell} className="interactive-element flex flex-col items-center p-2 rounded-md bg-green-800/50 hover:enabled:bg-green-800/80 w-24 disabled:opacity-50 disabled:cursor-not-allowed">
+                <button onClick={() => canSell && handlers.handleSellResource(resourceId, unitSellPrice, multiplier)} disabled={!canSell} className="interactive-element flex flex-col items-center p-2 rounded-md bg-green-800/50 hover:enabled:bg-green-800/80 w-24 disabled:opacity-50 disabled:cursor-not-allowed">
                     <span className="font-bold">Продать</span>
                     <span className="text-xs">за {formatNumber(totalSellPrice)} искр</span>
                 </button>

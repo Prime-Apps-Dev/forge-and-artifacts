@@ -100,7 +100,9 @@ export const IMAGE_PATHS = {
         SPARKSTEEL_PINCERS: '/img/items/sparksteel_pincers.webp',
         SPARKSTEEL_ARMOR_PLATES: '/img/items/sparksteel_armor_plates.webp',
         SPARKSTEEL_WATCH: '/img/items/sparksteel_watch.webp',
-        // Материалы артефактов (также являются specialItems)
+        PRECISION_GEARS: '/img/items/precision_gears.webp',
+        MEASURING_CALIPER: '/img/items/measuring_caliper.webp',
+        SPRING_MECHANISM: '/img/items/spring_mechanism.webp',
         MATERIAL_GUARDIAN_HEART: '/img/items/guardian_heart.webp',
         MATERIAL_ADAMANT_FRAME: '/img/items/adamant_frame.webp',
         MATERIAL_LAVA_AGATE: '/img/items/lava_agate.webp',
@@ -132,10 +134,22 @@ export const IMAGE_PATHS = {
     },
     UI: {
         ANVIL: '/img/ui/anvil.webp',
+    },
+    PERSONNEL: {
+        MINE_APPRENTICE: '/img/personnel/mine_apprentice.webp',
+        SMELTER_APPRENTICE: '/img/personnel/smelter_apprentice.webp',
+        ENGINEER_APPRENTICE: '/img/personnel/engineer_apprentice.webp',
+        MASTER_FORGER: '/img/personnel/master_forger.webp',
+        RESOURCE_MANAGER: '/img/personnel/resource_manager.webp',
+        WEAPONSMITH_ASSISTANT: '/img/personnel/weaponsmith_assistant.webp',
+        ARMORSMITH_APPRENTICE: '/img/personnel/armorsmith_apprentice.webp',
+        JEWELER_ASSISTANT: '/img/personnel/jeweler_assistant.webp',
+        TRADER_APPRENTICE: '/img/personnel/trader_apprentice.webp',
+        MANAGER: '/img/personnel/manager.webp',
+        ASSISTANT: '/img/personnel/assistant.webp',
     }
 };
 
-// Абсолютные пути к аудиофайлам
 export const AUDIO_PATHS = {
     MUSIC: [
         '/audio/cithare-medieval-1-307558.mp3',

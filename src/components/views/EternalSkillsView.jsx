@@ -1,12 +1,11 @@
 // src/components/views/EternalSkillsView.jsx
-
 import React, { useRef } from 'react';
-import { definitions } from '../../data/definitions';
-import { formatNumber } from '../../utils/formatters';
-import Tooltip from '../ui/display/Tooltip'; // Обновленный путь
-import EternalSkillNode from '../ui/cards/EternalSkillNode'; // Обновленный путь
+import { formatNumber } from '../../utils/formatters.jsx';
+import EternalSkillNode from '../ui/cards/EternalSkillNode';
+import { useGame } from '../../context/GameContext.jsx';
 
-const EternalSkillsView = ({ gameState, handlers }) => {
+const EternalSkillsView = () => {
+    const { displayedGameState: gameState } = useGame();
     const scrollContainerRef = useRef(null);
 
     const BranchHeader = ({ title }) => (
@@ -45,25 +44,18 @@ const EternalSkillsView = ({ gameState, handlers }) => {
         }
     ];
 
-    const renderSkillRow = (row, previousRow = null) => {
+    const renderSkillRow = (row) => {
         return (
             <div key={row.id} className="skills-row flex justify-center gap-12 flex-wrap">
-                {row.skills.map((skillId, index) => {
-                    return (
-                        <EternalSkillNode
-                            key={skillId}
-                            skillId={skillId}
-                            gameState={gameState}
-                            onBuyEternalSkill={handlers.handleBuyEternalSkill}
-                        />
-                    );
-                })}
+                {row.skills.map(skillId => (
+                    <EternalSkillNode
+                        key={skillId}
+                        skillId={skillId}
+                    />
+                ))}
             </div>
         );
     };
-
-
-    let previousRow = null;
 
     return (
         <div ref={scrollContainerRef} className="skills-tree-container relative h-full w-full overflow-y-auto p-4">
@@ -80,20 +72,16 @@ const EternalSkillsView = ({ gameState, handlers }) => {
             </div>
 
             <div className="skills-content flex flex-col items-center">
-                {eternalSkillTreeStructure.map(branchGroup => (
+                {eternalSkillTreeStructure.map((branchGroup, branchIndex) => (
                     <React.Fragment key={branchGroup.branch}>
                         <BranchHeader title={branchGroup.branch} />
-                        {branchGroup.rows.map((row, rowIndex) => {
-                            const renderedRow = renderSkillRow(row, previousRow);
-                            previousRow = row;
-                            return (
-                                <React.Fragment key={row.id}>
-                                    {renderedRow}
-                                    {rowIndex < branchGroup.rows.length - 1 && <Connector />}
-                                </React.Fragment>
-                            );
-                        })}
-                        {branchGroup.branch !== eternalSkillTreeStructure[eternalSkillTreeStructure.length - 1].branch && <Connector />}
+                        {branchGroup.rows.map((row, rowIndex) => (
+                            <React.Fragment key={row.id}>
+                                {renderSkillRow(row)}
+                                {rowIndex < branchGroup.rows.length - 1 && <Connector />}
+                            </React.Fragment>
+                        ))}
+                        {branchIndex < eternalSkillTreeStructure.length - 1 && <Connector />}
                     </React.Fragment>
                 ))}
                 <div className="h-20 w-full"></div>

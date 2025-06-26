@@ -1,17 +1,18 @@
 // src/hooks/useGameState.jsx
-import { useState, useRef, useCallback, useEffect } from 'react';
-
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useNotifications } from './useNotifications';
 import { useAudioControl } from './useAudioControl';
 import { useGameStateLoader } from './useGameStateLoader';
 import { usePlayerActions } from './usePlayerActions';
 import { useGameLoops } from './useGameLoops';
-
+import { assetLoader } from '../utils/assetLoader';
 
 export function useGameState() {
     const { toasts, showToast, removeToast } = useNotifications();
-
     const { displayedGameState, setDisplayedGameState, gameStateRef } = useGameStateLoader(showToast);
+    
+    const [assetsLoaded, setAssetsLoaded] = useState(false);
+    const [loadProgress, setLoadProgress] = useState(0);
 
     const { handleInitialGesture } = useAudioControl(
         displayedGameState.settings.sfxVolume,
@@ -22,58 +23,78 @@ export function useGameState() {
     const [completedOrderInfo, setCompletedOrderInfo] = useState(null);
     const [isSpecializationModalOpen, setIsSpecializationModalOpen] = useState(false);
     const [isWorldMapModalOpen, setIsWorldMapModalOpen] = useState(false);
-    const [isAchievementRewardModalOpen, setIsAchievementRewardModalOpen] = useState(false);
+    const [isAchievementModalOpen, setIsAchievementModalOpen] = useState(false);
     const [achievementToDisplay, setAchievementToDisplay] = useState(null);
     const [isAvatarSelectionModalOpen, setIsAvatarSelectionModalOpen] = useState(false);
     const [isCreditsModalOpen, setIsCreditsModalOpen] = useState(false);
-    const [isShopReputationModalOpen, setIsShopReputationModalOpen] = useState(false); 
+    const [isShopReputationModalOpen, setIsShopReputationModalOpen] = useState(false);
+    const [isHirePersonnelModalOpen, setIsHirePersonnelModalOpen] = useState(false);
+    const [activeInfoModal, setActiveInfoModal] = useState(null);
 
     const workTimeoutRef = useRef(null);
 
-    const isAchievementModalOpenRef = useRef(false);
-    useEffect(() => {
-        isAchievementModalOpenRef.current = isAchievementRewardModalOpen; // ИСПРАВЛЕНО: использование isAchievementRewardModalOpen
-    }, [isAchievementRewardModalOpen]); // ИСПРАВЛЕНО: использование isAchievementRewardModalOpen в зависимостях
-
-    const showAchievementRewardModal = useCallback((achievementDef) => {
-        if (!isAchievementModalOpenRef.current && achievementDef) {
-            setAchievementToDisplay(achievementDef);
-            setIsAchievementRewardModalOpen(true);
-        }
-    }, [setAchievementToDisplay, setIsAchievementRewardModalOpen]);
-
     const updateState = useCallback((updater) => {
-        const newState = updater(JSON.parse(JSON.stringify(gameStateRef.current)));
-        gameStateRef.current = newState;
-        setDisplayedGameState(newState);
+        setDisplayedGameState(prevState => {
+            if (!gameStateRef.current || typeof gameStateRef.current !== 'object') {
+                console.error("updateState: gameStateRef.current не является валидным объектом.");
+                return prevState;
+            }
+            const currentStateCopy = JSON.parse(JSON.stringify(gameStateRef.current));
+            const newState = updater(currentStateCopy);
+            
+            if (newState.activeInfoModal !== (gameStateRef.current.activeInfoModal || null)) {
+                 setActiveInfoModal(newState.activeInfoModal);
+            }
+            
+            gameStateRef.current = newState;
+            return newState;
+        });
+    }, [setDisplayedGameState, gameStateRef, setActiveInfoModal]);
+
+    useEffect(() => {
+        const loadAssets = async () => {
+            const updateProgress = () => setLoadProgress(assetLoader.getLoadProgress());
+            const progressInterval = setInterval(updateProgress, 100);
+            await assetLoader.load();
+            clearInterval(progressInterval);
+            setLoadProgress(1);
+            setAssetsLoaded(true);
+        };
+        loadAssets();
     }, []);
 
-    const handlers = usePlayerActions(
+    const showAchievementRewardModal = useCallback((achievementDef) => {
+        if (achievementDef) {
+            setAchievementToDisplay(achievementDef);
+            setIsAchievementModalOpen(true);
+        }
+    }, []);
+
+    const handlerProps = useMemo(() => ({
         updateState, showToast, gameStateRef,
         setIsWorking, workTimeoutRef, setCompletedOrderInfo,
-        setIsSpecializationModalOpen,
-        setIsWorldMapModalOpen,
-        setIsAchievementRewardModalOpen,
-        setAchievementToDisplay,
-        setIsAvatarSelectionModalOpen,
-        setIsCreditsModalOpen,
-        isAchievementModalOpenRef,
+        setIsSpecializationModalOpen, setIsWorldMapModalOpen,
+        setIsAchievementModalOpen, setAchievementToDisplay,
+        setIsAvatarSelectionModalOpen, setIsCreditsModalOpen,
         showAchievementRewardModal,
         setIsShopReputationModalOpen,
-        isShopReputationModalOpen 
-    );
+        setIsHirePersonnelModalOpen,
+        setActiveInfoModal,
+    }), [updateState, showToast, gameStateRef, showAchievementRewardModal]);
 
-    useGameLoops(
-        updateState,
-        handlers,
-        showToast,
-        showAchievementRewardModal
-    );
+    const handlers = usePlayerActions(handlerProps);
+
+    useGameLoops(updateState, handlers, showToast, showAchievementRewardModal, assetsLoaded);
 
     useEffect(() => {
-        const stateToSave = { ...gameStateRef.current };
-        stateToSave.orderQueue = [];
-        stateToSave.activeOrder = null;
+        if (!assetsLoaded || !displayedGameState) return;
+        
+        const stateToSave = { ...displayedGameState };
+        
+        // --- КЛЮЧЕВОЙ БЛОК: ОЧИСТКА ВРЕМЕННЫХ ДАННЫХ ПЕРЕД СОХРАНЕНИЕМ ---
+        // Эти состояния не должны сохраняться между сессиями
+        stateToSave.orderQueue = []; // Очищаем очередь заказов
+        stateToSave.activeOrder = null; // Очищаем активный заказ
         stateToSave.activeFreeCraft = null;
         stateToSave.currentEpicOrder = null;
         stateToSave.smeltingProcess = null;
@@ -82,37 +103,25 @@ export function useGameState() {
         stateToSave.activeGraving = null;
         stateToSave.activeInfoModal = null;
         stateToSave.activeSale = null;
-
-        if (stateToSave.activeOrder && stateToSave.activeOrder.minigameState) {
-            stateToSave.activeOrder = { ...stateToSave.activeOrder, minigameState: null };
-        }
-        delete stateToSave.lastClickTime;
-        delete stateToSave.clickCount;
+        stateToSave.personnelOffers = [];
+        stateToSave.lastClickTime = 0;
+        // -------------------------------------------------------------------
 
         try {
-            localStorage.setItem('forgeAndArtifacts_v10', JSON.stringify(stateToSave));
-        }
-        catch (e) {
+            const stateString = JSON.stringify(stateToSave);
+            const encodedState = btoa(unescape(encodeURIComponent(stateString)));
+            localStorage.setItem('forgeAndArtifacts_v10', encodedState);
+        } catch (e) {
             console.error("Failed to save state to localStorage:", e);
-            showToast("Ошибка сохранения игры!", "error");
         }
-    }, [displayedGameState, showToast]);
+    }, [displayedGameState, assetsLoaded]);
 
     return {
-        displayedGameState,
-        isWorking,
-        toasts,
-        completedOrderInfo,
-        isSpecializationModalOpen,
-        isWorldMapModalOpen,
-        isAchievementRewardModalOpen,
-        achievementToDisplay,
-        isAvatarSelectionModalOpen,
-        isCreditsModalOpen,
-        isShopReputationModalOpen,
-        handlers,
-        removeToast,
-        activeInfoModal: displayedGameState.activeInfoModal,
-        handleInitialGesture,
+        displayedGameState, isWorking, toasts, completedOrderInfo,
+        isSpecializationModalOpen, isWorldMapModalOpen, isAchievementModalOpen,
+        achievementToDisplay, isAvatarSelectionModalOpen, isCreditsModalOpen,
+        isShopReputationModalOpen, isHirePersonnelModalOpen,
+        handlers, removeToast, activeInfoModal, handleInitialGesture,
+        assetsLoaded, loadProgress, updateState,
     };
 }

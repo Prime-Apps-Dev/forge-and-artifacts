@@ -1,85 +1,264 @@
 // src/logic/gameLogic.js
-import { definitions } from "../data/definitions";
+import { definitions } from "../data/definitions/index.js";
 import { audioController } from '../utils/audioController';
-import { handleCompleteMission, handleOrderCompletion, handleSaleCompletion } from './gameCompletions';
-import { formatNumber } from '../utils/formatters';
+import { handleCompleteMission, handleSaleCompletion } from './gameCompletions';
+import { formatNumber } from '../utils/formatters.jsx';
 import { recalculateAllModifiers } from '../utils/gameStateUtils';
 import { gameConfig as GAME_CONFIG } from '../constants/gameConfig.js';
+import { visualEffects } from "../utils/visualEffects";
 
 let achievementCheckTimer = 0;
+let orderGenerationTimeout = null;
 
-export function startGameLoop(updateState, handlers, showToast, showAchievementRewardModal) { // Удалена showShopReputationModal из параметров, так как она не используется здесь
+export function generatePersonnelOffer(gameState) {
+    const availablePersonnelTypes = Object.values(definitions.personnel).filter(pDef => {
+        if (pDef.requiredSkill && !gameState.purchasedSkills[pDef.requiredSkill]) {
+            return false;
+        }
+        if (pDef.maxQuantity && gameState.hiredPersonnel.filter(p => p.personnelId === pDef.id).length >= pDef.maxQuantity) {
+            return false;
+        }
+        if (pDef.maxQuantity === 1 && gameState.hiredPersonnel.some(p => p.personnelId === pDef.id)) {
+            return false;
+        }
+        return true;
+    });
+
+    if (availablePersonnelTypes.length === 0) {
+        return null;
+    }
+
+    const randomPersonnelDef = availablePersonnelTypes[Math.floor(Math.random() * availablePersonnelTypes.length)];
+    
+    const baseLevel = randomPersonnelDef.minLevel || 1;
+    const maxLevelForOffer = Math.min(GAME_CONFIG.PERSONNEL_MAX_LEVEL, Math.floor(gameState.shopLevel / (GAME_CONFIG.PERSONNEL_LEVEL_OFFER_SHOP_LEVEL_DIVIDER || 5)) + baseLevel);
+    
+    const actualBaseLevel = Math.min(baseLevel, maxLevelForOffer);
+    const level = Math.floor(Math.random() * (maxLevelForOffer - actualBaseLevel + 1)) + actualBaseLevel;
+
+    let hireCost = { ...randomPersonnelDef.baseHireCost };
+    let wage = { ...randomPersonnelDef.baseWage };
+
+    for (let i = 1; i < level; i++) {
+        for (const res in hireCost) {
+            hireCost[res] = Math.floor(hireCost[res] * (randomPersonnelDef.costIncrease || GAME_CONFIG.PERSONNEL_HIRE_COST_MULTIPLIER_PER_LEVEL));
+        }
+        for (const res in wage) {
+            wage[res] = Math.floor(wage[res] * (randomPersonnelDef.wageIncrease || GAME_CONFIG.PERSONNEL_WAGE_MULTIPLIER_PER_LEVEL));
+        }
+    }
+
+    const shopLevelModifier = 1 - (gameState.shopLevel * GAME_CONFIG.PERSONNEL_OFFER_COST_REDUCTION_PER_SHOP_LEVEL);
+    for (const res in hireCost) {
+        hireCost[res] = Math.max(1, Math.floor(hireCost[res] * shopLevelModifier));
+    }
+    for (const res in wage) {
+        wage[res] = Math.max(1, Math.floor(wage[res] * shopLevelModifier));
+    }
+
+    return {
+        uniqueId: `personnel_offer_${Date.now()}_${Math.random()}`,
+        personnelId: randomPersonnelDef.id,
+        level: level,
+        mood: Math.floor(Math.random() * (100 - 70 + 1)) + 70,
+        hireCost: hireCost,
+        wage: wage,
+        xp: 0,
+        xpToNextLevel: definitions.personnel[randomPersonnelDef.id].baseXPToNextLevel,
+    };
+}
+
+export function startGameLoop(updateState, handlers, showToast, showAchievementRewardModal) {
+    let cantAffordToastCooldown = 0;
+
     return setInterval(() => {
+        const now = Date.now();
+        if (cantAffordToastCooldown > 0) {
+            cantAffordToastCooldown -= 100;
+        }
+
         updateState(state => {
             const deltaTime = 0.1;
-            const modifier = state.passiveIncomeModifier;
-            const currentRegion = definitions.regions[state.currentRegion];
 
-            if (state.passiveGeneration.ironOre > 0) {
-                const regionMod = currentRegion?.modifiers?.miningSpeed?.ironOre || 1.0;
-                state.ironOre += state.passiveGeneration.ironOre * modifier * regionMod * deltaTime;
-            }
-            if (state.purchasedSkills.findCopper && state.passiveGeneration.copperOre > 0) {
-                const regionMod = currentRegion?.modifiers?.miningSpeed?.copperOre || 1.0;
-                state.copperOre += state.passiveGeneration.copperOre * modifier * regionMod * deltaTime;
-            }
-            if (state.passiveGeneration.mithrilOre > 0) {
-                const regionMod = currentRegion?.modifiers?.miningSpeed?.mithrilOre || 1.0;
-                state.mithrilOre += state.passiveGeneration.mithrilOre * modifier * regionMod * deltaTime;
-            }
-            if (state.passiveGeneration.adamantiteOre > 0) {
-                const regionMod = currentRegion?.modifiers?.miningSpeed?.adamantiteOre || 1.0;
-                state.adamantiteOre += state.passiveGeneration.adamantiteOre * modifier * regionMod * deltaTime;
-            }
-            if (state.passiveGeneration.sparks > 0) {
-                state.sparks += state.passiveGeneration.sparks * modifier * deltaTime;
-            }
-            if (state.passiveGeneration.matter > 0) {
-                state.matter += state.passiveGeneration.matter * modifier * deltaTime;
-            }
+            if (!state.smeltingProcess && state.smeltingQueue.length > 0) {
+                const recipeId = state.smeltingQueue[0];
+                const recipe = definitions.recipes[recipeId];
+                
+                if (recipe) {
+                    let canAfford = true;
+                    let finalCost = {};
 
-            if (state.smeltingProcess) {
-                const recipe = definitions.recipes[state.smeltingProcess.recipeId];
-                state.smeltingProcess.progress += deltaTime * 10 * state.smeltingSpeedModifier;
-                if (state.smeltingProcess.progress >= recipe.requiredProgress) {
-                    const outputResource = Object.keys(recipe.output)[0];
-                    const outputAmount = recipe.output[outputResource];
-                    state[outputResource] += outputAmount;
-                    state.smeltingProcess = null;
-                    state.totalIngotsSmelted = (state.totalIngotsSmelted || 0) + outputAmount;
-                    showToast(`Готово: +${outputAmount} ${recipe.name}`, 'success');
+                    Object.entries(recipe.input).forEach(([resourceKey, baseCost]) => {
+                        const currentAmount = state[resourceKey] || state.specialItems[resourceKey] || 0;
+                        if (currentAmount < baseCost) {
+                            canAfford = false;
+                        }
+                    });
+
+                    if (canAfford) {
+                        Object.entries(recipe.input).forEach(([resourceKey, cost]) => {
+                             if(state.hasOwnProperty(resourceKey)) {
+                                state[resourceKey] -= cost;
+                            } else if (state.specialItems.hasOwnProperty(resourceKey)) {
+                                state.specialItems[resourceKey] -= cost;
+                            }
+                        });
+                        
+                        state.smeltingProcess = { recipeId, progress: 0 };
+                        state.smeltingQueue.shift(); 
+                        showToast(`Плавка из очереди: ${recipe.name} началась!`, 'info');
+                    } else {
+                        if (cantAffordToastCooldown <= 0) {
+                            showToast(`Недостаточно ресурсов для '${recipe.name}' в очереди плавки!`, 'error');
+                            cantAffordToastCooldown = 5000;
+                        }
+                    }
+                } else {
+                    state.smeltingQueue.shift();
+                    console.error("Invalid recipeId in smelting queue:", recipeId);
                 }
             }
+            
+            if (state.smeltingProcess) {
+                const recipe = definitions.recipes[state.smeltingProcess.recipeId];
+                if (!recipe || !recipe.requiredProgress) {
+                    console.error("Smelting error: Invalid recipe", state.smeltingProcess.recipeId);
+                    state.smeltingProcess = null;
+                } else {
+                    state.smeltingProcess.progress += 0.1 * 10 * (state.smeltingSpeedModifier || 1.0);
 
-            const activeProjectPlayer = state.activeOrder || state.activeFreeCraft || state.currentEpicOrder || state.activeReforge || state.activeInlay || state.activeGraving;
+                    if (state.smeltingProcess.progress >= recipe.requiredProgress) {
+                        const outputResource = Object.keys(recipe.output)[0];
+                        const outputAmount = recipe.output[outputResource];
+                        state[outputResource] = (state[outputResource] || 0) + outputAmount;
+                        state.totalIngotsSmelted = (state.totalIngotsSmelted || 0) + outputAmount;
+                        showToast(`Готово: +${outputAmount} ${recipe.name}`, 'success');
+                        state.smeltingProcess = null;
+                    }
+                }
+            }
+            
+            if (state.hiredPersonnel.length > 0) {
+                state.hiredPersonnel = state.hiredPersonnel.filter(p => {
+                    if (p.isResting) {
+                        p.mood = Math.min(100, p.mood + GAME_CONFIG.PERSONNEL_MOOD_RECOVERY_RATE * deltaTime);
+                        if (now > p.restEndTime) {
+                            p.isResting = false;
+                            p.mood = 100;
+                            showToast(`${p.name} отдохнул(а) и готов(а) к работе!`, 'info');
+                            if (p.previousAssignment) {
+                                state.personnelAssignment[p.uniqueId] = p.previousAssignment;
+                                p.previousAssignment = null;
+                            }
+                        }
+                        return true;
+                    }
 
-            if (activeProjectPlayer?.minigameState?.active) {
-                const component = definitions.items[activeProjectPlayer.itemKey]?.components?.find(c => c.id === activeProjectPlayer.activeComponentId);
-                const speed = component?.minigame?.barSpeed || 1.0;
-                let newPos = activeProjectPlayer.minigameState.position + (activeProjectPlayer.minigameState.direction * speed);
-                if (newPos >= 100) { newPos = 100; activeProjectPlayer.minigameState.direction = -1; }
-                else if (newPos <= 0) { newPos = 0; activeProjectPlayer.minigameState.direction = 1; }
-                activeProjectPlayer.minigameState.position = newPos;
+                    p.mood = Math.max(0, p.mood - GAME_CONFIG.PERSONNEL_MOOD_DECAY_RATE * deltaTime);
+
+                    if (p.mood < 10 && Math.random() < (GAME_CONFIG.PERSONNEL_RESIGN_CHANCE_LOW_MOOD * deltaTime)) {
+                        const pDef = definitions.personnel[p.personnelId];
+                        showToast(`${pDef.name} (${p.name}) уволился из-за ужасных условий труда!`, 'error');
+                        delete state.personnelAssignment[p.uniqueId];
+                        state.personnelSlots.used -= 1;
+                        state.personnelRestCooldowns[p.uniqueId] = now + GAME_CONFIG.PERSONNEL_SLOT_COOLDOWN_SECONDS * 1000;
+                        recalculateAllModifiers(state);
+                        return false;
+                    }
+                    
+                    const pDef = definitions.personnel[p.personnelId];
+                    const assignment = state.personnelAssignment[p.uniqueId];
+                    if (!pDef || !assignment) return true;
+                    const moodEfficiency = p.mood / 100;
+                    const baseAbility = pDef.baseAbilities;
+                    const perLevelAbility = pDef.abilitiesPerLevel;
+                    let xpGained = 0;
+                    switch (pDef.role) {
+                        case 'miner':
+                            const oreType = assignment.assignment;
+                            if (oreType) {
+                                const miningSpeed = (baseAbility.miningSpeed + (p.level - 1) * perLevelAbility.miningSpeed) * moodEfficiency;
+                                const amountGained = miningSpeed * deltaTime;
+                                state[oreType] = (state[oreType] || 0) + amountGained;
+                                xpGained = amountGained * GAME_CONFIG.PERSONNEL_XP_PER_RESOURCE_TICK;
+                            }
+                            break;
+                        case 'smelter':
+                            if (state.smeltingProcess) {
+                                const smeltingSpeed = (baseAbility.smeltingSpeed + (p.level - 1) * perLevelAbility.smeltingSpeed) * moodEfficiency;
+                                const progressAdded = smeltingSpeed * deltaTime;
+                                state.smeltingProcess.progress += progressAdded;
+                                xpGained = progressAdded * GAME_CONFIG.PERSONNEL_XP_PER_SMELT_PROGRESS;
+                            }
+                            break;
+                        case 'trader':
+                            const shelfIndex = parseInt(assignment.assignment.split('_')[1]);
+                            if (!isNaN(shelfIndex)) {
+                                const shelf = state.shopShelves[shelfIndex];
+                                if (shelf && shelf.customer) {
+                                    const salesSpeed = (baseAbility.salesSpeedModifier + (p.level - 1) * perLevelAbility.salesSpeedModifier) * moodEfficiency;
+                                    const progressAdded = GAME_CONFIG.PROGRESS_PER_SALE_CLICK * salesSpeed * deltaTime;
+                                    shelf.saleProgress += progressAdded;
+                                    xpGained = progressAdded * GAME_CONFIG.PERSONNEL_XP_PER_SALE_PROGRESS;
+                                    const item = state.inventory.find(i => i.uniqueId === shelf.itemId);
+                                    if (item) {
+                                        const itemDef = definitions.items[item.itemKey];
+                                        const baseValue = itemDef.components.reduce((sum, c) => sum + c.progress, 0);
+                                        const requiredProgress = (baseValue * item.quality) * GAME_CONFIG.SALE_REQUIRED_PROGRESS_MULTIPLIER;
+                                        if (shelf.saleProgress >= Math.max(50, requiredProgress)) {
+                                            handleSaleCompletion(state, shelfIndex, showToast);
+                                        }
+                                    }
+                                }
+                            }
+                            break;
+                    }
+                    if (xpGained > 0 && p.level < GAME_CONFIG.PERSONNEL_MAX_LEVEL) p.xp += xpGained;
+                    return true;
+                });
+            }
+            
+            const passiveIncomeModifier = state.passiveIncomeModifier || 1.0;
+            const currentRegion = definitions.regions[state.currentRegion];
+
+            if (state.passiveGeneration.ironOre > 0) state.ironOre += state.passiveGeneration.ironOre * passiveIncomeModifier * (currentRegion?.modifiers?.miningSpeed?.ironOre || 1.0) * deltaTime;
+            if (state.purchasedSkills.findCopper && state.passiveGeneration.copperOre > 0) state.copperOre += state.passiveGeneration.copperOre * passiveIncomeModifier * (currentRegion?.modifiers?.miningSpeed?.copperOre || 1.0) * deltaTime;
+            if (state.passiveGeneration.mithrilOre > 0) state.mithrilOre += state.passiveGeneration.mithrilOre * passiveIncomeModifier * (currentRegion?.modifiers?.miningSpeed?.mithrilOre || 1.0) * deltaTime;
+            if (state.passiveGeneration.adamantiteOre > 0) state.adamantiteOre += state.passiveGeneration.adamantiteOre * passiveIncomeModifier * (currentRegion?.modifiers?.miningSpeed?.adamantiteOre || 1.0) * deltaTime;
+            if (state.passiveGeneration.sparks > 0) state.sparks += state.passiveGeneration.sparks * passiveIncomeModifier * deltaTime;
+            if (state.passiveGeneration.matter > 0) state.matter += state.passiveGeneration.matter * passiveIncomeModifier * deltaTime;
+            
+            const timeSinceLastWagePayment = (now - state.lastWagePaymentTime) / (1000 * 60);
+            if (timeSinceLastWagePayment >= GAME_CONFIG.WAGE_PAYMENT_INTERVAL_MINUTES) {
+                let totalWageCostSparks = 0;
+                let totalWageCostMatter = 0;
+
+                state.hiredPersonnel.forEach(p => {
+                    const moodFactor = p.mood / 100;
+                    totalWageCostSparks += (p.wage.sparks || 0) * moodFactor * (1 - (state.personnelWageReduction || 0));
+                    totalWageCostMatter += (p.wage.matter || 0) * moodFactor * (1 - (state.personnelWageReduction || 0));
+                });
+
+                if (state.sparks >= totalWageCostSparks && state.matter >= totalWageCostMatter) {
+                    state.sparks -= totalWageCostSparks;
+                    state.matter -= totalWageCostMatter;
+                    showToast(`Выплачена зарплата персоналу: -${formatNumber(totalWageCostSparks)} искр, -${formatNumber(totalWageCostMatter)} материи.`, 'info');
+                    state.hiredPersonnel.forEach(p => p.mood = Math.min(100, p.mood + 5));
+                } else {
+                    showToast("Недостаточно средств для выплаты зарплаты! Эффективность персонала снижена.", "error");
+                    state.hiredPersonnel.forEach(p => p.mood = Math.max(0, p.mood - 10));
+                }
+                state.lastWagePaymentTime = now;
             }
 
             if (state.activeMissions && state.activeMissions.length > 0) {
-                const now = Date.now();
                 const completedMissionIds = [];
                 state.activeMissions.forEach(mission => {
-                    if (now >= mission.startTime + mission.duration * 1000) {
-                        completedMissionIds.push(mission.id);
-                    }
+                    if (now >= mission.startTime + mission.duration * 1000) completedMissionIds.push(mission.id);
                 });
-                completedMissionIds.forEach(missionId => {
-                    handleCompleteMission(state, missionId, showToast);
-                });
+                completedMissionIds.forEach(missionId => handleCompleteMission(state, missionId, showToast));
             }
-            if (state.investments.merchants) {
-                state.specialItems.gem = (state.specialItems.gem || 0) + (GAME_CONFIG.PASSIVE_GEM_GENERATION_PER_MINUTE / 60) * deltaTime;
-                if (Math.random() < (GAME_CONFIG.PASSIVE_ARTIFACT_COMPONENT_CHANCE_PER_MINUTE / 60) * deltaTime * 100) {
-                    state.specialItems.material_adamantFrame = (state.specialItems.material_adamantFrame || 0) + 1;
-                }
-            }
+
             state.shopShelves.forEach((shelf, index) => {
                 if (shelf.customer) {
                     shelf.saleTimer -= deltaTime;
@@ -89,89 +268,41 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                         showToast("Клиент ушел, не дождавшись обслуживания!", "error");
                     }
                 } else if (shelf.itemId) {
-                    const arrivalChancePerTick = 0.005 * state.playerShopSalesSpeedModifier;
-                    if (Math.random() < arrivalChancePerTick) {
-                        const client = definitions.clients[Math.floor(Math.random() * definitions.clients.length)];
-                        shelf.customer = client;
-                        shelf.saleTimer = 15 + Math.random() * 15;
+                    if (Math.random() < (0.005 * state.playerShopSalesSpeedModifier)) {
+                        shelf.customer = definitions.clients[Math.floor(Math.random() * definitions.clients.length)];
+                        shelf.saleTimer = (15 + Math.random() * 15) * state.timeLimitModifier;
                         showToast(`Новый клиент интересуется товаром на полке #${index + 1}!`, "info");
-                    };
+                    }
                 }
             });
-            const now = Date.now();
+
             const orderTTL = definitions.gameConfig.orderTTL;
             state.orderQueue = state.orderQueue.filter(order => {
-                if (!order.spawnTime) {
-                    order.spawnTime = now;
-                    order.timeToLive = orderTTL;
-                } else {
-                    order.timeToLive = Math.max(0, orderTTL - Math.floor((now - order.spawnTime) / 1000));
-                }
+                if (!order.spawnTime) order.spawnTime = now;
+                order.timeToLive = Math.max(0, orderTTL - Math.floor((now - order.spawnTime) / 1000));
                 if (order.timeToLive <= 0) {
-                    showToast(`Заказ от "${order.client.name}" на "${definitions.items[order.itemKey].name}" истек и исчез из очереди.`, 'error');
+                    showToast(`Заказ от "${order.client.name}" на "${definitions.items[order.itemKey].name}" истек.`, 'error');
                     return false;
                 }
                 return true;
             });
-
+            
             achievementCheckTimer += deltaTime;
             if (achievementCheckTimer >= 1) {
                 achievementCheckTimer = 0;
                 Object.values(definitions.achievements).forEach(achievementDef => {
-                    const achievementStatus = achievementDef.check(state, definitions);
-
-                    if (!achievementDef.levels) {
-                        // Логика для одноуровневых достижений
-                        if (achievementStatus.isComplete && !state.completedAchievements.includes(achievementDef.id)) {
-                            state.completedAchievements.push(achievementDef.id);
-                            const rewardId = achievementDef.id;
-                            if (!state.appliedAchievementRewards.includes(rewardId)) {
-                                achievementDef.apply(state); // Применяем эффект (теперь apply функция сама определяет, куда сохранять эффект)
-                                state.appliedAchievementRewards.push(rewardId); // Помечаем как примененное
-                                // showToast(`Достижение выполнено: "${achievementDef.title}"!`, 'levelup'); // Удален тост
-                                // audioController.play('levelup', 'G6', '2n'); // Удален звук
-                                showAchievementRewardModal(achievementDef); // Показываем модалку
-                                recalculateAllModifiers(state); // Пересчитываем модификаторы, так как могли измениться вечные бонусы
-                            }
-                        }
-                    } else {
-                        // Логика для многоуровневых достижений
-                        let currentLevelAchieved = 0;
-                        for (let i = 0; i < achievementDef.levels.length; i++) {
-                            if (achievementStatus.current >= achievementDef.levels[i].target) {
-                                currentLevelAchieved = i + 1;
-                            } else {
-                                break;
-                            }
-                        }
-
-                        if (currentLevelAchieved > 0) {
-                            for (let i = 0; i < currentLevelAchieved; i++) {
-                                const levelId = `${achievementDef.id}_level_${i + 1}`;
-                                const levelData = achievementDef.levels[i];
-
-                                if (!state.appliedAchievementRewards.includes(levelId)) {
-                                    achievementDef.apply(state, levelData.reward); // Применяем эффект уровня
-                                    state.appliedAchievementRewards.push(levelId); // Помечаем как примененное
-                                    // showToast(`Достижение выполнено: "${achievementDef.title}" (Ур. ${i + 1})!`, 'levelup'); // Удален тост
-                                    // audioController.play('levelup', 'G6', '2n'); // Удален звук
-                                    showAchievementRewardModal({ // Передаем объект для модалки
-                                        id: achievementDef.id,
-                                        title: `${achievementDef.title} (Ур. ${i + 1})`,
-                                        description: achievementDef.description,
-                                        effectName: levelData.effectName || achievementDef.effectName,
-                                        icon: achievementDef.icon,
-                                        isLevelAchievement: true,
-                                        level: i + 1
-                                    });
-                                    recalculateAllModifiers(state); // Пересчитываем модификаторы
-                                }
-                            }
+                    const status = achievementDef.check(state, definitions);
+                    if (status.isComplete && !state.completedAchievements.includes(achievementDef.id)) {
+                        state.completedAchievements.push(achievementDef.id);
+                        if (!state.appliedAchievementRewards.includes(achievementDef.id)) {
+                            if (achievementDef.apply) achievementDef.apply(state);
+                            state.appliedAchievementRewards.push(achievementDef.id);
+                            showAchievementRewardModal(achievementDef);
+                            recalculateAllModifiers(state);
                         }
                     }
                 });
             }
-
             return state;
         });
     }, 100);
@@ -180,28 +311,92 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
 export function startMarketLoop(updateState, showToast) {
     return setInterval(() => {
         updateState(state => {
-            if (state.market.nextEventIn <= 0) {
-                const eventIds = Object.keys(definitions.worldEvents);
-                const randomEventId = eventIds[Math.floor(Math.random() * eventIds.length)];
-                const newEvent = definitions.worldEvents[randomEventId];
-                state.market.worldEvent = {
-                    message: newEvent.message,
-                    priceModifiers: newEvent.effects || {},
-                    type: newEvent.type || 'market',
-                    conflictingFactions: newEvent.conflictingFactions || []
-                };
-                state.market.nextEventIn = Math.floor(Math.random() * 240) + 60 / (state.marketTradeSpeedModifier || 1);
-                showToast(`Новости Королевства: ${newEvent.message}`, 'info');
-            } else {
-                state.market.nextEventIn -= 1;
+            const now = Date.now();
+            const isEventActive = state.market.worldEvent && state.market.worldEvent.endTime > now;
+            if (!isEventActive) {
+                if (state.market.worldEvent.id !== 'stable') {
+                    state.market.worldEvent = { id: 'stable', name: 'Рынок стабилен', message: "Рынок стабилен", effects: {}, endTime: 0 };
+                    recalculateAllModifiers(state);
+                }
+                if (state.market.nextEventIn <= 0) {
+                    const eventPool = definitions.worldEvents.filter(event => event.type !== 'faction_conflict' || event.conflictingFactions.some(fid => (state.reputation[fid] || 0) > 0));
+                    if (eventPool.length > 0) {
+                        const newEvent = eventPool[Math.floor(Math.random() * eventPool.length)];
+                        state.market.worldEvent = { ...newEvent, endTime: now + newEvent.duration * 1000 };
+                        state.market.nextEventIn = (Math.floor(Math.random() * 180) + 60) / (state.marketTradeSpeedModifier || 1);
+                        showToast(`Новости Королевства: ${newEvent.message}`, 'info');
+                        recalculateAllModifiers(state);
+                    }
+                } else {
+                    state.market.nextEventIn -= 1;
+                }
+            }
+            if ((now - state.lastPersonnelOfferRollTime) / (1000 * 60) >= GAME_CONFIG.PERSONNEL_OFFER_REFRESH_INTERVAL_MINUTES) {
+                state.personnelOffers = [];
+                for (let i = 0; i < 3; i++) state.personnelOffers.push(generatePersonnelOffer(state));
+                state.lastPersonnelOfferRollTime = now;
+                state.personnelRollCount = 0;
+                showToast("Новые предложения о найме доступны!", "info");
             }
             return state;
         });
     }, 1000);
 }
 
-export function startOrderGenerationLoop(generateOrderHandler) {
-    return setInterval(() => {
-        generateOrderHandler();
-    }, 20000);
+export function generateNewOrder(state, showToast) {
+    if (state.orderQueue.length >= GAME_CONFIG.ORDER_QUEUE_MAX_LENGTH) return state;
+    const availableClients = definitions.clients.filter(c => state.masteryLevel >= c.unlockLevel && (!c.unlockSkill || state.purchasedSkills[c.unlockSkill]));
+    if (availableClients.length === 0) return state;
+    const client = availableClients[Math.floor(Math.random() * availableClients.length)];
+    const availableItems = Object.entries(definitions.items).filter(([id, def]) => !def.isQuestRecipe && (!def.requiredSkill || state.purchasedSkills[def.requiredSkill]) && (!def.firstPlaythroughLocked || !state.isFirstPlaythrough));
+    if (availableItems.length === 0) return state;
+    const [itemId, itemDef] = availableItems[Math.floor(Math.random() * availableItems.length)];
+    const baseSparks = itemDef.components.reduce((sum, c) => sum + c.progress, 0) * 10;
+    const baseMatter = itemDef.components.length * 5;
+    let rewards = { sparks: Math.floor(baseSparks * client.demands.reward * state.sparksModifier), matter: Math.floor(baseMatter * client.demands.reward * state.matterModifier) };
+    let factionId = null;
+    if (state.purchasedSkills.guildContracts) {
+        const potentialFactions = Object.keys(definitions.factions).filter(fid => (state.reputation[fid] || 0) > 0);
+        if (potentialFactions.length > 0 && Math.random() < (GAME_CONFIG.FACTION_ORDER_SKILL_BONUS + (state.reputation[potentialFactions[0]] / GAME_CONFIG.FACTION_ORDER_REPUTATION_DIVIDER))) {
+            factionId = potentialFactions[Math.floor(Math.random() * potentialFactions.length)];
+            rewards.sparks = Math.floor(rewards.sparks * 1.2);
+            rewards.matter = Math.floor(rewards.matter * 1.2);
+        }
+    }
+    state.orderQueue.push({
+        id: `order_${Date.now()}_${Math.random()}`,
+        itemKey: itemId,
+        client: { id: client.id, name: client.name, faceImg: client.faceImg, demands: client.demands },
+        rewards,
+        componentProgress: {},
+        activeComponentId: null,
+        qualityPoints: 0,
+        qualityHits: 0,
+        spawnTime: Date.now(),
+        timeToLive: GAME_CONFIG.orderTTL,
+        isRisky: client.isRisky && (Math.random() < GAME_CONFIG.RISKY_ORDER_BASE_CHANCE || (state.isShopLocked && Math.random() < GAME_CONFIG.RISKY_ORDER_LOCKED_SHOP_CHANCE)),
+        isCollector: client.isCollector || false,
+        factionId,
+    });
+    showToast(`Новый заказ от "${client.name}" на "${itemDef.name}"!`, "info");
+    audioController.play('cash', 'C4', '16n');
+    return state;
+}
+
+export function startOrderGenerationLoop(updateState, generateNewOrderHandler, checkForNewQuestsHandler, showToast) {
+    if (orderGenerationTimeout) clearTimeout(orderGenerationTimeout);
+    let isRunning = false;
+    const loop = () => {
+        if(isRunning) return;
+        isRunning = true;
+        updateState(state => {
+            const newState = generateNewOrderHandler(state, showToast);
+            checkForNewQuestsHandler(newState, showToast);
+            return newState;
+        });
+        isRunning = false;
+        const randomDelay = 20000 + Math.random() * 15000;
+        orderGenerationTimeout = setTimeout(loop, randomDelay);
+    };
+    loop();
 }

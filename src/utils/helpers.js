@@ -1,5 +1,5 @@
 // src/utils/helpers.js
-import { definitions } from '../data/definitions';
+import { definitions } from '../data/definitions/index.js';
 import { UI_CONSTANTS } from '../constants/ui';
 
 export const getReputationLevel = (reputation) => {

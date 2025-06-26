@@ -1,10 +1,11 @@
+// src/components/views/ArtifactsView.jsx
 import React from 'react';
-import { definitions } from '../../data/definitions';
-import SvgIcon from '../ui/display/SvgIcon'; // Обновленный путь
-import ArtifactCard from '../ui/cards/ArtifactCard'; // Обновленный путь
-import Tooltip from '../ui/display/Tooltip'; // Обновленный путь
+import ArtifactCard from '../ui/cards/ArtifactCard';
+import { useGame } from '../../context/GameContext.jsx';
 
-const ArtifactsView = ({ gameState, handlers }) => {
+const ArtifactsView = () => {
+    const { displayedGameState: gameState } = useGame();
+
     return (
          <div>
             <h2 className="font-cinzel text-2xl accent-glow-color text-shadow-glow flex items-center gap-2 border-b border-gray-700 pb-4 mb-6">
@@ -17,8 +18,6 @@ const ArtifactsView = ({ gameState, handlers }) => {
                         key={id}
                         id={id}
                         artifact={artifact}
-                        onCraftArtifact={handlers.handleCraftArtifact}
-                        isFirstPlaythrough={gameState.isFirstPlaythrough}
                     />
                 ))}
              </div>

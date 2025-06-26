@@ -1,11 +1,14 @@
 // src/components/modals/WorldMapModal.jsx
-
 import React from 'react';
-import { definitions } from '../../data/definitions';
+import { definitions } from '../../data/definitions/index.js';
 import Tooltip from '../ui/display/Tooltip';
-import { formatNumber } from '../../utils/formatters';
+import { formatNumber } from '../../utils/formatters.jsx';
+import { useGame } from '../../context/GameContext.jsx';
+import Button from '../ui/buttons/Button.jsx';
 
-const WorldMapModal = ({ isOpen, onClose, gameState, onSelectRegion }) => {
+const WorldMapModal = ({ isOpen, onClose }) => {
+    const { displayedGameState: gameState, handlers } = useGame();
+
     if (!isOpen) return null;
 
     const checkRegionUnlockConditions = (region) => {
@@ -65,7 +68,7 @@ const WorldMapModal = ({ isOpen, onClose, gameState, onSelectRegion }) => {
                                     `}
                                     onClick={() => {
                                         if (unlocked && !isCurrentRegion) {
-                                            onSelectRegion(region.id);
+                                            handlers.handleSelectRegion(region.id);
                                         }
                                     }}
                                 >
@@ -89,34 +92,22 @@ const WorldMapModal = ({ isOpen, onClose, gameState, onSelectRegion }) => {
                                         ))}
                                     </div>
 
-                                    {isCurrentRegion && (
-                                        <p className="text-yellow-300 font-bold mt-auto">Текущий регион</p>
-                                    )}
-                                    {hasVisitedBefore && !isCurrentRegion && (
-                                        <p className="text-blue-300 font-bold mt-auto">Ранее посещен</p>
-                                    )}
-                                    {!unlocked && (
-                                        <p className="text-red-400 font-bold mt-auto">Заблокировано</p>
-                                    )}
+                                    {isCurrentRegion && <p className="text-yellow-300 font-bold mt-auto">Текущий регион</p>}
+                                    {hasVisitedBefore && !isCurrentRegion && <p className="text-blue-300 font-bold mt-auto">Ранее посещен</p>}
+                                    {!unlocked && <p className="text-red-400 font-bold mt-auto">Заблокировано</p>}
                                     {unlocked && !isCurrentRegion && !hasVisitedBefore && (
-                                        <button
-                                            onClick={() => onSelectRegion(region.id)}
-                                            className="interactive-element mt-auto w-full bg-orange-600 text-black font-bold py-2 px-4 rounded-lg hover:bg-orange-500"
-                                        >
+                                        <Button onClick={() => handlers.handleSelectRegion(region.id)} className="mt-auto">
                                             Выбрать этот регион
-                                        </button>
+                                        </Button>
                                     )}
                                 </div>
                             </Tooltip>
                         );
                     })}
                 </div>
-                <button
-                    onClick={onClose}
-                    className="interactive-element mt-6 w-full bg-gray-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-500"
-                >
+                <Button onClick={onClose} variant="secondary" className="mt-6">
                     Закрыть
-                </button>
+                </Button>
             </div>
         </div>
     );

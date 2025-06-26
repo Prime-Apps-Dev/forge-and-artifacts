@@ -1,17 +1,23 @@
 // src/components/panels/AchievementsPanel.jsx
-import React from 'react';
-import { definitions } from '../../data/definitions';
+import React, { useMemo } from 'react';
+import { definitions } from '../../data/definitions/index.js';
 import AchievementCard from '../ui/cards/AchievementCard';
+import { useGame } from '../../context/GameContext.jsx';
 
-const AchievementsPanel = ({ gameState }) => {
-    const groupedAchievements = Object.values(definitions.achievements).reduce((acc, ach) => {
-        const category = ach.category || 'Прочее';
-        if (!acc[category]) {
-            acc[category] = [];
-        }
-        acc[category].push(ach);
-        return acc;
-    }, {});
+const AchievementsPanel = () => {
+    const { displayedGameState: gameState } = useGame();
+
+    // Оптимизация: группировка достижений выполняется только один раз
+    const groupedAchievements = useMemo(() => {
+        return Object.values(definitions.achievements).reduce((acc, ach) => {
+            const category = ach.category || 'Прочее';
+            if (!acc[category]) {
+                acc[category] = [];
+            }
+            acc[category].push(ach);
+            return acc;
+        }, {});
+    }, []); // Зависимостей нет, т.к. definitions статичны
 
     return (
         <div className="panel-section">
