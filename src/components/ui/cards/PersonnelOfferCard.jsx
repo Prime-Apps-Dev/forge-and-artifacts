@@ -5,6 +5,8 @@ import { definitions } from '../../../data/definitions/index.js';
 import { formatCostsJsx } from '../../../utils/formatters.jsx';
 import { useGame } from '../../../context/GameContext.jsx';
 import Button from '../buttons/Button.jsx';
+import ImageWithFallback from '../display/ImageWithFallback.jsx'; // Импортируем новый компонент
+import { UI_CONSTANTS } from '../../../constants/ui.js'; // Импортируем константы для заглушки
 
 const PersonnelOfferCard = memo(({ offer, isHiringDisabled }) => {
     const { displayedGameState: gameState, handlers } = useGame();
@@ -47,7 +49,12 @@ const PersonnelOfferCard = memo(({ offer, isHiringDisabled }) => {
 
     return (
         <div className={`bg-black/30 p-4 rounded-lg border-2 flex flex-col text-center ${isDisabled ? 'border-gray-700 opacity-60' : 'border-gray-600 hover:border-orange-500'}`}>
-            <img src={personnelDef.faceImg} alt={personnelDef.name} className="mx-auto mb-2 w-20 h-20 object-contain rounded-full border border-gray-700" />
+            <ImageWithFallback
+                src={personnelDef.faceImg}
+                fallbackSrc={UI_CONSTANTS.DEFAULT_AVATAR_SRC}
+                alt={personnelDef.name}
+                className="mx-auto mb-2 w-20 h-20 object-contain rounded-full border border-gray-700"
+            />
             <h3 className="font-cinzel text-lg font-bold text-white">{personnelDef.name}</h3>
             <p className="text-sm text-gray-400 my-1 grow">{personnelDef.description}</p>
             

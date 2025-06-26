@@ -2,13 +2,12 @@
 import React, { memo } from 'react';
 import { formatNumber } from '../../../utils/formatters.jsx';
 import Tooltip from '../display/Tooltip';
+import ImageWithFallback from '../display/ImageWithFallback.jsx'; // Импортируем новый компонент
+import { UI_CONSTANTS } from '../../../constants/ui.js'; // Импортируем константы для заглушки
 
 const AchievementCard = memo(({ achievement, status }) => {
     const progressPercentage = status.target > 0 ? (status.current / status.target) * 100 : 0;
     const isComplete = status.isComplete;
-
-    const imgSrc = achievement.icon;
-    const defaultImgSrc = 'https://placehold.co/128x128/333/FFF?text=ACH';
 
     return (
         <Tooltip text={achievement.description}>
@@ -28,8 +27,9 @@ const AchievementCard = memo(({ achievement, status }) => {
                 bg-opacity-80
             `}>
                 <div className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-md flex-shrink-0">
-                    <img
-                        src={imgSrc || defaultImgSrc}
+                    <ImageWithFallback
+                        src={achievement.icon}
+                        fallbackSrc={UI_CONSTANTS.PLACEHOLDER_ACHIEVEMENT_SRC}
                         alt={achievement.title}
                         className={`
                             object-cover w-full h-full img-rounded-corners

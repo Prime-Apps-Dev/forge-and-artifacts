@@ -1,13 +1,16 @@
 // src/components/ui/cards/HiredPersonnelCard.jsx
+// src/components/ui/cards/HiredPersonnelCard.jsx
 import React, { memo, useMemo, useState } from 'react';
 import { definitions } from '../../../data/definitions/index.js';
 import { formatCostsJsx, formatNumber } from '../../../utils/formatters.jsx';
 import { gameConfig as GAME_CONFIG } from '../../../constants/gameConfig.js';
 import { useGame } from '../../../context/GameContext.jsx';
 import Button from '../buttons/Button.jsx';
+import ImageWithFallback from '../display/ImageWithFallback.jsx';
+import { UI_CONSTANTS } from '../../../constants/ui.js';
 
-const AssignmentControls = memo(({ personnel }) => { /* ... (no changes) ... */ });
-const GiftControls = memo(({ personnel }) => { /* ... (no changes) ... */ });
+const AssignmentControls = memo(({ personnel }) => { /* ... (no changes from last version) ... */ });
+const GiftControls = memo(({ personnel }) => { /* ... (no changes from last version) ... */ });
 
 const HiredPersonnelCard = memo(({ personnel }) => {
     const { displayedGameState: gameState, handlers } = useGame();
@@ -42,7 +45,12 @@ const HiredPersonnelCard = memo(({ personnel }) => {
     return (
         <div className={`bg-black/30 p-4 rounded-lg border-2 flex flex-col ${isMaxLevel ? 'border-yellow-500 shadow-md shadow-yellow-500/10' : (isResting ? 'border-blue-700 opacity-70' : 'border-gray-700')}`}>
             <div className="flex items-center gap-4 mb-3">
-                <img src={personnelDef.faceImg} alt={personnelDef.name} className="w-16 h-16 object-contain rounded-full border border-gray-600" />
+                <ImageWithFallback 
+                    src={personnelDef.faceImg} 
+                    fallbackSrc={UI_CONSTANTS.DEFAULT_AVATAR_SRC}
+                    alt={personnelDef.name} 
+                    className="w-16 h-16 object-contain rounded-full border border-gray-600"
+                />
                 <div className="flex-grow">
                     <h3 className="font-cinzel text-lg font-bold text-white">{personnel.name || personnelDef.name}</h3>
                     <p className="text-sm text-gray-400">
