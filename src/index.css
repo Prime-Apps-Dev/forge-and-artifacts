@@ -7,6 +7,12 @@ body {
     background-color: #1c1c1e !important;
     overflow: hidden;
     background-attachment: fixed;
+    
+    /* ИСПРАВЛЕНИЕ: Добавляем правило для запрета выделения */
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select: none; /* IE 10+ */
+    user-select: none; /* Стандартный синтаксис */
+
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;

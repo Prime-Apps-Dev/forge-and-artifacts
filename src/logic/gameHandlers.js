@@ -26,25 +26,28 @@ export function createGameHandlers({
         workTimeoutRef.current = setTimeout(() => setIsWorking(false), 200);
     };
 
+    /**
+     * Применяет прогресс к активному проекту.
+     * @returns {boolean} - Возвращает true, если прогресс был успешно применен, иначе false.
+     */
     const applyProgress = (state, progressAmount, clickX, clickY) => {
         const activeProject = state.activeOrder || state.activeFreeCraft;
         if (!activeProject || !activeProject.activeComponentId) {
-            return;
+            return false;
         }
 
         const itemDef = definitions.items[activeProject.itemKey];
         const componentDef = itemDef.components.find(c => c.id === activeProject.activeComponentId);
         
         if (!componentDef || activeProject.completedComponents[componentDef.id]) {
-             return;
+             return false;
         }
 
-        // --- ИСПРАВЛЕНИЕ: Проверка верстака ---
-        if (componentDef.workstation !== state.activeWorkstationId) {
+        // ИСПРАВЛЕНИЕ: Проверка верстака по-прежнему происходит только ПОСЛЕ изучения навыка.
+        if (state.purchasedSkills.divisionOfLabor && componentDef.workstation !== state.activeWorkstationId) {
             showToast(`Неверный верстак! Требуется: ${definitions.workstations[componentDef.workstation].name}`, 'error');
-            return;
+            return false;
         }
-        // --- -------------------------------
 
         state.totalClicks = (state.totalClicks || 0) + 1;
         updateQuestProgress(state, 'totalClicks', {}, showToast);
@@ -76,7 +79,7 @@ export function createGameHandlers({
 
         if (activeProject.componentProgress[componentDef.id] === 0 && componentDef.cost) {
             if (!canAffordAndPay(state, componentDef.cost, showToast)) {
-                return;
+                return false; // Оплата не удалась, прогресс не засчитываем
             }
         }
         
@@ -111,6 +114,7 @@ export function createGameHandlers({
                 }
             }
         }
+        return true; // Прогресс успешно применен
     };
     
     const handleMinigameCompletion = (state, project, success, quality) => {
@@ -208,15 +212,13 @@ export function createGameHandlers({
                 return state;
             } 
             
-            // Здесь происходит вызов applyProgress, который уже содержит проверку
-            applyProgress(state, state.progressPerClick, clickX, clickY);
+            const wasProgressApplied = applyProgress(state, state.progressPerClick, clickX, clickY);
 
-            // Проверяем, не была ли работа заблокирована проверкой верстака
-            if (componentDef.workstation === state.activeWorkstationId) {
+            // ИСПРАВЛЕНИЕ: Эффекты воспроизводятся только если applyProgress вернул true.
+            if (wasProgressApplied) {
                  audioController.play('click', 'C3');
                  visualEffects.showParticleEffect(clickX, clickY, 'default');
             }
-
 
             return state;
         });
