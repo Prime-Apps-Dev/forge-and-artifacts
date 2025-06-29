@@ -7,11 +7,6 @@ body {
     background-color: #1c1c1e !important;
     overflow: hidden;
     background-attachment: fixed;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    /* Добавьте эти свойства для всего тела */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -53,14 +48,28 @@ body {
     animation: toast-fade-out 0.4s ease-out forwards !important;
 }
 
-/* ИЗМЕНЕНО: interactive-element теперь включает transform и transition для него */
+/* --- НОВЫЕ АНИМАЦИИ ДЛЯ МОБИЛЬНЫХ МОДАЛОК --- */
+@keyframes slide-in-up {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+.animate-slide-in-up {
+    animation: slide-in-up 0.3s ease-out forwards;
+}
+/* ------------------------------------------- */
+
+
 .interactive-element {
-    transition: box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, transform 0.1s ease; /* Добавлен transform в transition */
+    transition: box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, transform 0.1s ease;
 }
 
-/* ДОБАВЛЕНО: transform на сам interactive-element при активном состоянии */
 .interactive-element:not(:disabled):active {
-    transform: scale(0.95);
+    /* ИСПРАВЛЕНИЕ: Эта строка была причиной бага.
+      Трансформация элемента в момент клика может приводить к тому, 
+      что событие 'mouseup' происходит за его пределами, отменяя 'click'.
+      Мы удаляем это правило для повышения надёжности.
+    */
+    /* transform: scale(0.95); */
 }
 
 
@@ -103,102 +112,92 @@ body {
 .skills-svg { position: absolute; top: 0; left: 0; width: 100%; pointer-events: none; z-index: 0; }
 .skills-row > div { position: relative; z-index: 1; width: 192px; height: 224px; flex-shrink: 0; }
 
-@media (min-width: 1024px) {
+@media (min-width: 768px) {
     .left-panel { width: 60%; min-width: 60%; overflow-x: hidden; }
     .right-panel { width: 40%; min-width: 40%; overflow-x: hidden; }
 }
 
+/* --- ИЗМЕНЕННЫЕ СТИЛИ ДЛЯ УВЕДОМЛЕНИЙ --- */
 .toast-container {
     position: fixed !important;
-    bottom: calc(16px + 64px + 8px) !important;
-    right: 16px !important;
     z-index: 10000 !important;
     display: flex !important;
     flex-direction: column !important;
-    align-items: flex-end !important;
     gap: 8px !important;
-    max-width: 320px !important;
     pointer-events: none !important;
+    /* Mobile styles (top-right) */
+    top: 16px !important;
+    right: 16px !important;
+    align-items: flex-end !important;
+    max-width: 240px !important;
 }
+@media (min-width: 768px) {
+    .toast-container {
+        /* Desktop styles (bottom-right) */
+        top: auto !important;
+        bottom: calc(16px + 80px + 8px) !important; /* 80px - высота BottomBar */
+        right: 16px !important;
+        max-width: 320px !important;
+    }
+}
+/* --------------------------------------- */
+
 
 .img-rounded-corners {
     border-radius: 0.5rem;
 }
 
-/* Стили для выезжающей панели BottomBar */
-/* Удаляем padding-bottom с game-container */
 .game-container {
-    padding-bottom: 1rem; /* Минимальный отступ, чтобы не перекрывать кнопку-переключатель */
+    padding-bottom: 80px; /* Отступ для мобильного BottomBar */
+}
+@media (min-width: 768px) {
+    .game-container {
+        padding-bottom: 1rem;
+    }
 }
 
-/* Стили для кнопки-переключателя BottomBar */
-.bottom-bar-toggle-button {
-    bottom: 24px; /* Поднята на 16px от низа */
-    left: 50%;
-    transform: translateX(-50%); /* Всегда центрируем по X */
-    transition: bottom 0.3s ease-in-out;
-    z-index: 9998; /* Чуть ниже BottomBar, но выше всего остального UI */
-    width: 3rem; /* Задаем явную ширину для квадрата (48px) */
-    height: 3rem; /* Задаем явную высоту для квадрата (48px) */
-    display: flex; /* Делаем flex контейнером */
-    align-items: center; /* Центрируем содержимое по вертикали */
-    justify-content: center; /* Центрируем содержимое по горизонтали */
-    padding: 0; /* Убираем padding, так как размер задан явно */
-    border-radius: 9999px; /* Делаем кнопку круглой */
-}
-
-/* Стили для самой выезжающей панели */
-.bottom-bar-panel {
+.bottom-bar-panel-container {
     position: fixed;
-    bottom: 24px; /* Поднята на 16px от низа */
-    left: 50%; /* Центрируем по горизонтали */
-    /* Важно: translateX должен быть всегда, а translateY будет изменяться */
-    transform: translateX(-50%) translateY(0); /* Начальная позиция: центрировано по X, не смещено по Y */
-    transition: transform 0.3s ease-in-out; /* Анимируем только transform */
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    pointer-events: none; /* Контейнер не должен перехватывать клики */
+}
 
-    width: calc(100% - 2rem); /* Ширина 100% минус padding от App.jsx */
-    max-width: 600px; /* Максимальная ширина, как на скриншоте */
-    height: 80px; /* Высота панели */
-    border-radius: 1rem; /* Закругляем со всех сторон */
-    padding: 1rem .5rem; /* Отступы сверху и снизу по 4px, по бокам по 1rem */
-    box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.3); /* Тень для эффекта выезда */
-    z-index: 10; /* Выше всех UI элементов, кроме модалок и тостов */
-    background-color: rgba(31, 41, 55, 0.7); /* bg-gray-800 с прозрачностью 70% */
-    border: 2px solid #374151; /* border-gray-700 */
+.bottom-bar-panel {
+    width: calc(100% - 2rem);
+    max-width: 600px;
+    height: 80px;
+    border-radius: 1rem;
+    padding: 1rem .5rem;
+    box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.3);
+    z-index: 10;
+    background-color: rgba(31, 41, 55, 0.7);
+    border: 2px solid #374151;
     backdrop-filter: blur(8px);
     display: flex;
     align-items: center;
     justify-content: space-between;
+    position: relative;
+    bottom: 24px;
+    transition: transform 0.3s ease-in-out;
+    pointer-events: auto; /* Сама панель должна быть кликабельной */
 }
 
-.tabs, .left-panel, .right-panel, .overflow-y-auto {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
-}
-.tabs::-webkit-scrollbar,
-.left-panel::-webkit-scrollbar,
-.right-panel::-webkit-scrollbar,
-.overflow-y-auto::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, and Opera */
+.bottom-bar-panel-hidden {
+    transform: translateY(calc(100% + 24px));
 }
 
-/* Адаптируем трансформацию для скрытия панели с учетом нового bottom и высоты */
-/* Используем transform: translateY(0) для показанной панели и transform: translateY(calc(100% + 16px)) для скрытой */
-/* Для того чтобы transform: translateX(-50%) всегда оставался, мы применяем его в базовом классе */
-.bottom-bar-panel.translate-y-full {
-    transform: translateX(-50%) translateY(calc(100% + 16px)); /* Сдвигаем на 100% + отступ от низа */
-}
-
-/* Добавлены классы для разделителей */
 .bottom-bar-divider {
     width: 2px;
-    height: 70%; /* Высота разделителя */
-    background-color: rgba(255, 255, 255, 0.2); /* Светло-серый, полупрозрачный */
-    margin: 0 0.5rem; /* Отступы по бокам */
+    height: 70%;
+    background-color: rgba(255, 255, 255, 0.2);
+    margin: 0 0.5rem;
     border-radius: 1px;
 }
 
-/* НОВЫЕ СТИЛИ ДЛЯ АНИМАЦИИ КНОПКИ ПОДТВЕРЖДЕНИЯ */
 .confirm-btn-animate {
     transition: width 0.3s ease-in-out, background-color 0.3s ease-in-out, padding 0.3s ease-in-out;
 }

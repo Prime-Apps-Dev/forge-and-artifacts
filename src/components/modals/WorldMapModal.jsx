@@ -5,9 +5,12 @@ import Tooltip from '../ui/display/Tooltip';
 import { formatNumber } from '../../utils/formatters.jsx';
 import { useGame } from '../../context/GameContext.jsx';
 import Button from '../ui/buttons/Button.jsx';
+import { useDraggableModal } from '../../hooks/useDraggableModal.js';
+import ModalDragHandle from '../ui/display/ModalDragHandle.jsx';
 
 const WorldMapModal = ({ isOpen, onClose }) => {
     const { displayedGameState: gameState, handlers } = useGame();
+    const { touchHandlers } = useDraggableModal(onClose);
 
     if (!isOpen) return null;
 
@@ -41,7 +44,11 @@ const WorldMapModal = ({ isOpen, onClose }) => {
             <div
                 className="bg-gray-900 border-2 border-orange-500 rounded-lg shadow-2xl p-8 w-full max-w-4xl max-h-[90vh] flex flex-col modal-content"
                 onClick={e => e.stopPropagation()}
+                {...touchHandlers}
             >
+                {/* Mobile Drag Handle */}
+                <ModalDragHandle />
+
                 <h2 className="font-cinzel text-3xl text-center text-orange-400 text-shadow-glow mb-4">
                     Выберите Новый Регион
                 </h2>
@@ -105,7 +112,7 @@ const WorldMapModal = ({ isOpen, onClose }) => {
                         );
                     })}
                 </div>
-                <Button onClick={onClose} variant="secondary" className="mt-6">
+                <Button onClick={onClose} variant="secondary" className="mt-6 hidden md:block">
                     Закрыть
                 </Button>
             </div>

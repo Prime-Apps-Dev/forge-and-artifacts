@@ -5,9 +5,12 @@ import { formatCostsJsx } from '../../utils/formatters.jsx';
 import { useGame } from '../../context/GameContext.jsx';
 import Button from '../ui/buttons/Button.jsx';
 import { gameConfig as GAME_CONFIG } from '../../constants/gameConfig.js';
+import { useDraggableModal } from '../../hooks/useDraggableModal.js';
+import ModalDragHandle from '../ui/display/ModalDragHandle.jsx';
 
 const HirePersonnelModal = memo(({ isOpen, onClose }) => {
     const { displayedGameState: gameState, handlers } = useGame();
+    const { touchHandlers } = useDraggableModal(onClose);
     const [isFading, setIsFading] = useState(false);
 
     if (!isOpen) return null;
@@ -59,10 +62,14 @@ const HirePersonnelModal = memo(({ isOpen, onClose }) => {
             <div
                 className="bg-gray-900 border-2 border-gray-700 rounded-lg shadow-2xl p-8 w-full max-w-4xl max-h-[90vh] flex flex-col modal-content"
                 onClick={e => e.stopPropagation()}
+                {...touchHandlers}
             >
+                {/* Mobile Drag Handle */}
+                <ModalDragHandle />
+
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="font-cinzel text-2xl text-orange-400">Нанять Персонал</h2>
-                    <button onClick={onClose} className="text-gray-400 hover:text-white material-icons-outlined">close</button>
+                    <button onClick={onClose} className="hidden md:block text-gray-400 hover:text-white material-icons-outlined">close</button>
                 </div>
 
                 <div className="flex justify-between items-center mb-4 p-3 bg-black/20 rounded-md border border-gray-700">
@@ -93,7 +100,7 @@ const HirePersonnelModal = memo(({ isOpen, onClose }) => {
                     )}
                 </div>
 
-                <Button onClick={onClose} className="mt-6">
+                <Button onClick={onClose} className="mt-6 hidden md:block">
                     Закрыть
                 </Button>
             </div>

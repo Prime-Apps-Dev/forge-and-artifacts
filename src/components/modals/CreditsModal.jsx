@@ -1,19 +1,27 @@
 // src/components/modals/CreditsModal.jsx
 import React from 'react';
 import Button from '../ui/buttons/Button.jsx';
+import { useDraggableModal } from '../../hooks/useDraggableModal.js';
+import ModalDragHandle from '../ui/display/ModalDragHandle.jsx';
 
 const CreditsModal = ({ isOpen, onClose }) => {
+    const { touchHandlers } = useDraggableModal(onClose);
+
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 modal-backdrop" onClick={onClose}>
+        <div className="fixed inset-0 bg-black/80 flex items-end justify-center md:items-center z-50 modal-backdrop" onClick={onClose}>
             <div
-                className="bg-gray-900 border-2 border-gray-700 rounded-lg shadow-2xl p-8 w-full max-w-2xl max-h-[90vh] flex flex-col modal-content"
+                className="bg-gray-900 border-t-2 md:border-2 border-gray-700 w-full rounded-t-2xl md:rounded-lg shadow-2xl p-6 flex flex-col modal-content animate-slide-in-up md:animate-none md:relative md:max-w-2xl h-[85vh] md:max-h-[90vh]"
                 onClick={e => e.stopPropagation()}
+                {...touchHandlers}
             >
-                <div className="flex justify-between items-center mb-4">
+                {/* Mobile Drag Handle */}
+                <ModalDragHandle />
+
+                <div className="flex justify-between items-center mb-4 flex-shrink-0">
                     <h2 className="font-cinzel text-2xl text-orange-400">Благодарности и Авторы</h2>
-                    <button onClick={onClose} className="text-gray-400 hover:text-white material-icons-outlined">close</button>
+                    <button onClick={onClose} className="hidden md:block text-gray-400 hover:text-white material-icons-outlined">close</button>
                 </div>
 
                 <div className="grow overflow-y-auto pr-2 text-gray-300 text-sm leading-relaxed">
@@ -43,7 +51,7 @@ const CreditsModal = ({ isOpen, onClose }) => {
                     </ul>
                 </div>
 
-                <Button onClick={onClose} className="mt-6">
+                <Button onClick={onClose} className="mt-6 flex-shrink-0 hidden md:block">
                     Закрыть
                 </Button>
             </div>

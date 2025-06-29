@@ -1,3 +1,4 @@
+// src/components/ui/display/Toast.jsx
 import React, { useEffect, useState } from 'react';
 
 const Toast = ({ id, message, type, onRemove }) => {
@@ -15,45 +16,36 @@ const Toast = ({ id, message, type, onRemove }) => {
         return () => clearTimeout(timer);
     }, [id, onRemove]);
 
-    // Определяем цвета динамически
     const bgColorClass = {
-        info: 'bg-blue-800/60',
-        success: 'bg-green-800/60',
-        crit: 'bg-yellow-800/60',
-        error: 'bg-red-800/60',
-        faction: 'bg-purple-800/60',
-        levelup: 'bg-orange-800/60',
+        info: 'bg-blue-800/60', success: 'bg-green-800/60',
+        crit: 'bg-yellow-800/60', error: 'bg-red-800/60',
+        faction: 'bg-purple-800/60', levelup: 'bg-orange-800/60',
     }[type] || 'bg-gray-800/60';
 
     const borderColorClass = {
-        info: 'border-blue-600',
-        success: 'border-green-600',
-        crit: 'border-yellow-600',
-        error: 'border-red-600',
-        faction: 'border-purple-600',
-        levelup: 'border-orange-600',
+        info: 'border-blue-600', success: 'border-green-600',
+        crit: 'border-yellow-600', error: 'border-red-600',
+        faction: 'border-purple-600', levelup: 'border-orange-600',
     }[type] || 'border-gray-600';
 
     const iconColor = {
-        info: '#60A5FA', // text-blue-400
-        success: '#4ADE80', // text-green-400
-        crit: '#FACC15', // text-yellow-400
-        error: '#F87171', // text-red-400
-        faction: '#C084FC', // text-purple-400
-        levelup: '#FB923C', // text-orange-400
-    }[type] || '#9CA3AF'; // text-gray-400
+        info: '#60A5FA', success: '#4ADE80', crit: '#FACC15',
+        error: '#F87171', faction: '#C084FC', levelup: '#FB923C',
+    }[type] || '#9CA3AF';
 
     return (
         <div className={`
-            toast-item flex items-center gap-3 pr-4
+            toast-item flex items-center gap-2 pr-3
             ${bgColorClass}
             border ${borderColorClass}
-            text-white py-2 px-4 rounded-lg shadow-lg mb-2
+            text-white rounded-lg shadow-lg
             relative overflow-hidden
             ${isFadingOut ? 'animate-fade-out' : 'animate-fade-in-up'}
             backdrop-blur-sm
+            py-1 px-2 text-xs
+            md:py-2 md:px-4 md:text-sm md:gap-3 md:pr-4
         `}>
-            <div className={`w-3 h-3 rounded-full flex-shrink-0`} style={{backgroundColor: iconColor}}></div>
+            <div className={`w-2 h-2 md:w-3 md:h-3 rounded-full flex-shrink-0`} style={{backgroundColor: iconColor}}></div>
             <span>{message}</span>
         </div>
     );

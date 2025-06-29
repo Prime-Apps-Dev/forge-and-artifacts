@@ -39,6 +39,13 @@ export function createGameHandlers({
              return;
         }
 
+        // --- ИСПРАВЛЕНИЕ: Проверка верстака ---
+        if (componentDef.workstation !== state.activeWorkstationId) {
+            showToast(`Неверный верстак! Требуется: ${definitions.workstations[componentDef.workstation].name}`, 'error');
+            return;
+        }
+        // --- -------------------------------
+
         state.totalClicks = (state.totalClicks || 0) + 1;
         updateQuestProgress(state, 'totalClicks', {}, showToast);
         
@@ -95,7 +102,6 @@ export function createGameHandlers({
                 showToast(`Компонент "${componentDef.name}" завершен!`, 'success');
                 audioController.play('complete', 'A4', '8n');
 
-                // --- MODIFIED COMPLETION CHECK ---
                 const totalComponents = itemDef.components.length;
                 const completedCount = Object.keys(activeProject.completedComponents).length;
 
@@ -138,11 +144,12 @@ export function createGameHandlers({
         updateState(state => {
             const project = state.activeOrder || state.activeFreeCraft;
 
+            if (state.activeReforge) { /* Reforge logic */ return state; }
+            if (state.activeInlay) { /* Inlay logic */ return state; }
+            if (state.activeGraving) { /* Graving logic */ return state; }
+            if (state.currentEpicOrder) { /* Epic order logic */ return state; }
+
             if (!project) {
-                 if(state.currentEpicOrder) { /* Epic order logic */ return state; }
-                 if(state.activeReforge) { /* Reforge logic */ return state; }
-                 if(state.activeInlay) { /* Inlay logic */ return state; }
-                 if(state.activeGraving) { /* Graving logic */ return state; }
                  showToast("Выберите проект для работы!", "error");
                  return state;
             }
@@ -201,9 +208,15 @@ export function createGameHandlers({
                 return state;
             } 
             
-            audioController.play('click', 'C3');
-            visualEffects.showParticleEffect(clickX, clickY, 'default');
+            // Здесь происходит вызов applyProgress, который уже содержит проверку
             applyProgress(state, state.progressPerClick, clickX, clickY);
+
+            // Проверяем, не была ли работа заблокирована проверкой верстака
+            if (componentDef.workstation === state.activeWorkstationId) {
+                 audioController.play('click', 'C3');
+                 visualEffects.showParticleEffect(clickX, clickY, 'default');
+            }
+
 
             return state;
         });

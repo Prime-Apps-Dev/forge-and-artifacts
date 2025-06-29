@@ -14,7 +14,6 @@ import QualityMinigameBar from '../minigames/QualityMinigameBar.jsx';
 import ClickPointsMinigame from '../minigames/ClickPointsMinigame.jsx';
 import HoldAndReleaseMinigame from '../minigames/HoldAndReleaseMinigame.jsx';
 
-// Внутренний компонент для отображения активного проекта
 const ActiveProjectDisplay = memo(() => {
     const { displayedGameState: gameState, handlers } = useGame();
     
@@ -24,7 +23,6 @@ const ActiveProjectDisplay = memo(() => {
     const playerItemDef = definitions.items[activePlayerProject.itemKey];
     const activePlayerComponent = playerItemDef ? playerItemDef.components.find(c => c.id === activePlayerProject.activeComponentId) : null;
     
-    // Безопасное получение изображения клиента
     const clientFaceImg = gameState.activeOrder?.client?.faceImg || IMAGE_PATHS.CLIENTS.SHADOWY_FIGURE;
 
     return (
@@ -50,28 +48,11 @@ const ActiveProjectDisplay = memo(() => {
             
             {activePlayerProject?.minigameState?.active && activePlayerComponent?.minigame && (
                 <div className="minigame-container">
-                    {activePlayerProject.minigameState.type === 'bar_precision' && 
-                        <QualityMinigameBar 
-                            minigameState={activePlayerProject.minigameState} 
-                            componentDef={activePlayerComponent}
-                        />}
-                    {activePlayerProject.minigameState.type === 'click_points' && 
-                        <ClickPointsMinigame
-                            minigameState={activePlayerProject.minigameState}
-                            componentDef={activePlayerComponent}
-                            onClickPoint={handlers.handleMinigameClickPoint}
-                            updateMinigameState={handlers.handleUpdateMinigameState}
-                        />}
-                     {activePlayerProject.minigameState.type === 'hold_and_release' && 
-                        <HoldAndReleaseMinigame
-                            minigameState={activePlayerProject.minigameState}
-                            componentDef={activePlayerComponent}
-                            onRelease={handlers.handleMinigameRelease}
-                            updateMinigameState={handlers.handleUpdateMinigameState}
-                        />}
+                    {activePlayerProject.minigameState.type === 'bar_precision' && <QualityMinigameBar minigameState={activePlayerProject.minigameState} componentDef={activePlayerComponent} />}
+                    {activePlayerProject.minigameState.type === 'click_points' && <ClickPointsMinigame minigameState={activePlayerProject.minigameState} componentDef={activePlayerComponent} onClickPoint={handlers.handleMinigameClickPoint} updateMinigameState={handlers.handleUpdateMinigameState} />}
+                     {activePlayerProject.minigameState.type === 'hold_and_release' && <HoldAndReleaseMinigame minigameState={activePlayerProject.minigameState} componentDef={activePlayerComponent} onRelease={handlers.handleMinigameRelease} updateMinigameState={handlers.handleUpdateMinigameState} />}
                 </div>
             )}
-
             <div className="flex flex-col gap-2 mt-2">
                  {playerItemDef?.components.map(comp => <ComponentItem key={comp.id} component={comp} orderState={activePlayerProject} />)}
             </div>
@@ -79,7 +60,6 @@ const ActiveProjectDisplay = memo(() => {
     );
 });
 
-// Внутренний компонент для выбора верстака
 const WorkstationSelector = memo(() => {
     const { displayedGameState: gameState, handlers } = useGame();
     const { purchasedSkills, activeWorkstationId, workstations, activeOrder, activeFreeCraft, currentEpicOrder, activeReforge, activeInlay, activeGraving } = gameState;
@@ -91,7 +71,7 @@ const WorkstationSelector = memo(() => {
         if (activeReforge) return 'anvil';
         if (activeInlay) return 'grindstone';
         if (activeGraving) return 'workbench';
-        if (activePlayerProject) {
+        if (activePlayerProject && activePlayerProject.activeComponentId) {
             const itemDef = definitions.items[activePlayerProject.itemKey];
             const activeComponent = itemDef?.components.find(c => c.id === activePlayerProject.activeComponentId);
             if (activeComponent) return activeComponent.workstation;
@@ -112,39 +92,30 @@ const WorkstationSelector = memo(() => {
                 const currentWorkstationState = workstations[id];
                 const xpProgress = (currentWorkstationState.xpToNextLevel > 0) ? (currentWorkstationState.xp / currentWorkstationState.xpToNextLevel) * 100 : 100;
                 const isMaxLevel = currentWorkstationState.level >= station.maxLevel;
-
                 let tooltipContent = `${station.name}\nУровень: ${currentWorkstationState.level} / ${station.maxLevel}`;
-                if (!isMaxLevel) {
-                    tooltipContent += `\nXP: ${formatNumber(currentWorkstationState.xp, true)} / ${formatNumber(currentWorkstationState.xpToNextLevel, true)}`;
-                }
-                if (activeWorkstationId === id) {
-                    tooltipContent += "\n(Активный)";
-                }
+                if (!isMaxLevel) { tooltipContent += `\nXP: ${formatNumber(currentWorkstationState.xp, true)} / ${formatNumber(currentWorkstationState.xpToNextLevel, true)}`; }
+                if (activeWorkstationId === id) { tooltipContent += "\n(Активный)"; } 
+                else if (requiredWorkstation === id) { tooltipContent += "\n(Требуется)"; }
                 if (station.bonusesPerLevel) {
                     tooltipContent += "\nБонусы за уровень:";
                     for (const bonusType in station.bonusesPerLevel) {
                         const bonusValue = station.bonusesPerLevel[bonusType];
                         const totalBonus = bonusValue * (currentWorkstationState.level - 1);
-                        tooltipContent += `\n- ${bonusType}: +${(totalBonus * (bonusType.endsWith('Modifier') || bonusType === 'critChance' || bonusType === 'smeltingSpeedModifier' ? 100 : 1)).toFixed(bonusType === 'critChance' ? 1 : (bonusType.endsWith('Modifier') ? 0 : 0))}${bonusType.endsWith('Modifier') || bonusType === 'critChance' || bonusType === 'smeltingSpeedModifier' ? '%' : ''}`;
+                        tooltipContent += `\n- ${bonusType}: +${(totalBonus * 100).toFixed(1)}%`;
                     }
                 }
-
+                const isRequiredAndNotActive = requiredWorkstation && requiredWorkstation === id && activeWorkstationId !== id;
+                const isDisabled = requiredWorkstation && requiredWorkstation !== id;
                 return (
                     <Tooltip key={id} text={tooltipContent}>
                         <button
                             onClick={() => handlers.handleSelectWorkstation(id)}
-                            className={`interactive-element p-3 rounded-lg border-2 transition-all duration-200 relative overflow-hidden
-                                ${activeWorkstationId === id ? 'bg-orange-500/20 border-orange-500' : 'bg-gray-700/50 border-gray-600 hover:border-gray-500'}
-                                ${requiredWorkstation === id && activeWorkstationId !== id ? 'animate-pulse border-blue-500' : ''} `}
-                            disabled={requiredWorkstation && requiredWorkstation !== id}
+                            className={`interactive-element p-3 rounded-lg border-2 transition-all duration-200 relative overflow-hidden ${activeWorkstationId === id ? 'bg-orange-500/20 border-orange-500' : 'bg-gray-700/50 border-gray-600 hover:border-gray-500'} ${isRequiredAndNotActive ? 'animate-pulse !border-blue-500' : ''} ${isDisabled ? '!opacity-50 cursor-not-allowed' : ''}`}
+                            disabled={isDisabled}
                         >
                             <span className={`material-icons-outlined text-4xl ${activeWorkstationId === id ? 'text-orange-400' : 'text-gray-400'}`}>{station.icon}</span>
-                            <div className="absolute bottom-0 left-0 w-full bg-black/50 text-center text-xs font-bold">
-                                Ур. {currentWorkstationState.level}
-                            </div>
-                            {!isMaxLevel && (
-                                <div className="absolute bottom-0 left-0 h-1 bg-yellow-500" style={{ width: `${xpProgress}%` }}></div>
-                            )}
+                            <div className="absolute bottom-0 left-0 w-full bg-black/50 text-center text-xs font-bold">Ур. {currentWorkstationState.level}</div>
+                            {!isMaxLevel && (<div className="absolute bottom-0 left-0 h-1 bg-yellow-500" style={{ width: `${xpProgress}%` }}></div>)}
                         </button>
                     </Tooltip>
                 );
@@ -153,7 +124,6 @@ const WorkstationSelector = memo(() => {
     );
 });
 
-// Основной компонент
 const ForgeView = () => {
     const { displayedGameState: gameState, handlers, isWorking } = useGame();
     const [mode, setMode] = useState('orders');
@@ -206,48 +176,22 @@ const ForgeView = () => {
                             <h3 className="font-cinzel text-lg text-center mb-3">Выберите предмет для перековки</h3>
                             {canReforge && !gameState.isFirstPlaythrough ? (
                                 gameState.inventory.filter(item => item.location === 'inventory' && definitions.items[item.itemKey].hasInlaySlots && item.quality < 10.0).length > 0 ? (
-                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         {gameState.inventory.filter(item => item.location === 'inventory' && definitions.items[item.itemKey].hasInlaySlots && item.quality < 10.0).map(item => (
                                             <InventoryItemCard key={item.uniqueId} item={item} onAction={() => handlers.handleStartReforge(item.uniqueId)} actionLabel="Перековать" isAnyActiveProject={isAnyActiveProject} />
                                         ))}
                                     </div>
                                 ) : <p className="text-center text-gray-500 italic py-8">У вас нет предметов, подходящих для перековки.</p>
-                            ) : <p className="text-center text-gray-500 italic py-8">{gameState.isFirstPlaythrough ? "Доступно после первого Переселения." : "Изучите навык 'Мастер Перековки'."}</p>}
-                        </div>
-                    ) : mode === 'inlay' ? (
-                        <div>
-                            <h3 className="font-cinzel text-lg text-center mb-3">Выберите предмет для инкрустации</h3>
-                            {canInlay && !gameState.isFirstPlaythrough ? (
-                                gameState.inventory.filter(item => { const def = definitions.items[item.itemKey]; return def.hasInlaySlots && item.location === 'inventory' && ((item.inlaySlots || []).length < (item.quality >= 10 ? 3 : item.quality >= 8 ? 2 : item.quality >= 6 ? 1 : 0)); }).length > 0 ? (
-                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                                        {gameState.inventory.filter(item => { const def = definitions.items[item.itemKey]; return def.hasInlaySlots && item.location === 'inventory' && ((item.inlaySlots || []).length < (item.quality >= 10 ? 3 : item.quality >= 8 ? 2 : item.quality >= 6 ? 1 : 0)); }).map(item => (
-                                            <InventoryItemCard key={item.uniqueId} item={item} onAction={() => handlers.handleStartInlay(item.uniqueId, 'gem')} actionLabel="Инкрустировать" isAnyActiveProject={isAnyActiveProject} />
-                                        ))}
-                                    </div>
-                                ) : <p className="text-center text-gray-500 italic py-8">У вас нет предметов для инкрустации.</p>
-                            ) : <p className="text-center text-gray-500 italic py-8">{gameState.isFirstPlaythrough ? "Доступно после первого Переселения." : "Найдите самоцветы для инкрустации."}</p>}
-                        </div>
-                    ) : mode === 'graving' ? (
-                        <div>
-                            <h3 className="font-cinzel text-lg text-center mb-3">Выберите предмет для гравировки</h3>
-                            {canGrave && !gameState.isFirstPlaythrough ? (
-                                gameState.inventory.filter(item => item.location === 'inventory' && (definitions.items[item.itemKey].hasInlaySlots || definitions.items[item.itemKey].gravingAvailable)).length > 0 ? (
-                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                                        {gameState.inventory.filter(item => item.location === 'inventory' && (definitions.items[item.itemKey].hasInlaySlots || definitions.items[item.itemKey].gravingAvailable)).map(item => (
-                                            <InventoryItemCard key={item.uniqueId} item={item} onAction={() => handlers.handleStartGraving(item.uniqueId)} actionLabel="Гравировать" isAnyActiveProject={isAnyActiveProject} />
-                                        ))}
-                                    </div>
-                                ) : <p className="text-center text-gray-500 italic py-8">У вас нет предметов для гравировки.</p>
-                            ) : <p className="text-center text-gray-500 italic py-8">{gameState.isFirstPlaythrough ? "Доступно после первого Переселения." : "Изучите навык 'Искусство Гравировки'."}</p>}
+                            ) : <p className="text-center text-gray-500 italic py-8">{gameState.isFirstPlaythrough ? "Доступно после Переселения." : "Изучите 'Мастер Перековки'."}</p>}
                         </div>
                     ) : null
                 )}
             </div>
 
             <WorkstationSelector />
-
-            <div id="forge-area" className="flex items-center justify-center">
-                <div onClick={handlers.handleStrikeAnvil} className={`interactive-element cursor-pointer rounded-full p-4 transition-transform ${isWorking ? 'anvil-working' : ''}`}>
+            
+            <div id="forge-area" className="hidden md:flex items-center justify-center">
+                <div onClick={(e) => handlers.handleStrikeAnvil(e)} className={`interactive-element cursor-pointer rounded-full p-4 transition-transform ${isWorking ? 'anvil-working' : ''}`}>
                     <img src={IMAGE_PATHS.UI.ANVIL} alt="Наковальня" className="w-48 h-48 drop-shadow-lg" />
                 </div>
             </div>

@@ -30,16 +30,18 @@ export function useGameState() {
     const [isShopReputationModalOpen, setIsShopReputationModalOpen] = useState(false);
     const [isHirePersonnelModalOpen, setIsHirePersonnelModalOpen] = useState(false);
     const [activeInfoModal, setActiveInfoModal] = useState(null);
-
     const [isManagePersonnelModalOpen, setIsManagePersonnelModalOpen] = useState(false);
     const [managingPersonnelId, setManagingPersonnelId] = useState(null);
-    
-    // --- НОВЫЕ СОСТОЯНИЯ ДЛЯ ЭКИПИРОВКИ ---
     const [isUpgradeItemModalOpen, setIsUpgradeItemModalOpen] = useState(false);
     const [itemToUpgradeId, setItemToUpgradeId] = useState(null);
     const [isEquipItemModalOpen, setIsEquipItemModalOpen] = useState(false);
     const [personnelToEquip, setPersonnelToEquip] = useState({ id: null, slot: null });
-    // ------------------------------------
+
+    // --- НОВОЕ: Состояния для общих модалок, которые теперь в бургере ---
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [isInventoryOpen, setIsInventoryOpen] = useState(false);
+    const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+
 
     const workTimeoutRef = useRef(null);
 
@@ -92,9 +94,12 @@ export function useGameState() {
         setActiveInfoModal,
         setIsManagePersonnelModalOpen,
         setManagingPersonnelId,
-        // --- НОВЫЕ СЕТТЕРЫ ДЛЯ МОДАЛЬНЫХ ОКОН ---
         setIsUpgradeItemModalOpen, setItemToUpgradeId,
-        setIsEquipItemModalOpen, setPersonnelToEquip
+        setIsEquipItemModalOpen, setPersonnelToEquip,
+        // --- НОВЫЕ СЕТТЕРЫ ---
+        setIsSettingsOpen,
+        setIsInventoryOpen,
+        setIsProfileModalOpen,
     }), [updateState, showToast, gameStateRef, showAchievementRewardModal]);
 
     const handlers = usePlayerActions(handlerProps);
@@ -134,10 +139,10 @@ export function useGameState() {
         achievementToDisplay, isAvatarSelectionModalOpen, isCreditsModalOpen,
         isShopReputationModalOpen, isHirePersonnelModalOpen,
         isManagePersonnelModalOpen, managingPersonnelId,
-        // --- НОВЫЕ ЗНАЧЕНИЯ ДЛЯ ПЕРЕДАЧИ В APP ---
         isUpgradeItemModalOpen, itemToUpgradeId,
         isEquipItemModalOpen, personnelToEquip,
-        // --------------------------------------
+        // --- НОВЫЕ ЗНАЧЕНИЯ ---
+        isSettingsOpen, isInventoryOpen, isProfileModalOpen,
         handlers, removeToast, activeInfoModal, handleInitialGesture,
         assetsLoaded, loadProgress, updateState,
     };

@@ -17,12 +17,22 @@ export const useModalsHandlers = ({
     setActiveInfoModal,
     setIsManagePersonnelModalOpen,
     setManagingPersonnelId,
-    // --- НОВЫЕ ПРОПСЫ ---
     setIsUpgradeItemModalOpen,
     setItemToUpgradeId,
     setIsEquipItemModalOpen,
     setPersonnelToEquip,
+    // --- НОВЫЕ СЕТТЕРЫ ---
+    setIsSettingsOpen,
+    setIsInventoryOpen,
+    setIsProfileModalOpen,
 }) => {
+
+    const handleOpenProfileModal = useCallback(() => setIsProfileModalOpen(true), [setIsProfileModalOpen]);
+    const handleCloseProfileModal = useCallback(() => setIsProfileModalOpen(false), [setIsProfileModalOpen]);
+    const handleOpenSettingsModal = useCallback(() => setIsSettingsOpen(true), [setIsSettingsOpen]);
+    const handleCloseSettingsModal = useCallback(() => setIsSettingsOpen(false), [setIsSettingsOpen]);
+    const handleOpenInventoryModal = useCallback(() => setIsInventoryOpen(true), [setIsInventoryOpen]);
+    const handleCloseInventoryModal = useCallback(() => setIsInventoryOpen(false), [setIsInventoryOpen]);
 
     const handleCloseInfoModal = useCallback(() => {
         setActiveInfoModal(null);
@@ -103,7 +113,6 @@ export const useModalsHandlers = ({
         setManagingPersonnelId(null);
     }, [setIsManagePersonnelModalOpen, setManagingPersonnelId]);
 
-    // --- НОВЫЕ ОБРАБОТЧИКИ ДЛЯ ЭКИПИРОВКИ ---
     const handleOpenUpgradeItemModal = useCallback((itemId) => {
         setItemToUpgradeId(itemId);
         setIsUpgradeItemModalOpen(true);
@@ -123,7 +132,6 @@ export const useModalsHandlers = ({
         setIsEquipItemModalOpen(false);
         setPersonnelToEquip({ id: null, slot: null });
     }, [setIsEquipItemModalOpen, setPersonnelToEquip]);
-    // --- ------------------------------------ ---
 
 
     return useMemo(() => ({
@@ -142,11 +150,17 @@ export const useModalsHandlers = ({
         handleCloseHirePersonnelModal,
         handleOpenManagePersonnelModal,
         handleCloseManagePersonnelModal,
-        // --- НОВЫЕ ОБРАБОТЧИКИ ---
         handleOpenUpgradeItemModal,
         handleCloseUpgradeItemModal,
         handleOpenEquipItemModal,
         handleCloseEquipItemModal,
+        // --- НОВЫЕ ОБРАБОТЧИКИ ---
+        handleOpenProfileModal,
+        handleCloseProfileModal,
+        handleOpenSettingsModal,
+        handleCloseSettingsModal,
+        handleOpenInventoryModal,
+        handleCloseInventoryModal,
     }), [
         handleCloseInfoModal, handleCloseWorldMapModal, handleCloseAchievementModal,
         handleClaimAchievementReward, handleOpenAvatarSelectionModal, handleCloseAvatarSelectionModal,
@@ -154,6 +168,7 @@ export const useModalsHandlers = ({
         handleOpenShopReputationModal, handleCloseShopReputationModal,
         handleOpenHirePersonnelModal, handleCloseHirePersonnelModal,
         handleOpenManagePersonnelModal, handleCloseManagePersonnelModal,
-        handleOpenUpgradeItemModal, handleCloseUpgradeItemModal, handleOpenEquipItemModal, handleCloseEquipItemModal, // Добавляем в зависимости
+        handleOpenUpgradeItemModal, handleCloseUpgradeItemModal, handleOpenEquipItemModal, handleCloseEquipItemModal,
+        handleOpenProfileModal, handleCloseProfileModal, handleOpenSettingsModal, handleCloseSettingsModal, handleOpenInventoryModal, handleCloseInventoryModal,
     ]);
 };

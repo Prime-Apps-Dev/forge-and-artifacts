@@ -5,9 +5,12 @@ import { definitions } from '../../data/definitions/index';
 import { formatCostsJsx, formatNumber } from '../../utils/formatters';
 import Button from '../ui/buttons/Button';
 import { getItemImageSrc } from '../../utils/helpers';
+import { useDraggableModal } from '../../hooks/useDraggableModal.js';
+import ModalDragHandle from '../ui/display/ModalDragHandle.jsx';
 
 const UpgradeItemModal = ({ isOpen, onClose, itemId }) => {
     const { displayedGameState: gameState, handlers } = useGame();
+    const { touchHandlers } = useDraggableModal(onClose);
 
     if (!isOpen || !itemId) return null;
 
@@ -39,10 +42,17 @@ const UpgradeItemModal = ({ isOpen, onClose, itemId }) => {
 
     return (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 modal-backdrop" onClick={onClose}>
-            <div className="bg-gray-900 border-2 border-yellow-500 rounded-lg shadow-2xl p-6 w-full max-w-lg modal-content" onClick={e => e.stopPropagation()}>
+            <div 
+                className="bg-gray-900 border-2 border-yellow-500 rounded-lg shadow-2xl p-6 w-full max-w-lg modal-content" 
+                onClick={e => e.stopPropagation()}
+                {...touchHandlers}
+            >
+                {/* Mobile Drag Handle */}
+                <ModalDragHandle />
+
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="font-cinzel text-2xl text-yellow-400">Улучшение предмета</h2>
-                    <button onClick={onClose} className="text-gray-400 hover:text-white material-icons-outlined">close</button>
+                    <button onClick={onClose} className="hidden md:block text-gray-400 hover:text-white material-icons-outlined">close</button>
                 </div>
 
                 <div className="flex flex-col items-center text-center">
@@ -79,7 +89,7 @@ const UpgradeItemModal = ({ isOpen, onClose, itemId }) => {
                         </Button>
                     </div>
                 )}
-                 <Button onClick={onClose} variant="secondary" className={`mt-2 ${isMaxLevel ? 'w-full' : ''}`}>Закрыть</Button>
+                 <Button onClick={onClose} variant="secondary" className={`mt-2 ${isMaxLevel ? 'w-full' : ''} hidden md:block`}>Закрыть</Button>
             </div>
         </div>
     );

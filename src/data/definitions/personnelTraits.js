@@ -10,6 +10,7 @@
  * - type: 'positive' или 'negative'.
  * - rarity: 'common', 'uncommon', 'rare'.
  * - role (опционально): 'miner', 'smelter', etc. для особых черт.
+ * - excludes (опционально): массив id черт, с которыми эта черта несовместима.
  */
 export const personnelTraits = {
     // --- СТАНДАРТНЫЕ ПОЛОЖИТЕЛЬНЫЕ ЧЕРТЫ ---
@@ -17,11 +18,13 @@ export const personnelTraits = {
         id: 'workaholic', name: "Трудоголик",
         description: "Этот сотрудник работает немного быстрее, но его настроение падает быстрее.",
         icon: 'bolt', type: 'positive', rarity: 'uncommon',
+        excludes: ['lazy'], // ИСКЛЮЧЕНИЕ
     },
     optimist: {
         id: 'optimist', name: "Оптимист",
         description: "Всегда в хорошем настроении. Настроение падает медленнее.",
         icon: 'sentiment_very_satisfied', type: 'positive', rarity: 'common',
+        excludes: ['pessimist'], // ИСКЛЮЧЕНИЕ
     },
     fast_learner: {
         id: 'fast_learner', name: "Быстро Учится",
@@ -32,16 +35,19 @@ export const personnelTraits = {
         id: 'thrifty', name: "Бережливый",
         description: "Требует на 10% меньше зарплаты (Искры).",
         icon: 'savings', type: 'positive', rarity: 'rare',
+        excludes: ['greedy'], // ИСКЛЮЧЕНИЕ
     },
     charismatic: {
         id: 'charismatic', name: "Харизматичный",
         description: "Повышает настроение всех остальных сотрудников.",
         icon: 'theater_comedy', type: 'positive', rarity: 'rare',
+        excludes: ['arrogant'], // ИСКЛЮЧЕНИЕ
     },
     sturdy: {
         id: 'sturdy', name: "Крепкий",
         description: "Реже отдыхает и медленнее устает.",
         icon: 'fitness_center', type: 'positive', rarity: 'common',
+        excludes: ['sickly'], // ИСКЛЮЧЕНИЕ
     },
 
     // --- СТАНДАРТНЫЕ ОТРИЦАТЕЛЬНЫЕ ЧЕРТЫ ---
@@ -49,11 +55,13 @@ export const personnelTraits = {
         id: 'pessimist', name: "Пессимист",
         description: "Всегда в плохом настроении. Настроение падает быстрее.",
         icon: 'sentiment_very_dissatisfied', type: 'negative', rarity: 'common',
+        excludes: ['optimist'], // ИСКЛЮЧЕНИЕ
     },
     lazy: {
         id: 'lazy', name: "Лентяй",
         description: "Работает на 10% медленнее.",
         icon: 'bed', type: 'negative', rarity: 'uncommon',
+        excludes: ['workaholic'], // ИСКЛЮЧЕНИЕ
     },
     clumsy: {
         id: 'clumsy', name: "Неуклюжий",
@@ -64,16 +72,19 @@ export const personnelTraits = {
         id: 'greedy', name: "Жадный",
         description: "Требует на 20% больше зарплаты (Искры).",
         icon: 'paid', type: 'negative', rarity: 'uncommon',
+        excludes: ['thrifty'], // ИСКЛЮЧЕНИЕ
     },
     sickly: {
         id: 'sickly', name: "Болезненный",
         description: "Чаще нуждается в отдыхе.",
         icon: 'sick', type: 'negative', rarity: 'common',
+        excludes: ['sturdy'], // ИСКЛЮЧЕНИЕ
     },
     arrogant: {
         id: 'arrogant', name: "Надменный",
         description: "Снижает настроение всех остальных сотрудников.",
         icon: 'sentiment_neutral', type: 'negative', rarity: 'rare',
+        excludes: ['charismatic'], // ИСКЛЮЧЕНИЕ
     },
 
     // --- ОСОБЫЕ ЧЕРТЫ: ШАХТЕР ---

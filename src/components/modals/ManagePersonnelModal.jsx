@@ -8,6 +8,8 @@ import { UI_CONSTANTS } from '../../constants/ui.js';
 import { formatCostsJsx, formatNumber } from '../../utils/formatters.jsx';
 import Tooltip from '../ui/display/Tooltip.jsx';
 import { getItemImageSrc } from '../../utils/helpers.js';
+import { useDraggableModal } from '../../hooks/useDraggableModal.js';
+import ModalDragHandle from '../ui/display/ModalDragHandle.jsx';
 
 const EquipmentSlot = ({ slotType, personnel, onEquipClick }) => {
     const { displayedGameState: gameState } = useGame();
@@ -115,6 +117,7 @@ const AssignmentControls = ({ personnel, personnelDef, onClose }) => {
 
 const ManagePersonnelModal = ({ personnelId, onClose }) => {
     const { displayedGameState: gameState, handlers } = useGame();
+    const { touchHandlers } = useDraggableModal(onClose);
     
     const personnel = useMemo(() => 
         gameState.hiredPersonnel.find(p => p.uniqueId === personnelId),
@@ -172,16 +175,62 @@ const ManagePersonnelModal = ({ personnelId, onClose }) => {
         const s = Math.floor(seconds % 60).toString().padStart(2, '0');
         return `${h}:${m}:${s}`;
     };
+    
+    const formatAbility = (key, value) => {
+        switch (key) {
+            case 'miningSpeed': return `Добыча: +${value.toFixed(2)}/сек`;
+            case 'miningQuality': return `Качество добычи: x${value.toFixed(2)}`;
+            case 'smeltingSpeed': return `Плавка: +${value.toFixed(2)}/сек`;
+            case 'smeltingEfficiency': return `Эффективность плавки: +${(value * 100).toFixed(1)}%`;
+            case 'salesSpeedModifier': return `Скорость продаж: +${(value * 100).toFixed(0)}%`;
+            case 'tipChanceModifier': return `Шанс чаевых: +${(value * 100).toFixed(1)}%`;
+            case 'wageReduction': return `Снижение ЗП: -${(value * 100).toFixed(0)}%`;
+            case 'progressPerClick': return `Прогресс/клик: +${value.toFixed(1)}`;
+            case 'clientWaitTimeModifier': return `Ожидание клиентов: +${(value * 100).toFixed(0)}%`;
+            default: return `${key}: ${value.toFixed(2)}`;
+        }
+    };
+
+    const calculatedAbilities = useMemo(() => {
+        const abilities = { ...personnelDef.baseAbilities };
+        for(const key in personnelDef.abilitiesPerLevel) {
+            abilities[key] = (abilities[key] || 0) + (personnelDef.abilitiesPerLevel[key] * (personnel.level -1));
+        }
+        
+        if (personnel.equipment) {
+            for(const slot in personnel.equipment) {
+                if (personnel.equipment[slot]) {
+                    const item = gameState.inventory.find(i => i.uniqueId === personnel.equipment[slot]);
+                    if (item) {
+                        const itemDef = definitions.items[item.itemKey];
+                        for(const bonusKey in itemDef.bonuses) {
+                            abilities[bonusKey] = (abilities[bonusKey] || 0) + itemDef.bonuses[bonusKey];
+                        }
+                        if (item.level > 1 && itemDef.bonusesPerLevel) {
+                            for(const bonusKey in itemDef.bonusesPerLevel) {
+                                abilities[bonusKey] = (abilities[bonusKey] || 0) + (itemDef.bonusesPerLevel[bonusKey] * (item.level - 1));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return abilities;
+    }, [personnel, personnelDef, gameState.inventory]);
 
     return (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 modal-backdrop" onClick={onClose}>
             <div
                 className="bg-gray-900 border-2 border-gray-700 rounded-lg shadow-2xl p-6 w-full max-w-lg flex flex-col modal-content max-h-[90vh]"
                 onClick={e => e.stopPropagation()}
+                {...touchHandlers}
             >
+                {/* Mobile Drag Handle */}
+                <ModalDragHandle />
+
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="font-cinzel text-2xl text-orange-400">Управление: {personnel.name}</h2>
-                    <button onClick={onClose} className="text-gray-400 hover:text-white material-icons-outlined">close</button>
+                    <button onClick={onClose} className="hidden md:block text-gray-400 hover:text-white material-icons-outlined">close</button>
                 </div>
 
                 <div className="grow overflow-y-auto pr-2 space-y-4">
@@ -196,12 +245,22 @@ const ManagePersonnelModal = ({ personnelId, onClose }) => {
                             <div className="flex-grow">
                                 <h3 className="font-cinzel text-xl font-bold text-white">{personnel.name}</h3>
                                 <p className="text-gray-400 text-sm">{personnelDef.name}</p>
-                                <div className="w-full bg-gray-800 rounded-full h-2.5 mt-2">
-                                    <div className="bg-green-500 h-full rounded-full" style={{ width: `${xpProgressPercentage}%` }}></div>
-                                </div>
-                                <div className="w-full bg-gray-800 rounded-full h-2.5 mt-1">
-                                    <div className={`h-full rounded-full ${personnel.mood < 30 ? 'bg-red-500' : personnel.mood < 70 ? 'bg-yellow-500' : 'bg-green-500'}`} style={{ width: `${personnel.mood}%` }}></div>
-                                </div>
+                                <Tooltip text={`Опыт: ${formatNumber(personnel.xp, true)} / ${formatNumber(personnel.xpToNextLevel, true)}`}>
+                                    <div className="flex items-center gap-2 mt-2">
+                                        <p className="text-gray-600 text-md font-bold">XP</p>
+                                        <div className="w-full bg-gray-800 rounded-full h-2.5 border border-black/20">
+                                            <div className="bg-green-500 h-full rounded-full" style={{ width: `${xpProgressPercentage}%` }}></div>
+                                        </div>
+                                    </div>
+                                </Tooltip>
+                                <Tooltip text={`Настроение: ${Math.round(personnel.mood)}%`}>
+                                     <div className="flex items-center gap-2 mt-1">
+                                        <span className="material-icons-outlined text-gray-600 text-lg">sentiment_satisfied</span>
+                                        <div className="w-full bg-gray-800 rounded-full h-2.5 border border-black/20">
+                                            <div className={`h-full rounded-full ${personnel.mood < 30 ? 'bg-red-500' : personnel.mood < 70 ? 'bg-yellow-500' : 'bg-green-500'}`} style={{ width: `${personnel.mood}%` }}></div>
+                                        </div>
+                                     </div>
+                                </Tooltip>
                             </div>
                         </div>
                         {personnel.traits?.length > 0 && (
@@ -221,8 +280,16 @@ const ManagePersonnelModal = ({ personnelId, onClose }) => {
                             </div>
                         )}
                     </div>
+                    
+                    <div className="bg-black/20 p-4 rounded-lg border border-gray-700">
+                        <h3 className="font-cinzel text-lg text-green-400 mb-2">Способности</h3>
+                        <ul className="list-disc list-inside text-sm text-white ml-2 space-y-1">
+                             {Object.entries(calculatedAbilities).map(([key, value]) => (
+                                <li key={key}>{formatAbility(key, value)}</li>
+                            ))}
+                        </ul>
+                    </div>
 
-                    {/* --- НОВАЯ СЕКЦИЯ: ЭКИПИРОВКА --- */}
                     <div className="bg-black/20 p-4 rounded-lg border border-gray-700">
                         <h3 className="font-cinzel text-lg text-teal-400 mb-3">Экипировка</h3>
                         <div className="grid grid-cols-2 gap-4">
@@ -230,7 +297,6 @@ const ManagePersonnelModal = ({ personnelId, onClose }) => {
                             <EquipmentSlot slotType="gear" personnel={personnel} onEquipClick={() => handlers.handleOpenEquipItemModal(personnelId, 'gear')} />
                         </div>
                     </div>
-                    {/* --- --------------------------- --- */}
 
                     <div className="bg-black/20 p-4 rounded-lg border border-gray-700">
                         <h3 className="font-cinzel text-lg text-blue-400 mb-3">Назначение на работу</h3>
@@ -327,7 +393,7 @@ const ManagePersonnelModal = ({ personnelId, onClose }) => {
                     </div>
                 </div>
 
-                <Button onClick={onClose} className="mt-6">
+                <Button onClick={onClose} className="mt-6 hidden md:block">
                     Закрыть
                 </Button>
             </div>

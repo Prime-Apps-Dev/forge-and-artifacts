@@ -47,23 +47,43 @@ export function generatePersonnelOffer(gameState) {
 
     const randomPersonnelDef = availablePersonnelTypes[Math.floor(Math.random() * availablePersonnelTypes.length)];
     
+    // --- ИСПРАВЛЕННАЯ ЛОГИКА ВЫБОРА ЧЕРТ ---
     const allTraits = Object.values(definitions.personnelTraits);
-    const positiveTraits = allTraits.filter(t => t.type === 'positive' && (!t.role || t.role === randomPersonnelDef.role));
-    const negativeTraits = allTraits.filter(t => t.type === 'negative' && (!t.role || t.role === randomPersonnelDef.role));
-    
     const assignedTraits = new Set();
-    const pickRandomTrait = (traitPool) => {
-        if (traitPool.length === 0) return;
-        let trait;
-        do {
-            trait = traitPool[Math.floor(Math.random() * traitPool.length)];
-        } while (assignedTraits.has(trait.id));
-        assignedTraits.add(trait.id);
+    const assignedTraitObjects = [];
+
+    const pickTraits = (count, type) => {
+        const potentialTraits = allTraits.filter(t => 
+            t.type === type && 
+            (!t.role || t.role === randomPersonnelDef.role) &&
+            !assignedTraits.has(t.id)
+        );
+        
+        // Перемешиваем массив для случайности
+        potentialTraits.sort(() => 0.5 - Math.random());
+
+        let pickedCount = 0;
+        for (const trait of potentialTraits) {
+            if (pickedCount >= count) break;
+
+            // Проверяем на конфликты
+            const hasConflict = trait.excludes?.some(excludedId => assignedTraits.has(excludedId));
+            if (hasConflict) continue;
+            
+            // Проверяем обратный конфликт
+            const isExcludedByAssigned = assignedTraitObjects.some(assignedTrait => assignedTrait.excludes?.includes(trait.id));
+            if(isExcludedByAssigned) continue;
+
+
+            assignedTraits.add(trait.id);
+            assignedTraitObjects.push(trait);
+            pickedCount++;
+        }
     };
 
-    for (let i = 0; i < traitCounts[rarity].positive; i++) pickRandomTrait(positiveTraits);
-    for (let i = 0; i < traitCounts[rarity].negative; i++) pickRandomTrait(negativeTraits);
-
+    pickTraits(traitCounts[rarity].positive, 'positive');
+    pickTraits(traitCounts[rarity].negative, 'negative');
+    // --- КОНЕЦ ИСПРАВЛЕННОЙ ЛОГИКИ ---
 
     const baseLevel = randomPersonnelDef.minLevel || 1;
     const maxLevelForOffer = Math.min(GAME_CONFIG.PERSONNEL_MAX_LEVEL, Math.floor(gameState.shopLevel / (GAME_CONFIG.PERSONNEL_LEVEL_OFFER_SHOP_LEVEL_DIVIDER || 5)) + baseLevel);
@@ -209,7 +229,6 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                     const assignment = state.personnelAssignment[p.uniqueId];
                     if (!pDef || !assignment) return true;
                     
-                    // --- НОВАЯ ЛОГИКА: Расчет бонусов от экипировки ---
                     let equipmentBonuses = {};
                     if (p.equipment) {
                         for(const slot in p.equipment) {
@@ -229,7 +248,6 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                             }
                         }
                     }
-                    // --- -------------------------------------------- ---
 
                     const moodEfficiency = p.mood / 100;
                     const baseAbility = pDef.baseAbilities;
@@ -240,7 +258,7 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                             const oreType = assignment.assignment;
                             if (oreType) {
                                 let miningSpeed = (baseAbility.miningSpeed + (p.level - 1) * perLevelAbility.miningSpeed);
-                                miningSpeed += (equipmentBonuses.miningSpeed || 0); // Применяем бонус
+                                miningSpeed += (equipmentBonuses.miningSpeed || 0); 
                                 miningSpeed *= moodEfficiency;
                                 
                                 const amountGained = miningSpeed * deltaTime;
@@ -252,7 +270,7 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                         case 'smelter':
                             if (state.smeltingProcess) {
                                 let smeltingSpeed = (baseAbility.smeltingSpeed + (p.level - 1) * perLevelAbility.smeltingSpeed);
-                                smeltingSpeed += (equipmentBonuses.smeltingSpeed || 0); // Применяем бонус
+                                smeltingSpeed += (equipmentBonuses.smeltingSpeed || 0);
                                 smeltingSpeed *= moodEfficiency;
 
                                 const progressAdded = smeltingSpeed * deltaTime;
@@ -267,7 +285,7 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                                 const shelf = state.shopShelves[shelfIndex];
                                 if (shelf && shelf.customer) {
                                     let salesSpeed = (baseAbility.salesSpeedModifier + (p.level - 1) * perLevelAbility.salesSpeedModifier);
-                                    salesSpeed += (equipmentBonuses.salesSpeedModifier || 0); // Применяем бонус
+                                    salesSpeed += (equipmentBonuses.salesSpeedModifier || 0);
                                     salesSpeed *= moodEfficiency;
 
                                     const progressAdded = GAME_CONFIG.PROGRESS_PER_SALE_CLICK * salesSpeed * deltaTime;

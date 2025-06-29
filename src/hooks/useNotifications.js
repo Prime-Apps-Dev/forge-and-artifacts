@@ -1,3 +1,4 @@
+// src/hooks/useNotifications.js
 import { useState, useCallback } from 'react';
 
 export function useNotifications() {
@@ -5,7 +6,8 @@ export function useNotifications() {
 
     const showToast = useCallback((message, type = 'info') => {
         const id = Date.now() + Math.random();
-        setToasts(prev => [...prev.slice(-5), { id, message, type }]);
+        // ИЗМЕНЕНИЕ: Ограничиваем количество тостов до 3 (slice(-2) + 1 новый = 3)
+        setToasts(prev => [...prev.slice(-2), { id, message, type }]);
     }, []);
 
     const removeToast = useCallback((id) => {
