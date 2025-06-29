@@ -61,7 +61,7 @@ export const greatArtifacts = {
         components: {
             blueprint: { name: "Древний чертеж: Бастион", obtained: false, itemId: 'blueprint_bastion'},
             material1: { name: "Адамантитовое ядро", obtained: false, itemId: 'component_adamantiteCore'},
-            material2: { name: "Стабилизирующий Гироскоп", obtained: false, itemId: 'component_stabilizingGyroscope'},
+            material2: { name: "Укрепляющий Сердечник", obtained: false, itemId: 'component_stabilizingGyroscope'}, // THEMATIC CHANGE
         },
         status: 'locked',
         epicOrder: [

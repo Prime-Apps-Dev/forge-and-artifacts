@@ -5,8 +5,8 @@ import { definitions } from '../../../data/definitions/index.js';
 import { formatCostsJsx } from '../../../utils/formatters.jsx';
 import { useGame } from '../../../context/GameContext.jsx';
 import Button from '../buttons/Button.jsx';
-import ImageWithFallback from '../display/ImageWithFallback.jsx'; // Импортируем новый компонент
-import { UI_CONSTANTS } from '../../../constants/ui.js'; // Импортируем константы для заглушки
+import ImageWithFallback from '../display/ImageWithFallback.jsx';
+import { UI_CONSTANTS } from '../../../constants/ui.js';
 
 const PersonnelOfferCard = memo(({ offer, isHiringDisabled }) => {
     const { displayedGameState: gameState, handlers } = useGame();
@@ -47,22 +47,48 @@ const PersonnelOfferCard = memo(({ offer, isHiringDisabled }) => {
         }
     };
 
+    const rarityStyles = {
+        common: 'border-gray-600 hover:border-orange-500',
+        rare: 'border-blue-500 hover:border-blue-400',
+        epic: 'border-purple-500 hover:border-purple-400',
+        legendary: 'border-yellow-500 hover:border-yellow-400 shadow-yellow-500/20'
+    };
+    const rarityBorderClass = rarityStyles[offer.rarity] || rarityStyles.common;
+
     return (
-        <div className={`bg-black/30 p-4 rounded-lg border-2 flex flex-col text-center ${isDisabled ? 'border-gray-700 opacity-60' : 'border-gray-600 hover:border-orange-500'}`}>
+        <div className={`bg-black/30 p-4 rounded-lg border-2 flex flex-col h-full ${isDisabled ? 'border-gray-700 opacity-60' : rarityBorderClass}`}>
             <ImageWithFallback
                 src={personnelDef.faceImg}
                 fallbackSrc={UI_CONSTANTS.DEFAULT_AVATAR_SRC}
                 alt={personnelDef.name}
-                className="mx-auto mb-2 w-20 h-20 object-contain rounded-full border border-gray-700"
+                className={`mx-auto mb-2 w-20 h-20 object-contain rounded-full border-2 ${rarityBorderClass}`}
             />
             <h3 className="font-cinzel text-lg font-bold text-white">{personnelDef.name}</h3>
             <p className="text-sm text-gray-400 my-1 grow">{personnelDef.description}</p>
             
-            <div className="text-left text-sm mt-auto pt-2 border-t border-gray-700">
+            {offer.traits?.length > 0 && (
+                <div className="mt-2 pt-2 border-t border-gray-700/50">
+                    <p className="text-xs text-gray-400 text-center mb-2">Черты характера:</p>
+                    <div className="flex justify-center flex-wrap gap-2">
+                        {offer.traits.map(traitId => {
+                            const traitDef = definitions.personnelTraits[traitId];
+                            if (!traitDef) return null;
+                            const traitColor = traitDef.type === 'positive' ? 'text-green-400' : 'text-red-400';
+                            return (
+                                <Tooltip key={traitId} text={`${traitDef.name}: ${traitDef.description}`}>
+                                    <span className={`material-icons-outlined text-xl ${traitColor}`}>{traitDef.icon}</span>
+                                </Tooltip>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+            
+            <div className="text-left text-sm mt-auto pt-2 border-t border-gray-700/50">
                 <p className="text-white">Уровень: <span className="font-bold">{offer.level}</span></p>
                 <p className="text-white">Настроение: <span className="font-bold text-green-400">{offer.mood}%</span></p>
                 <p className="mt-1 font-bold text-yellow-300">Способности:</p>
-                <ul className="list-disc list-inside text-xs text-gray-300 ml-2">
+                <ul className="list-disc list-inside text-xs text-white ml-2">
                     {Object.entries(currentAbilities).map(([key, value]) => (
                         <li key={key}>{formatAbility(key, value)}</li>
                     ))}

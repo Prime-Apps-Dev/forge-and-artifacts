@@ -144,10 +144,22 @@ export function handleSaleCompletion(state, shelfIndex, showToast) {
         return;
     }
     const itemDef = definitions.items[itemSold.itemKey];
-    const baseValue = itemDef.components.reduce((sum, c) => sum + c.progress, 0);
+    const baseValue = Object.values(itemSold.stats || {}).reduce((sum, statVal) => sum + statVal, 0) * 5;
     const salePrice = Math.floor((baseValue * GAME_CONFIG.SALE_BASE_PRICE_MULTIPLIER) * itemSold.quality);
     state.sparks += salePrice;
     state.totalSparksEarned += salePrice;
+    
+    const assignmentEntry = Object.entries(state.personnelAssignment).find(
+        ([pId, assignment]) => assignment.role === 'trader' && assignment.assignment === `shelf_${shelfIndex}`
+    );
+    if (assignmentEntry) {
+        const traderId = assignmentEntry[0];
+        const trader = state.hiredPersonnel.find(p => p.uniqueId === traderId);
+        if (trader) {
+            trader.sessionStats.salesValue = (trader.sessionStats.salesValue || 0) + salePrice;
+        }
+    }
+    
     const client = shelf.customer;
     const tipChance = (client?.demands?.tipChance || 0) + (state.tipChance || 0);
     if (Math.random() < tipChance) {
@@ -175,30 +187,93 @@ export function handleSaleCompletion(state, shelfIndex, showToast) {
     checkForNewQuests(state, showToast);
 }
 
-export function handleFreeCraftCompletion(state, craftProject, showToast) {
-    const itemDef = definitions.items[craftProject.itemKey];
-    const quality = 1.0 + (craftProject.qualityPoints || 0) + (Math.random() * 0.5);
-    const newItem = {
-        uniqueId: `item_${Date.now()}_${Math.random()}`,
-        itemKey: craftProject.itemKey,
-        quality: quality,
-        location: 'inventory',
-        inlaySlots: [],
-        gravingLevel: state.initialGravingLevel || 0,
-    };
-    if (state.inventory.length < state.inventoryCapacity) {
-        state.inventory.push(newItem);
-        showToast(`Создан предмет: "${itemDef.name}" (добавлен в инвентарь)!`, 'success');
-        state.totalItemsCrafted = (state.totalItemsCrafted || 0) + 1;
-    } else {
-        showToast(`Инвентарь полон! Предмет "${itemDef.name}" утерян.`, 'error');
+function completeCraft(state, project, showToast, setCompletedOrderInfo) {
+    const itemDef = definitions.items[project.itemKey];
+    if (!itemDef || !project.completedComponents) {
+        return;
     }
-    state.activeFreeCraft = null;
-    let xpEarned = Math.max(1, Math.floor(itemDef.components.reduce((sum, c) => sum + c.progress, 0) / GAME_CONFIG.CRAFT_XP_PROGRESS_DIVIDER));
-    updateMastery(state, Math.floor(xpEarned * (state.masteryXpModifier || 1.0)), showToast);
-    updateQuestProgress(state, 'craft', { itemId: craftProject.itemKey }, showToast);
+
+    const finalStats = {};
+    let totalQuality = 0;
+    let componentCount = 0;
+
+    for (const compId in project.completedComponents) {
+        const compData = project.completedComponents[compId];
+        if (compData.finalStats) {
+            for (const statName in compData.finalStats) {
+                finalStats[statName] = (finalStats[statName] || 0) + compData.finalStats[statName];
+            }
+        }
+        totalQuality += compData.quality;
+        componentCount++;
+    }
+
+    const averageQuality = componentCount > 0 ? totalQuality / componentCount : 1.0;
+    state.totalItemsCrafted = (state.totalItemsCrafted || 0) + 1;
+    
+    const isOrder = !!project.client;
+
+    if (!isOrder) { // FREE CRAFT
+        const newItem = {
+            uniqueId: `item_${Date.now()}_${Math.random()}`,
+            itemKey: project.itemKey,
+            quality: averageQuality,
+            stats: finalStats,
+            location: 'inventory',
+            inlaySlots: [],
+            gravingLevel: state.initialGravingLevel || 0,
+            level: 1, // НОВОЕ ПОЛЕ: Уровень предмета по умолчанию
+        };
+        if (state.inventory.length < state.inventoryCapacity) {
+            state.inventory.push(newItem);
+            showToast(`Создан предмет: "${itemDef.name}" (добавлен в инвентарь)!`, 'success');
+        } else {
+            showToast(`Инвентарь полон! Предмет "${itemDef.name}" утерян.`, 'error');
+        }
+        state.activeFreeCraft = null;
+        let xpEarned = Math.max(1, Math.floor(itemDef.components.reduce((sum, c) => sum + c.progress, 0) / GAME_CONFIG.CRAFT_XP_PROGRESS_DIVIDER));
+        updateMastery(state, Math.floor(xpEarned * (state.masteryXpModifier || 1.0)), showToast);
+    } else { // ORDER
+        audioController.play('complete', 'C5', '4n');
+        const timeTaken = (Date.now() - project.startTime) / 1000;
+        let tier = 'bronze';
+        if (timeTaken <= project.timeLimits.gold) tier = 'gold';
+        else if (timeTaken <= project.timeLimits.silver) tier = 'silver';
+        
+        const rewardMultiplier = tier === 'gold' ? 2.0 : tier === 'silver' ? 1.5 : 0.5;
+        
+        let finalSparks = Math.floor(project.rewards.sparks * rewardMultiplier * state.sparksModifier);
+        let finalMatter = Math.floor(project.rewards.matter * rewardMultiplier * state.matterModifier);
+        
+        if (state.artifacts.quill?.status === 'completed') finalMatter += Math.floor(finalSparks / 100);
+        state.sparks += finalSparks;
+        state.totalSparksEarned += finalSparks;
+        state.matter += finalMatter;
+        
+        let xpEarned = Math.max(1, Math.floor((itemDef.components.reduce((sum, c) => sum + c.progress, 0) / GAME_CONFIG.ORDER_XP_PROGRESS_DIVIDER) * rewardMultiplier));
+        updateMastery(state, Math.floor(xpEarned * (state.masteryXpModifier || 1.0)), showToast);
+        
+        if (project.isRisky) {
+            state.totalRiskyOrdersCompleted = (state.totalRiskyOrdersCompleted || 0) + 1;
+            state.consecutiveRiskyOrders = (state.consecutiveRiskyOrders || 0) + 1;
+            updateQuestProgress(state, 'risky_order', {}, showToast);
+        } else {
+            state.consecutiveRiskyOrders = 0;
+        }
+        setCompletedOrderInfo({ item: itemDef, sparks: finalSparks, matter: finalMatter, tier, reputationChange: {} });
+        state.activeOrder = null;
+    }
+
+    updateQuestProgress(state, 'craft', { itemId: project.itemKey }, showToast);
     checkForNewQuests(state, showToast);
-    return state;
+}
+
+export function handleOrderCompletion(state, order, showToast, setCompletedOrderInfo) {
+    completeCraft(state, order, showToast, setCompletedOrderInfo);
+}
+
+export function handleFreeCraftCompletion(state, craftProject, showToast) {
+    completeCraft(state, craftProject, showToast, null);
 }
 
 export function handleCompleteReforge(state, reforgeProject, showToast) {
@@ -258,42 +333,6 @@ export function handleCompleteGraving(state, gravingProject, showToast) {
         }
     }
     state.activeGraving = null;
-    checkForNewQuests(state, showToast);
-    return state;
-}
-
-export function handleOrderCompletion(state, order, showToast, setCompletedOrderInfo) {
-    if (!order || !definitions.items[order.itemKey]) return state;
-    audioController.play('complete', 'C5', '4n');
-    const itemDef = definitions.items[order.itemKey];
-    const timeTaken = (Date.now() - order.startTime) / 1000;
-    let tier = 'bronze';
-    if (timeTaken <= order.timeLimits.gold) tier = 'gold';
-    else if (timeTaken <= order.timeLimits.silver) tier = 'silver';
-    const qualityMultiplier = order.qualityHits > 0 ? (1 + order.qualityPoints / order.qualityHits) : 1;
-    let rewardMultiplier = 0.5;
-    if (tier === 'gold') rewardMultiplier *= 2.0;
-    if (tier === 'silver') rewardMultiplier *= 1.5;
-    rewardMultiplier *= qualityMultiplier;
-    let finalSparks = Math.floor(order.rewards.sparks * rewardMultiplier * state.sparksModifier);
-    let finalMatter = Math.floor(order.rewards.matter * rewardMultiplier * state.matterModifier);
-    if (state.artifacts.quill?.status === 'completed') finalMatter += Math.floor(finalSparks / 100);
-    state.sparks += finalSparks;
-    state.totalSparksEarned += finalSparks;
-    state.matter += finalMatter;
-    let xpEarned = Math.max(1, Math.floor((itemDef.components.reduce((sum, c) => sum + c.progress, 0) / GAME_CONFIG.ORDER_XP_PROGRESS_DIVIDER) * rewardMultiplier));
-    updateMastery(state, Math.floor(xpEarned * (state.masteryXpModifier || 1.0)), showToast);
-    state.totalItemsCrafted = (state.totalItemsCrafted || 0) + 1;
-    if (order.isRisky) {
-        state.totalRiskyOrdersCompleted = (state.totalRiskyOrdersCompleted || 0) + 1;
-        state.consecutiveRiskyOrders = (state.consecutiveRiskyOrders || 0) + 1;
-        updateQuestProgress(state, 'risky_order', {}, showToast);
-    } else {
-        state.consecutiveRiskyOrders = 0;
-    }
-    updateQuestProgress(state, 'craft', { itemId: order.itemKey }, showToast);
-    setCompletedOrderInfo({ item: itemDef, sparks: finalSparks, matter: finalMatter, tier, reputationChange: {} });
-    state.activeOrder = null;
     checkForNewQuests(state, showToast);
     return state;
 }

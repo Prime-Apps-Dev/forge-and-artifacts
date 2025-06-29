@@ -1,5 +1,7 @@
 // src/hooks/useModalsHandlers.js
 import { useCallback, useMemo } from 'react';
+import { populatePersonnelOffers } from '../logic/gameLogic';
+import { gameConfig as GAME_CONFIG } from '../constants/gameConfig';
 
 export const useModalsHandlers = ({ 
     updateState, 
@@ -12,7 +14,14 @@ export const useModalsHandlers = ({
     setIsCreditsModalOpen, 
     setIsShopReputationModalOpen, 
     setIsHirePersonnelModalOpen,
-    setActiveInfoModal
+    setActiveInfoModal,
+    setIsManagePersonnelModalOpen,
+    setManagingPersonnelId,
+    // --- НОВЫЕ ПРОПСЫ ---
+    setIsUpgradeItemModalOpen,
+    setItemToUpgradeId,
+    setIsEquipItemModalOpen,
+    setPersonnelToEquip,
 }) => {
 
     const handleCloseInfoModal = useCallback(() => {
@@ -30,7 +39,6 @@ export const useModalsHandlers = ({
 
     const handleClaimAchievementReward = useCallback((achievementId, rewardText) => {
         showToast(rewardText, 'levelup');
-        // Логика применения награды уже в основном цикле, здесь только закрываем окно
         setIsAchievementModalOpen(false);
         setAchievementToDisplay(null);
     }, [showToast, setIsAchievementModalOpen, setAchievementToDisplay]);
@@ -43,7 +51,6 @@ export const useModalsHandlers = ({
         setIsAvatarSelectionModalOpen(false);
     }, [setIsAvatarSelectionModalOpen]);
 
-    // ИСПРАВЛЕНИЕ: Добавляем обработчик выбора аватара сюда
     const handleSelectAvatar = useCallback((avatarId) => {
         updateState(state => {
             state.playerAvatarId = avatarId;
@@ -70,13 +77,53 @@ export const useModalsHandlers = ({
     }, [setIsShopReputationModalOpen]);
 
     const handleOpenHirePersonnelModal = useCallback(() => {
+        updateState(state => {
+            if (state.personnelOffers.length === 0) {
+                populatePersonnelOffers(state);
+                state.lastPersonnelOfferRollTime = Date.now();
+                state.personnelRollCount = 0;
+            }
+            return state;
+        });
         setIsSpecializationModalOpen(false);
         setIsHirePersonnelModalOpen(true);
-    }, [setIsHirePersonnelModalOpen, setIsSpecializationModalOpen]);
+    }, [updateState, setIsHirePersonnelModalOpen, setIsSpecializationModalOpen]);
 
     const handleCloseHirePersonnelModal = useCallback(() => {
         setIsHirePersonnelModalOpen(false);
     }, [setIsHirePersonnelModalOpen]);
+
+    const handleOpenManagePersonnelModal = useCallback((personnelId) => {
+        setManagingPersonnelId(personnelId);
+        setIsManagePersonnelModalOpen(true);
+    }, [setIsManagePersonnelModalOpen, setManagingPersonnelId]);
+
+    const handleCloseManagePersonnelModal = useCallback(() => {
+        setIsManagePersonnelModalOpen(false);
+        setManagingPersonnelId(null);
+    }, [setIsManagePersonnelModalOpen, setManagingPersonnelId]);
+
+    // --- НОВЫЕ ОБРАБОТЧИКИ ДЛЯ ЭКИПИРОВКИ ---
+    const handleOpenUpgradeItemModal = useCallback((itemId) => {
+        setItemToUpgradeId(itemId);
+        setIsUpgradeItemModalOpen(true);
+    }, [setItemToUpgradeId, setIsUpgradeItemModalOpen]);
+
+    const handleCloseUpgradeItemModal = useCallback(() => {
+        setIsUpgradeItemModalOpen(false);
+        setItemToUpgradeId(null);
+    }, [setIsUpgradeItemModalOpen, setItemToUpgradeId]);
+    
+    const handleOpenEquipItemModal = useCallback((personnelId, slot) => {
+        setPersonnelToEquip({ id: personnelId, slot: slot });
+        setIsEquipItemModalOpen(true);
+    }, [setPersonnelToEquip, setIsEquipItemModalOpen]);
+
+    const handleCloseEquipItemModal = useCallback(() => {
+        setIsEquipItemModalOpen(false);
+        setPersonnelToEquip({ id: null, slot: null });
+    }, [setIsEquipItemModalOpen, setPersonnelToEquip]);
+    // --- ------------------------------------ ---
 
 
     return useMemo(() => ({
@@ -86,18 +133,27 @@ export const useModalsHandlers = ({
         handleClaimAchievementReward,
         handleOpenAvatarSelectionModal,
         handleCloseAvatarSelectionModal,
-        handleSelectAvatar, // <-- Возвращаем его в общем объекте
+        handleSelectAvatar,
         handleOpenCreditsModal,
         handleCloseCreditsModal,
         handleOpenShopReputationModal,
         handleCloseShopReputationModal,
         handleOpenHirePersonnelModal,
         handleCloseHirePersonnelModal,
+        handleOpenManagePersonnelModal,
+        handleCloseManagePersonnelModal,
+        // --- НОВЫЕ ОБРАБОТЧИКИ ---
+        handleOpenUpgradeItemModal,
+        handleCloseUpgradeItemModal,
+        handleOpenEquipItemModal,
+        handleCloseEquipItemModal,
     }), [
         handleCloseInfoModal, handleCloseWorldMapModal, handleCloseAchievementModal,
         handleClaimAchievementReward, handleOpenAvatarSelectionModal, handleCloseAvatarSelectionModal,
         handleSelectAvatar, handleOpenCreditsModal, handleCloseCreditsModal,
         handleOpenShopReputationModal, handleCloseShopReputationModal,
         handleOpenHirePersonnelModal, handleCloseHirePersonnelModal,
+        handleOpenManagePersonnelModal, handleCloseManagePersonnelModal,
+        handleOpenUpgradeItemModal, handleCloseUpgradeItemModal, handleOpenEquipItemModal, handleCloseEquipItemModal, // Добавляем в зависимости
     ]);
 };

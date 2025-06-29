@@ -31,6 +31,16 @@ export function useGameState() {
     const [isHirePersonnelModalOpen, setIsHirePersonnelModalOpen] = useState(false);
     const [activeInfoModal, setActiveInfoModal] = useState(null);
 
+    const [isManagePersonnelModalOpen, setIsManagePersonnelModalOpen] = useState(false);
+    const [managingPersonnelId, setManagingPersonnelId] = useState(null);
+    
+    // --- НОВЫЕ СОСТОЯНИЯ ДЛЯ ЭКИПИРОВКИ ---
+    const [isUpgradeItemModalOpen, setIsUpgradeItemModalOpen] = useState(false);
+    const [itemToUpgradeId, setItemToUpgradeId] = useState(null);
+    const [isEquipItemModalOpen, setIsEquipItemModalOpen] = useState(false);
+    const [personnelToEquip, setPersonnelToEquip] = useState({ id: null, slot: null });
+    // ------------------------------------
+
     const workTimeoutRef = useRef(null);
 
     const updateState = useCallback((updater) => {
@@ -80,6 +90,11 @@ export function useGameState() {
         setIsShopReputationModalOpen,
         setIsHirePersonnelModalOpen,
         setActiveInfoModal,
+        setIsManagePersonnelModalOpen,
+        setManagingPersonnelId,
+        // --- НОВЫЕ СЕТТЕРЫ ДЛЯ МОДАЛЬНЫХ ОКОН ---
+        setIsUpgradeItemModalOpen, setItemToUpgradeId,
+        setIsEquipItemModalOpen, setPersonnelToEquip
     }), [updateState, showToast, gameStateRef, showAchievementRewardModal]);
 
     const handlers = usePlayerActions(handlerProps);
@@ -91,10 +106,8 @@ export function useGameState() {
         
         const stateToSave = { ...displayedGameState };
         
-        // --- КЛЮЧЕВОЙ БЛОК: ОЧИСТКА ВРЕМЕННЫХ ДАННЫХ ПЕРЕД СОХРАНЕНИЕМ ---
-        // Эти состояния не должны сохраняться между сессиями
-        stateToSave.orderQueue = []; // Очищаем очередь заказов
-        stateToSave.activeOrder = null; // Очищаем активный заказ
+        stateToSave.orderQueue = [];
+        stateToSave.activeOrder = null;
         stateToSave.activeFreeCraft = null;
         stateToSave.currentEpicOrder = null;
         stateToSave.smeltingProcess = null;
@@ -105,7 +118,6 @@ export function useGameState() {
         stateToSave.activeSale = null;
         stateToSave.personnelOffers = [];
         stateToSave.lastClickTime = 0;
-        // -------------------------------------------------------------------
 
         try {
             const stateString = JSON.stringify(stateToSave);
@@ -121,6 +133,11 @@ export function useGameState() {
         isSpecializationModalOpen, isWorldMapModalOpen, isAchievementModalOpen,
         achievementToDisplay, isAvatarSelectionModalOpen, isCreditsModalOpen,
         isShopReputationModalOpen, isHirePersonnelModalOpen,
+        isManagePersonnelModalOpen, managingPersonnelId,
+        // --- НОВЫЕ ЗНАЧЕНИЯ ДЛЯ ПЕРЕДАЧИ В APP ---
+        isUpgradeItemModalOpen, itemToUpgradeId,
+        isEquipItemModalOpen, personnelToEquip,
+        // --------------------------------------
         handlers, removeToast, activeInfoModal, handleInitialGesture,
         assetsLoaded, loadProgress, updateState,
     };

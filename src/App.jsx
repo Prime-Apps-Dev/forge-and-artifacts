@@ -33,6 +33,11 @@ import HirePersonnelModal from './components/modals/HirePersonnelModal';
 import ParticleEmitter from './components/effects/ParticleEmitter';
 import LoadingScreen from './components/LoadingScreen';
 import ShopReputationModal from './components/modals/ShopReputationModal.jsx';
+import ManagePersonnelModal from './components/modals/ManagePersonnelModal.jsx';
+// --- НОВЫЕ ИМПОРТЫ ---
+import UpgradeItemModal from './components/modals/UpgradeItemModal.jsx';
+import EquipItemModal from './components/modals/EquipItemModal.jsx';
+
 
 const useHorizontalScroll = () => {
     const elRef = useRef();
@@ -68,7 +73,12 @@ export default function App() {
         displayedGameState, toasts, completedOrderInfo, isSpecializationModalOpen,
         isWorldMapModalOpen, isAchievementRewardModalOpen, achievementToDisplay,
         isAvatarSelectionModalOpen, isCreditsModalOpen, isShopReputationModalOpen,
-        isHirePersonnelModalOpen, handlers, removeToast, activeInfoModal,
+        isHirePersonnelModalOpen, isManagePersonnelModalOpen, managingPersonnelId, 
+        // --- НОВЫЕ ЗНАЧЕНИЯ ИЗ КОНТЕКСТА ---
+        isUpgradeItemModalOpen, itemToUpgradeId,
+        isEquipItemModalOpen, personnelToEquip,
+        // ------------------------------------
+        handlers, removeToast, activeInfoModal,
         handleInitialGesture, assetsLoaded, loadProgress,
     } = useGame();
 
@@ -107,6 +117,11 @@ export default function App() {
             {isAchievementRewardModalOpen && achievementToDisplay && <AchievementRewardModal isOpen={isAchievementRewardModalOpen} onClose={handlers.handleCloseAchievementRewardModal} achievement={achievementToDisplay} />}
             {isAvatarSelectionModalOpen && <AvatarSelectionModal isOpen={isAvatarSelectionModalOpen} onClose={handlers.handleCloseAvatarSelectionModal} />}
             {isCreditsModalOpen && <CreditsModal isOpen={isCreditsModalOpen} onClose={handlers.handleCloseCreditsModal} />}
+            {isManagePersonnelModalOpen && <ManagePersonnelModal personnelId={managingPersonnelId} onClose={handlers.handleCloseManagePersonnelModal} />}
+            {/* --- РЕНДЕР НОВЫХ МОДАЛЬНЫХ ОКОН --- */}
+            {isUpgradeItemModalOpen && <UpgradeItemModal isOpen={isUpgradeItemModalOpen} onClose={handlers.handleCloseUpgradeItemModal} itemId={itemToUpgradeId} />}
+            {isEquipItemModalOpen && <EquipItemModal isOpen={isEquipItemModalOpen} onClose={handlers.handleCloseEquipItemModal} personnelId={personnelToEquip.id} equipSlot={personnelToEquip.slot} />}
+
 
             <div className="game-container flex flex-col lg:flex-row h-screen py-4 px-2 gap-4 text-gray-200 max-w-[1500px] w-full mx-auto lg:mx-3 relative z-10">
                 <div className="left-panel bg-gray-800/80 backdrop-blur-md border-2 border-gray-700 rounded-lg overflow-y-auto w-3/5">
@@ -155,7 +170,7 @@ export default function App() {
             </div>
 
             <div className={`bottom-bar-panel transition-transform duration-300 ease-in-out ${isBottomBarVisible ? 'translate-y-0' : 'translate-y-full'}`}>
-                <BottomBar onToggleInventoryModal={() => setIsInventoryOpen(true)} onToggleSettingsModal={() => setIsSettingsOpen(true)} onToggleProfileModal={() => setIsProfileModalOpen(true)} onToggleBottomBarVisibility={toggleBottomBarVisibility} />
+                <BottomBar onToggleInventoryModal={() => setIsInventoryOpen(true)} onToggleSettingsModal={() => setIsSettingsOpen(false)} onToggleProfileModal={() => setIsProfileModalOpen(true)} onToggleBottomBarVisibility={toggleBottomBarVisibility} />
             </div>
             
             <div className={`fixed left-1/2 -translate-x-1/2 transition-all duration-300 ease-in-out z-20 ${isBottomBarVisible ? 'bottom-[112px]' : 'bottom-6'}`}>

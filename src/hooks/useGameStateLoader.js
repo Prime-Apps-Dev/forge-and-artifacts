@@ -11,7 +11,7 @@ export const initialGameState = {
     ironOre: 10, copperOre: 0, mithrilOre: 0, adamantiteOre: 0,
     ironIngots: 0, copperIngots: 0, bronzeIngots: 0, sparksteelIngots: 0, mithrilIngots: 0, adamantiteIngots: 0, arcaniteIngots: 0,
     specialItems: { gem: 0, expeditionMap: 0, material_guardianHeart: 0, material_adamantFrame: 0, material_lavaAgate: 0, material_ironwoodHandle: 0, material_sunTear: 0, material_purifiedGold: 0, component_adamantiteCore: 0, component_stabilizingGyroscope: 0, component_purifiedMithril: 0, component_focusingLens: 0 },
-    inventory: [],
+    inventory: [], 
     inventoryCapacity: 8,
     shopShelves: [
         { id: 'shelf_0', itemId: null, customer: null, saleProgress: 0, saleTimer: 0 },
@@ -184,7 +184,8 @@ export function useGameStateLoader(showToast) {
             } else if (key === 'activeOrder' || key === 'activeFreeCraft') {
                 const project = parsed[key];
                 if (project && typeof project === 'object') {
-                    tempState[key] = { ...project, minigameState: null };
+                    // Сбрасываем проекты при загрузке, чтобы избежать проблем с новой логикой
+                    tempState[key] = null;
                 } else {
                     tempState[key] = null;
                 }
@@ -197,13 +198,33 @@ export function useGameStateLoader(showToast) {
                  tempState[key] = parsed[key];
             }
         });
-        
+
+        // --- НОВАЯ ЛОГИКА ДЛЯ СОВМЕСТИМОСТИ СОХРАНЕНИЙ ---
         if (tempState.hiredPersonnel && Array.isArray(tempState.hiredPersonnel)) {
              tempState.hiredPersonnel.forEach(p => {
                  p.previousAssignment = p.previousAssignment || null;
+                 p.rarity = p.rarity || 'common';
+                 p.traits = p.traits || [];
+                 p.timeWorked = p.timeWorked || 0;
+                 p.giftsReceived = p.giftsReceived || 0;
+                 p.equipment = p.equipment || { tool: null, gear: null }; // Инициализация экипировки
+                 if (!p.sessionStats) {
+                     p.sessionStats = {
+                         mined: {},
+                         smeltedProgress: 0,
+                         salesValue: 0,
+                         startTime: Date.now(),
+                     };
+                 }
              });
              tempState.personnelSlots.used = tempState.hiredPersonnel.length;
         }
+        if (tempState.inventory && Array.isArray(tempState.inventory)) {
+            tempState.inventory.forEach(item => {
+                item.level = item.level || 1; // Инициализация уровня предмета
+            });
+        }
+        // --- -------------------------------------------- ---
 
         recalculateAllModifiers(tempState);
 
@@ -211,7 +232,7 @@ export function useGameStateLoader(showToast) {
     });
 
     const gameStateRef = useRef(displayedGameState);
-    
+
     useEffect(() => {
         gameStateRef.current = displayedGameState;
     }, [displayedGameState]);

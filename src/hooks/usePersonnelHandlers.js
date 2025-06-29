@@ -6,7 +6,7 @@ import { recalculateAllModifiers } from '../utils/gameStateUtils';
 import { audioController } from '../utils/audioController';
 import { gameConfig as GAME_CONFIG } from '../constants/gameConfig';
 import { v4 as uuidv4 } from 'uuid';
-import { generatePersonnelOffer } from '../logic/gameLogic';
+import { generatePersonnelOffer, populatePersonnelOffers } from '../logic/gameLogic';
 import { canAffordAndPay } from '../utils/gameUtils';
 
 export const usePersonnelHandlers = ({ updateState, showToast, setIsHirePersonnelModalOpen }) => {
@@ -36,13 +36,7 @@ export const usePersonnelHandlers = ({ updateState, showToast, setIsHirePersonne
                 state.personnelRollCount = 0;
             }
 
-            state.personnelOffers = [];
-            for (let i = 0; i < 3; i++) {
-                const newOffer = generatePersonnelOffer(state);
-                if (newOffer) {
-                    state.personnelOffers.push(newOffer);
-                }
-            }
+            populatePersonnelOffers(state);
             state.lastPersonnelOfferRollTime = now;
             state.personnelRollCount += 1;
 
@@ -98,6 +92,17 @@ export const usePersonnelHandlers = ({ updateState, showToast, setIsHirePersonne
                 previousAssignment: null,
                 isResting: false,
                 restEndTime: 0,
+                rarity: offer.rarity,
+                traits: offer.traits,
+                timeWorked: 0,
+                giftsReceived: 0,
+                sessionStats: {
+                    mined: {},
+                    smeltedProgress: 0,
+                    salesValue: 0,
+                    startTime: Date.now(),
+                },
+                equipment: { tool: null, gear: null },
             };
 
             state.hiredPersonnel.push(newPersonnel);
@@ -113,9 +118,6 @@ export const usePersonnelHandlers = ({ updateState, showToast, setIsHirePersonne
     }, [updateState, showToast]);
 
     const handleFirePersonnel = useCallback((personnelUniqueId) => {
-        if (!window.confirm("Вы уверены, что хотите уволить этого сотрудника? Он не вернется в список предложений сразу!")) {
-            return;
-        }
         updateState(state => {
             const personnelIndex = state.hiredPersonnel.findIndex(p => p.uniqueId === personnelUniqueId);
             if (personnelIndex === -1) return state;
@@ -143,6 +145,14 @@ export const usePersonnelHandlers = ({ updateState, showToast, setIsHirePersonne
             if (personnel.isResting) {
                 showToast("Сотрудник отдыхает и не может быть назначен!", "error");
                 return state;
+            }
+
+            if (assignment !== null) {
+                const hasTool = personnel.equipment && personnel.equipment.tool;
+                if (!hasTool) {
+                    showToast(`Невозможно назначить ${personnel.name}. Сначала выдайте сотруднику инструмент!`, "error");
+                    return state;
+                }
             }
 
             delete state.personnelAssignment[personnelUniqueId];
@@ -226,6 +236,8 @@ export const usePersonnelHandlers = ({ updateState, showToast, setIsHirePersonne
                     return state;
                 }
                 
+                personnel.giftsReceived = (personnel.giftsReceived || 0) + 1;
+                
                 const pDef = definitions.personnel[personnel.personnelId];
                 let moodBoost = 10 + Math.floor(Math.random() * 5);
 
@@ -273,6 +285,32 @@ export const usePersonnelHandlers = ({ updateState, showToast, setIsHirePersonne
         });
     }, [updateState, showToast]);
 
+    // --- НОВЫЙ ОБРАБОТЧИК ДЛЯ ЭКИПИРОВКИ ---
+    const handleEquipItem = useCallback((personnelUniqueId, slot, itemUniqueId) => {
+        updateState(state => {
+            const personnel = state.hiredPersonnel.find(p => p.uniqueId === personnelUniqueId);
+            const itemToEquip = state.inventory.find(i => i.uniqueId === itemUniqueId);
+
+            if (!personnel || !itemToEquip) { showToast("Ошибка экипировки!", "error"); return state; }
+            
+            // Возвращаем старый предмет в инвентарь, если он был
+            const oldItemId = personnel.equipment[slot];
+            if (oldItemId) {
+                const oldItem = state.inventory.find(i => i.uniqueId === oldItemId);
+                if (oldItem) oldItem.location = 'inventory';
+            }
+
+            // Экипируем новый предмет
+            personnel.equipment[slot] = itemUniqueId;
+            itemToEquip.location = `equipped_${personnelUniqueId}`; // Меняем локацию, чтобы убрать из общего инвентаря
+            
+            const itemDef = definitions.items[itemToEquip.itemKey];
+            showToast(`${itemDef.name} экипирован на ${personnel.name}.`, 'success');
+            recalculateAllModifiers(state);
+            return state;
+        });
+    }, [updateState, showToast]);
+
     return useMemo(() => ({
         handleGeneratePersonnelOffers,
         handleHirePersonnel,
@@ -280,6 +318,7 @@ export const usePersonnelHandlers = ({ updateState, showToast, setIsHirePersonne
         handleAssignPersonnel,
         handlePersonnelLevelUp,
         handlePersonnelAction,
+        handleEquipItem, // Экспортируем новый обработчик
     }), [
         handleGeneratePersonnelOffers,
         handleHirePersonnel,
@@ -287,5 +326,6 @@ export const usePersonnelHandlers = ({ updateState, showToast, setIsHirePersonne
         handleAssignPersonnel,
         handlePersonnelLevelUp,
         handlePersonnelAction,
+        handleEquipItem,
     ]);
 };

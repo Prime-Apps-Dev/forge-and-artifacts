@@ -7,8 +7,7 @@ import {
     handleCompleteInlay,
     handleCompleteGraving,
     handleOrderCompletion,
-    handleSaleCompletion,
-    updateQuestProgress // Импортируем нашу новую функцию
+    updateQuestProgress
 } from './gameCompletions';
 import { visualEffects } from '../utils/visualEffects';
 import { gameConfig as GAME_CONFIG } from '../constants/gameConfig.js';
@@ -27,31 +26,23 @@ export function createGameHandlers({
         workTimeoutRef.current = setTimeout(() => setIsWorking(false), 200);
     };
 
-    const endMinigame = (project, success, qualityBonus = 0, progressBonus = 0) => {
-        if (!project || !project.minigameState) return 0;
-        
-        if (success) {
-            showToast(`Отличный удар! (+${qualityBonus.toFixed(1)} к качеству)`, 'crit');
-            project.qualityPoints = (project.qualityPoints || 0) + qualityBonus;
-            project.qualityHits = (project.qualityHits || 0) + 1;
-        } else {
-            showToast("Промах!", "error");
-            project.qualityPoints = (project.qualityPoints || 0) - GAME_CONFIG.MINIGAME_PENALTY_QUALITY_DECREASE;
-        }
-        
-        project.minigameState = null;
-        return progressBonus;
-    };
-    
     const applyProgress = (state, progressAmount, clickX, clickY) => {
-        state.totalClicks = (state.totalClicks || 0) + 1;
-        // Накопительные квесты проверяются здесь, так как они не зависят от успеха/неудачи действия
-        updateQuestProgress(state, 'totalClicks', {}, showToast);
-        if (state.totalMatterSpent > 0) { // Проверяем, тратилась ли материя
-            updateQuestProgress(state, 'totalMatterSpent', {}, showToast);
+        const activeProject = state.activeOrder || state.activeFreeCraft;
+        if (!activeProject || !activeProject.activeComponentId) {
+            return;
         }
 
-        const workstationMod = state.workstationBonus[state.activeWorkstationId] || 1;
+        const itemDef = definitions.items[activeProject.itemKey];
+        const componentDef = itemDef.components.find(c => c.id === activeProject.activeComponentId);
+        
+        if (!componentDef || activeProject.completedComponents[componentDef.id]) {
+             return;
+        }
+
+        state.totalClicks = (state.totalClicks || 0) + 1;
+        updateQuestProgress(state, 'totalClicks', {}, showToast);
+        
+        const workstationMod = state.workstationBonus[state.activeWorkstationId] || 1.0;
         progressAmount *= workstationMod;
 
         const currentWorkstation = state.workstations[state.activeWorkstationId];
@@ -72,69 +63,150 @@ export function createGameHandlers({
             }
         }
         
-        if (state.currentEpicOrder) {
-            const epicOrder = state.currentEpicOrder;
-            const artifactDef = definitions.greatArtifacts[epicOrder.artifactId];
-            const stageDef = artifactDef.epicOrder.find(s => s.stage === epicOrder.currentStage);
+        if (activeProject.componentProgress[componentDef.id] === undefined) {
+            activeProject.componentProgress[componentDef.id] = 0;
+        }
 
-            if (state.purchasedSkills.divisionOfLabor && stageDef.workstation !== state.activeWorkstationId) {
-                showToast(`Не тот станок! Требуется: ${definitions.workstations[stageDef.workstation].name}`, "error");
-                return state;
+        if (activeProject.componentProgress[componentDef.id] === 0 && componentDef.cost) {
+            if (!canAffordAndPay(state, componentDef.cost, showToast)) {
+                return;
             }
-            if (epicOrder.progress === 0 && stageDef.cost) {
-                if (!canAffordAndPay(state, stageDef.cost, showToast)) {
-                    return state;
-                }
-            }
-            epicOrder.progress += progressAmount;
-            if (epicOrder.progress >= stageDef.progress) {
-                const isLastStage = epicOrder.currentStage === artifactDef.epicOrder.length;
-                if (isLastStage) {
-                    audioController.play('levelup', 'C6', '1n');
-                    state.artifacts[epicOrder.artifactId].status = 'completed';
-                    setCompletedOrderInfo({ isArtifact: true, artifactId: epicOrder.artifactId });
-                    state.currentEpicOrder = null;
-                    showToast(`Шедевр создан: ${artifactDef.name}!`, 'levelup');
-                } else {
-                    audioController.play('complete', 'A4', '8n');
-                    epicOrder.currentStage += 1;
-                    epicOrder.progress = 0;
-                    showToast(`Этап ${stageDef.stage} завершен!`, 'success');
-                }
-            }
-            return state;
         }
         
-        const activeProject = state.activeOrder || state.activeFreeCraft;
+        activeProject.componentProgress[componentDef.id] = Math.min(componentDef.progress, activeProject.componentProgress[componentDef.id] + progressAmount);
 
-        if (activeProject) {
-            const itemDef = definitions.items[activeProject.itemKey];
-            const componentDef = itemDef.components.find(c => c.id === activeProject.activeComponentId);
+        if (activeProject.componentProgress[componentDef.id] >= componentDef.progress) {
+             if (!activeProject.completedComponents[componentDef.id]) {
+                const quality = activeProject.minigameQualityBuffer?.[componentDef.id] || 1.0;
+                
+                const finalStats = {};
+                if (componentDef.baseStats) {
+                    for (const statName in componentDef.baseStats) {
+                        finalStats[statName] = componentDef.baseStats[statName] * quality;
+                    }
+                }
+                activeProject.completedComponents[componentDef.id] = { quality, finalStats };
+                activeProject.activeComponentId = null;
 
-            if (!componentDef || (activeProject.componentProgress[componentDef.id] || 0) >= componentDef.progress) return state;
-            
-            if ((activeProject.componentProgress[componentDef.id] || 0) === 0 && componentDef.cost) {
-                if (!canAffordAndPay(state, componentDef.cost, showToast)) return state;
+                if(activeProject.minigameQualityBuffer?.[componentDef.id]) {
+                    delete activeProject.minigameQualityBuffer[componentDef.id];
+                }
+
+                showToast(`Компонент "${componentDef.name}" завершен!`, 'success');
+                audioController.play('complete', 'A4', '8n');
+
+                // --- MODIFIED COMPLETION CHECK ---
+                const totalComponents = itemDef.components.length;
+                const completedCount = Object.keys(activeProject.completedComponents).length;
+
+                if (completedCount >= totalComponents) {
+                    if (state.activeOrder) handleOrderCompletion(state, state.activeOrder, showToast, setCompletedOrderInfo);
+                    else if (state.activeFreeCraft) handleFreeCraftCompletion(state, activeProject, showToast);
+                }
             }
-
-            if (!activeProject.componentProgress[componentDef.id]) activeProject.componentProgress[componentDef.id] = 0;
-            activeProject.componentProgress[componentDef.id] = Math.min(componentDef.progress, activeProject.componentProgress[componentDef.id] + progressAmount);
-
-            if (itemDef.components.every(c => (activeProject.componentProgress[c.id] || 0) >= c.progress)) {
-                if (state.activeOrder) handleOrderCompletion(state, state.activeOrder, showToast, setCompletedOrderInfo);
-                else if (state.activeFreeCraft) handleFreeCraftCompletion(state, activeProject, showToast);
-            }
-        } else if (state.activeReforge) {
-            state.activeReforge.progress += progressAmount;
-            if (state.activeReforge.progress >= state.activeReforge.requiredProgress) handleCompleteReforge(state, state.activeReforge, showToast);
-        } else if (state.activeInlay) {
-            state.activeInlay.progress += progressAmount;
-            if (state.activeInlay.progress >= state.activeInlay.requiredProgress) handleCompleteInlay(state, state.activeInlay, showToast);
-        } else if (state.activeGraving) {
-            state.activeGraving.progress += progressAmount;
-            if (state.activeGraving.progress >= state.activeGraving.requiredProgress) handleCompleteGraving(state, state.activeGraving, showToast);
         }
-        return state;
+    };
+    
+    const handleMinigameCompletion = (state, project, success, quality) => {
+        project.minigameState = null;
+        const componentDef = definitions.items[project.itemKey]?.components.find(c => c.id === project.activeComponentId);
+        if (!componentDef) return;
+
+        project.minigameQualityBuffer = project.minigameQualityBuffer || {};
+        project.minigameQualityBuffer[componentDef.id] = quality;
+        
+        if (success) {
+            showToast(`Результат мини-игры: Качество x${quality.toFixed(2)}. Продолжайте работу!`, 'info');
+            const currentProgress = project.componentProgress[componentDef.id] || 0;
+            const remainingProgress = componentDef.progress - currentProgress;
+            const calculatedBonus = componentDef.progress * (0.01 + Math.random() * 0.09);
+            const progressBonus = Math.min(calculatedBonus, remainingProgress > 1 ? remainingProgress - 1 : 0);
+            
+            if (progressBonus > 0) {
+                 project.componentProgress[componentDef.id] += progressBonus;
+            }
+        } else {
+            showToast(`Мини-игра провалена! Качество компонента пострадает (x${quality.toFixed(2)}).`, 'error');
+        }
+    };
+
+    const handleStrikeAnvil = (e) => {
+        triggerWorkAnimation();
+        const clickX = e.clientX;
+        const clickY = e.clientY;
+
+        updateState(state => {
+            const project = state.activeOrder || state.activeFreeCraft;
+
+            if (!project) {
+                 if(state.currentEpicOrder) { /* Epic order logic */ return state; }
+                 if(state.activeReforge) { /* Reforge logic */ return state; }
+                 if(state.activeInlay) { /* Inlay logic */ return state; }
+                 if(state.activeGraving) { /* Graving logic */ return state; }
+                 showToast("Выберите проект для работы!", "error");
+                 return state;
+            }
+            
+            if (!project.activeComponentId) {
+                showToast("Выберите компонент для работы!", "error");
+                return state;
+            }
+
+            const componentDef = definitions.items[project.itemKey]?.components.find(c => c.id === project.activeComponentId);
+            if (!componentDef) return state;
+
+            if (project.minigameState?.active) {
+                if (project.minigameState.type === 'bar_precision') {
+                    const pos = project.minigameState.position;
+                    let success = false;
+                    let quality = 1.0 - GAME_CONFIG.MINIGAME_PENALTY_QUALITY_DECREASE;
+                    for (const zone of componentDef.minigame.zones) {
+                        if (pos >= zone.from && pos <= zone.to) {
+                            success = true;
+                            quality = zone.qualityBonus;
+                            break;
+                        }
+                    }
+                    audioController.play(success ? 'crit' : 'click', 'A4');
+                    handleMinigameCompletion(state, project, success, quality);
+                }
+                return state;
+            }
+            
+            const canTriggerMinigame = (project.minigameCount || 0) < 3;
+            if (componentDef.minigame && canTriggerMinigame && !project.completedComponents[componentDef.id] && Math.random() < componentDef.minigame.triggerChance) {
+                project.minigameCount = (project.minigameCount || 0) + 1;
+                showToast("Момент истины!", "info");
+                audioController.play('complete', 'C4', '8n');
+                project.minigameState = { active: true, type: componentDef.minigame.type, startTime: Date.now() };
+                
+                if (project.minigameState.type === 'click_points') {
+                    project.minigameState.points = [];
+                    project.minigameState.totalPoints = Math.floor(Math.random() * (componentDef.minigame.pointsCount.max - componentDef.minigame.pointsCount.min + 1)) + componentDef.minigame.pointsCount.min;
+                    project.minigameState.hitPoints = 0;
+                }
+                if (project.minigameState.type === 'hold_and_release') {
+                    project.minigameState.fillPercentage = 0;
+                    project.minigameState.isHolding = false;
+                    const zoneSize = Math.floor(Math.random() * (componentDef.minigame.zoneSize.max - componentDef.minigame.zoneSize.min + 1)) + componentDef.minigame.zoneSize.min;
+                    const perfectSize = Math.floor(Math.random() * (componentDef.minigame.perfectZoneSize.max - componentDef.minigame.perfectZoneSize.min + 1)) + componentDef.minigame.perfectZoneSize.min;
+                    const targetStart = Math.random() * (100 - zoneSize);
+                    project.minigameState.targetZone = { from: targetStart, to: targetStart + zoneSize };
+                    const perfectStart = targetStart + Math.random() * (zoneSize - perfectSize);
+                    project.minigameState.perfectZone = { from: perfectStart, to: perfectStart + perfectSize };
+                }
+                if(project.minigameState.type === 'bar_precision') {
+                    project.minigameState.position = 0;
+                }
+                return state;
+            } 
+            
+            audioController.play('click', 'C3');
+            visualEffects.showParticleEffect(clickX, clickY, 'default');
+            applyProgress(state, state.progressPerClick, clickX, clickY);
+
+            return state;
+        });
     };
     
     const handleMinigameClickPoint = (pointId) => {
@@ -143,6 +215,8 @@ export function createGameHandlers({
             if (!project?.minigameState?.active || project.minigameState.type !== 'click_points') return state;
 
             const minigameState = project.minigameState;
+            const componentDef = definitions.items[project.itemKey].components.find(c => c.id === project.activeComponentId)?.minigame;
+
             const pointIndex = minigameState.points.findIndex(p => p.id === pointId);
             if (pointIndex === -1) return state;
 
@@ -151,11 +225,8 @@ export function createGameHandlers({
             audioController.play('click', 'G5', '16n');
 
             if (minigameState.hitPoints >= minigameState.totalPoints) {
-                const minigameDef = definitions.items[project.itemKey].components.find(c => c.id === project.activeComponentId)?.minigame;
-                const qualityBonus = minigameState.totalPoints * minigameDef.qualityBonus;
-                const progressBonus = minigameState.totalPoints * minigameDef.progressBonus;
-                const finalProgressBonus = endMinigame(project, true, qualityBonus, progressBonus);
-                applyProgress(state, state.progressPerClick + finalProgressBonus, 0, 0);
+                const qualityBonus = componentDef.qualityBonus;
+                handleMinigameCompletion(state, project, true, qualityBonus);
             }
             return state;
         });
@@ -171,114 +242,37 @@ export function createGameHandlers({
             const minigameDef = definitions.items[project.itemKey].components.find(c => c.id === project.activeComponentId)?.minigame;
             
             let success = false;
-            let qualityBonus = 0;
-            let progressBonus = 0;
+            let quality = 1.0 - GAME_CONFIG.MINIGAME_PENALTY_QUALITY_DECREASE;
 
             if (minigameState.fillPercentage >= minigameState.perfectZone.from && minigameState.fillPercentage <= minigameState.perfectZone.to) {
                 success = true;
-                qualityBonus = minigameDef.perfectQualityBonus;
-                progressBonus = minigameDef.perfectProgressBonus;
-                 audioController.play('crit', 'C5', '8n');
+                quality = minigameDef.perfectQualityBonus;
+                audioController.play('crit', 'C5', '8n');
             } else if (minigameState.fillPercentage >= minigameState.targetZone.from && minigameState.fillPercentage <= minigameState.targetZone.to) {
                 success = true;
-                qualityBonus = minigameDef.qualityBonus;
-                progressBonus = minigameDef.progressBonus;
-                 audioController.play('click', 'A4', '8n');
+                quality = minigameDef.qualityBonus;
+                audioController.play('click', 'A4', '8n');
             } else {
-                 audioController.play('click', 'C3', '8n');
+                audioController.play('click', 'C3', '8n');
             }
-            const finalProgressBonus = endMinigame(project, success, qualityBonus, progressBonus);
-            applyProgress(state, state.progressPerClick + finalProgressBonus, 0, 0);
+            handleMinigameCompletion(state, project, success, quality);
             return state;
         });
     };
 
-
     return {
-        handleStrikeAnvil: (e) => {
-            triggerWorkAnimation();
-            const clickX = e.clientX;
-            const clickY = e.clientY;
-
-            updateState(state => {
-                const project = state.activeOrder || state.activeFreeCraft || state.currentEpicOrder || state.activeReforge || state.activeInlay || state.activeGraving;
-                if (!project) {
-                    showToast("Выберите проект для работы!", "error");
-                    return state;
-                }
-                
-                if((state.activeOrder || state.activeFreeCraft) && !project.activeComponentId){
-                    showToast("Выберите компонент для работы!", "error");
-                    return state;
-                }
-                
-                const craftProject = state.activeOrder || state.activeFreeCraft;
-                const componentDef = craftProject ? definitions.items[craftProject.itemKey]?.components.find(c => c.id === craftProject.activeComponentId) : null;
-
-                if (craftProject && craftProject.minigameState?.active) {
-                    if (craftProject.minigameState.type === 'bar_precision') {
-                        const pos = craftProject.minigameState.position;
-                        let hitQuality = 'miss';
-                        let progressBonus = 0;
-                        let qualityBonus = 0;
-                        for (const zone of componentDef.minigame.zones) {
-                            if (pos >= zone.from && pos <= zone.to) {
-                                hitQuality = zone.quality;
-                                progressBonus = zone.progressBonus;
-                                qualityBonus = zone.qualityBonus;
-                                break;
-                            }
-                        }
-                        const finalProgressBonus = endMinigame(craftProject, hitQuality !== 'miss', qualityBonus, progressBonus);
-                        applyProgress(state, state.progressPerClick + finalProgressBonus, clickX, clickY);
-                        audioController.play(hitQuality !== 'miss' ? 'crit' : 'click', 'A4');
-                    }
-                    return state;
-                }
-                
-                if (craftProject && componentDef?.minigame && Math.random() < componentDef.minigame.triggerChance) {
-                    showToast("Момент истины!", "info");
-                    audioController.play('complete', 'C4', '8n');
-                    const minigameDef = componentDef.minigame;
-                    
-                    craftProject.minigameState = { active: true, type: minigameDef.type, startTime: Date.now() };
-
-                    if (minigameDef.type === 'click_points') {
-                        craftProject.minigameState.points = [];
-                        craftProject.minigameState.totalPoints = Math.floor(Math.random() * (minigameDef.pointsCount.max - minigameDef.pointsCount.min + 1)) + minigameDef.pointsCount.min;
-                        craftProject.minigameState.hitPoints = 0;
-                    }
-                    if (minigameDef.type === 'hold_and_release') {
-                        craftProject.minigameState.fillPercentage = 0;
-                        craftProject.minigameState.isHolding = false;
-                        const zoneSize = Math.floor(Math.random() * (minigameDef.zoneSize.max - minigameDef.zoneSize.min + 1)) + minigameDef.zoneSize.min;
-                        const perfectSize = Math.floor(Math.random() * (minigameDef.perfectZoneSize.max - minigameDef.perfectZoneSize.min + 1)) + minigameDef.perfectZoneSize.min;
-                        const targetStart = Math.random() * (100 - zoneSize);
-                        craftProject.minigameState.targetZone = { from: targetStart, to: targetStart + zoneSize };
-                        const perfectStart = targetStart + Math.random() * (zoneSize - perfectSize);
-                        craftProject.minigameState.perfectZone = { from: perfectStart, to: perfectStart + perfectSize };
-                    }
-                    if(minigameDef.type === 'bar_precision') {
-                        craftProject.minigameState.position = 0;
-                    }
-                } else {
-                    audioController.play('click', 'C3');
-                    visualEffects.showParticleEffect(clickX, clickY, 'default');
-                    applyProgress(state, state.progressPerClick, clickX, clickY);
-                }
-
-                return state;
-            });
-        },
+        handleStrikeAnvil,
         handleSelectComponent: (componentId) => {
             updateState(state => {
-                if (state.activeOrder) state.activeOrder.activeComponentId = componentId;
-                else if (state.activeFreeCraft) state.activeFreeCraft.activeComponentId = componentId;
+                const project = state.activeOrder || state.activeFreeCraft;
+                if (project) {
+                    project.activeComponentId = componentId;
+                }
                 return state;
             });
         },
         handleSelectWorkstation: (workstationId) => {
-            updateState(state => {
+             updateState(state => {
                 state.activeWorkstationId = workstationId;
                 return state;
             });

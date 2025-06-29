@@ -28,14 +28,16 @@ const PersonnelView = () => {
              </Button>
 
              {hiredUniquePersonnel.length > 0 ? (
-                 <div className="flex flex-col gap-4">
-                     <h4 className="font-cinzel text-orange-400 text-lg mb-3">Ваш штат</h4>
-                     {hiredUniquePersonnel.map(personnel => (
-                         <HiredPersonnelCard
-                             key={personnel.uniqueId}
-                             personnel={personnel}
-                         />
-                     ))}
+                 <div>
+                    <h4 className="font-cinzel text-orange-400 text-lg mb-3">Ваш штат</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                        {hiredUniquePersonnel.map(personnel => (
+                            <HiredPersonnelCard
+                                key={personnel.uniqueId}
+                                personnel={personnel}
+                            />
+                        ))}
+                    </div>
                  </div>
              ) : (
                  <p className="text-gray-500 italic text-center py-8">В вашем штате пока нет сотрудников. Нажмите "Нанять нового сотрудника"!</p>

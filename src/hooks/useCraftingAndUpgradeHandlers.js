@@ -44,6 +44,12 @@ export const useCraftingAndUpgradeHandlers = ({ updateState, showToast, setCompl
             }
             orderToAccept.startTime = Date.now();
             orderToAccept.timeLimits = { gold: (definitions.items[orderToAccept.itemKey].components.reduce((sum, c) => sum + c.progress, 0) / 2) * state.timeLimitModifier, silver: definitions.items[orderToAccept.itemKey].components.reduce((sum, c) => sum + c.progress, 0) * state.timeLimitModifier };
+            
+            orderToAccept.completedComponents = {};
+            orderToAccept.activeComponentId = null; 
+            orderToAccept.minigameCount = 0;
+            orderToAccept.minigameQualityBuffer = {}; 
+
             state.activeOrder = orderToAccept;
             state.masteryXP = (state.masteryXP || 0) + Math.max(1, Math.floor((definitions.items[orderToAccept.itemKey].components.reduce((sum, c) => sum + c.progress, 0) * 0.05)));
             showToast("Заказ принят в работу!", "info");
@@ -64,8 +70,16 @@ export const useCraftingAndUpgradeHandlers = ({ updateState, showToast, setCompl
                 showToast(`Необходим чертеж "${definitions.specialItems[item.blueprintId]?.name || item.blueprintId}" для создания этого предмета!`, "error");
                 return state;
             }
+            
+            state.activeFreeCraft = {
+                itemKey,
+                componentProgress: {}, 
+                completedComponents: {}, 
+                activeComponentId: null, 
+                minigameCount: 0,
+                minigameQualityBuffer: {},
+            };
 
-            state.activeFreeCraft = { itemKey, componentProgress: {}, activeComponentId: item.components.find(c => !c.requires)?.id || item.components[0].id, };
             showToast(`Начато создание предмета: ${item.name}`, "info");
             return state;
         });
@@ -302,6 +316,31 @@ export const useCraftingAndUpgradeHandlers = ({ updateState, showToast, setCompl
             return state;
         });
     }, [updateState, showToast]);
+    
+    // --- НОВЫЙ ОБРАБОТЧИК ---
+    const handleUpgradeItem = useCallback((itemUniqueId) => {
+        updateState(state => {
+            const item = state.inventory.find(i => i.uniqueId === itemUniqueId);
+            if (!item) { showToast("Предмет не найден!", "error"); return state; }
+            
+            const itemDef = definitions.items[item.itemKey];
+            if (!itemDef || item.level >= itemDef.maxLevel) {
+                showToast("Предмет нельзя улучшить!", "error"); return state;
+            }
+
+            const cost = itemDef.upgradeCosts[item.level - 1];
+            if (!canAffordAndPay(state, cost, showToast)) {
+                return state;
+            }
+
+            item.level += 1;
+            showToast(`Предмет "${itemDef.name}" улучшен до уровня ${item.level}!`, 'success');
+            audioController.play('levelup', 'D5', '8n');
+            recalculateAllModifiers(state); // Пересчет на случай, если бонусы зависят от уровня
+            return state;
+        });
+    }, [updateState, showToast]);
+
 
     return useMemo(() => ({
         handleAcceptOrder,
@@ -314,6 +353,7 @@ export const useCraftingAndUpgradeHandlers = ({ updateState, showToast, setCompl
         handleBuyUpgrade,
         handleCraftArtifact,
         handleCancelSmelt,
+        handleUpgradeItem, // Добавляем новый обработчик
     }), [
         handleAcceptOrder,
         handleStartFreeCraft,
@@ -325,5 +365,6 @@ export const useCraftingAndUpgradeHandlers = ({ updateState, showToast, setCompl
         handleBuyUpgrade,
         handleCraftArtifact,
         handleCancelSmelt,
+        handleUpgradeItem, // Добавляем в зависимости
     ]);
 };

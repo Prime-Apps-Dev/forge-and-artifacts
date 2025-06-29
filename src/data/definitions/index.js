@@ -19,6 +19,7 @@ import { upgrades } from './upgrades.js';
 import { shopUpgrades } from './shopUpgrades.js';
 import { recipes } from './recipes.js';
 import { gameConfig } from '../../constants/gameConfig.js';
+import { personnelTraits } from './personnelTraits.js'; // НОВЫЙ ИМПОРТ
 
 /**
  * Централизованный объект, содержащий все игровые определения.
@@ -35,6 +36,7 @@ export const definitions = {
     eternalSkills,
     avatars,
     personnel,
+    personnelTraits, // НОВОЕ СВОЙСТВО
     masteryLevelRewards,
     playerRanks,
     shopLevels,

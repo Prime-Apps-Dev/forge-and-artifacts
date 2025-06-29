@@ -11,25 +11,60 @@ let achievementCheckTimer = 0;
 let orderGenerationTimeout = null;
 
 export function generatePersonnelOffer(gameState) {
+    const resourceUnlockSkills = {
+        copperOre: 'findCopper', copperIngots: 'findCopper', bronzeIngots: 'artOfAlloys',
+        sparksteelIngots: 'artOfAlloys', mithrilOre: 'mithrilProspecting', mithrilIngots: 'mithrilProspecting',
+        adamantiteOre: 'adamantiteMining', adamantiteIngots: 'adamantiteMining', arcaniteIngots: 'arcaneMetallurgy',
+    };
+
     const availablePersonnelTypes = Object.values(definitions.personnel).filter(pDef => {
-        if (pDef.requiredSkill && !gameState.purchasedSkills[pDef.requiredSkill]) {
-            return false;
-        }
-        if (pDef.maxQuantity && gameState.hiredPersonnel.filter(p => p.personnelId === pDef.id).length >= pDef.maxQuantity) {
-            return false;
-        }
-        if (pDef.maxQuantity === 1 && gameState.hiredPersonnel.some(p => p.personnelId === pDef.id)) {
-            return false;
+        if (pDef.requiredSkill && !gameState.purchasedSkills[pDef.requiredSkill]) return false;
+        if (pDef.maxQuantity && gameState.hiredPersonnel.filter(p => p.personnelId === pDef.id).length >= pDef.maxQuantity) return false;
+        if (pDef.maxQuantity === 1 && gameState.hiredPersonnel.some(p => p.personnelId === pDef.id)) return false;
+        const costs = Object.keys(pDef.baseHireCost);
+        for (const resource of costs) {
+            const requiredSkill = resourceUnlockSkills[resource];
+            if (requiredSkill && !gameState.purchasedSkills[requiredSkill]) return false;
         }
         return true;
     });
 
-    if (availablePersonnelTypes.length === 0) {
-        return null;
-    }
+    if (availablePersonnelTypes.length === 0) return null;
+
+    const rand = Math.random() * 100;
+    let rarity;
+    if (rand < 1) rarity = 'legendary';
+    else if (rand < 11) rarity = 'epic';
+    else if (rand < 35) rarity = 'rare';
+    else rarity = 'common';
+
+    const traitCounts = {
+        common: { positive: 1, negative: 2 },
+        rare: { positive: 2, negative: 2 },
+        epic: { positive: 2, negative: 1 },
+        legendary: { positive: Math.random() < 0.5 ? 3 : 4, negative: 0 }
+    };
 
     const randomPersonnelDef = availablePersonnelTypes[Math.floor(Math.random() * availablePersonnelTypes.length)];
     
+    const allTraits = Object.values(definitions.personnelTraits);
+    const positiveTraits = allTraits.filter(t => t.type === 'positive' && (!t.role || t.role === randomPersonnelDef.role));
+    const negativeTraits = allTraits.filter(t => t.type === 'negative' && (!t.role || t.role === randomPersonnelDef.role));
+    
+    const assignedTraits = new Set();
+    const pickRandomTrait = (traitPool) => {
+        if (traitPool.length === 0) return;
+        let trait;
+        do {
+            trait = traitPool[Math.floor(Math.random() * traitPool.length)];
+        } while (assignedTraits.has(trait.id));
+        assignedTraits.add(trait.id);
+    };
+
+    for (let i = 0; i < traitCounts[rarity].positive; i++) pickRandomTrait(positiveTraits);
+    for (let i = 0; i < traitCounts[rarity].negative; i++) pickRandomTrait(negativeTraits);
+
+
     const baseLevel = randomPersonnelDef.minLevel || 1;
     const maxLevelForOffer = Math.min(GAME_CONFIG.PERSONNEL_MAX_LEVEL, Math.floor(gameState.shopLevel / (GAME_CONFIG.PERSONNEL_LEVEL_OFFER_SHOP_LEVEL_DIVIDER || 5)) + baseLevel);
     
@@ -40,21 +75,17 @@ export function generatePersonnelOffer(gameState) {
     let wage = { ...randomPersonnelDef.baseWage };
 
     for (let i = 1; i < level; i++) {
-        for (const res in hireCost) {
-            hireCost[res] = Math.floor(hireCost[res] * (randomPersonnelDef.costIncrease || GAME_CONFIG.PERSONNEL_HIRE_COST_MULTIPLIER_PER_LEVEL));
-        }
-        for (const res in wage) {
-            wage[res] = Math.floor(wage[res] * (randomPersonnelDef.wageIncrease || GAME_CONFIG.PERSONNEL_WAGE_MULTIPLIER_PER_LEVEL));
-        }
+        for (const res in hireCost) hireCost[res] = Math.floor(hireCost[res] * (randomPersonnelDef.costIncrease || GAME_CONFIG.PERSONNEL_HIRE_COST_MULTIPLIER_PER_LEVEL));
+        for (const res in wage) wage[res] = Math.floor(wage[res] * (randomPersonnelDef.wageIncrease || GAME_CONFIG.PERSONNEL_WAGE_MULTIPLIER_PER_LEVEL));
     }
 
     const shopLevelModifier = 1 - (gameState.shopLevel * GAME_CONFIG.PERSONNEL_OFFER_COST_REDUCTION_PER_SHOP_LEVEL);
-    for (const res in hireCost) {
-        hireCost[res] = Math.max(1, Math.floor(hireCost[res] * shopLevelModifier));
-    }
-    for (const res in wage) {
-        wage[res] = Math.max(1, Math.floor(wage[res] * shopLevelModifier));
-    }
+    for (const res in hireCost) hireCost[res] = Math.max(1, Math.floor(hireCost[res] * shopLevelModifier));
+    for (const res in wage) wage[res] = Math.max(1, Math.floor(wage[res] * shopLevelModifier));
+
+    const randomFactor = 0.85 + Math.random() * 0.30;
+    for (const res in hireCost) hireCost[res] = Math.max(1, Math.floor(hireCost[res] * randomFactor));
+    for (const res in wage) wage[res] = Math.max(1, Math.floor(wage[res] * randomFactor));
 
     return {
         uniqueId: `personnel_offer_${Date.now()}_${Math.random()}`,
@@ -65,8 +96,22 @@ export function generatePersonnelOffer(gameState) {
         wage: wage,
         xp: 0,
         xpToNextLevel: definitions.personnel[randomPersonnelDef.id].baseXPToNextLevel,
+        rarity: rarity, 
+        traits: Array.from(assignedTraits),
     };
 }
+
+export function populatePersonnelOffers(state) {
+    state.personnelOffers = [];
+    for (let i = 0; i < 3; i++) {
+        const newOffer = generatePersonnelOffer(state);
+        if (newOffer) {
+            state.personnelOffers.push(newOffer);
+        }
+    }
+    return state;
+}
+
 
 export function startGameLoop(updateState, handlers, showToast, showAchievementRewardModal) {
     let cantAffordToastCooldown = 0;
@@ -86,22 +131,15 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                 
                 if (recipe) {
                     let canAfford = true;
-                    let finalCost = {};
-
                     Object.entries(recipe.input).forEach(([resourceKey, baseCost]) => {
                         const currentAmount = state[resourceKey] || state.specialItems[resourceKey] || 0;
-                        if (currentAmount < baseCost) {
-                            canAfford = false;
-                        }
+                        if (currentAmount < baseCost) canAfford = false;
                     });
 
                     if (canAfford) {
                         Object.entries(recipe.input).forEach(([resourceKey, cost]) => {
-                             if(state.hasOwnProperty(resourceKey)) {
-                                state[resourceKey] -= cost;
-                            } else if (state.specialItems.hasOwnProperty(resourceKey)) {
-                                state.specialItems[resourceKey] -= cost;
-                            }
+                             if(state.hasOwnProperty(resourceKey)) state[resourceKey] -= cost;
+                             else if (state.specialItems.hasOwnProperty(resourceKey)) state.specialItems[resourceKey] -= cost;
                         });
                         
                         state.smeltingProcess = { recipeId, progress: 0 };
@@ -143,8 +181,7 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                     if (p.isResting) {
                         p.mood = Math.min(100, p.mood + GAME_CONFIG.PERSONNEL_MOOD_RECOVERY_RATE * deltaTime);
                         if (now > p.restEndTime) {
-                            p.isResting = false;
-                            p.mood = 100;
+                            p.isResting = false; p.mood = 100;
                             showToast(`${p.name} отдохнул(а) и готов(а) к работе!`, 'info');
                             if (p.previousAssignment) {
                                 state.personnelAssignment[p.uniqueId] = p.previousAssignment;
@@ -153,6 +190,8 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                         }
                         return true;
                     }
+                    
+                    p.timeWorked = (p.timeWorked || 0) + deltaTime;
 
                     p.mood = Math.max(0, p.mood - GAME_CONFIG.PERSONNEL_MOOD_DECAY_RATE * deltaTime);
 
@@ -169,6 +208,29 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                     const pDef = definitions.personnel[p.personnelId];
                     const assignment = state.personnelAssignment[p.uniqueId];
                     if (!pDef || !assignment) return true;
+                    
+                    // --- НОВАЯ ЛОГИКА: Расчет бонусов от экипировки ---
+                    let equipmentBonuses = {};
+                    if (p.equipment) {
+                        for(const slot in p.equipment) {
+                            if (p.equipment[slot]) {
+                                const item = state.inventory.find(i => i.uniqueId === p.equipment[slot]);
+                                if (item) {
+                                    const itemDef = definitions.items[item.itemKey];
+                                    for(const bonusKey in itemDef.bonuses) {
+                                        equipmentBonuses[bonusKey] = (equipmentBonuses[bonusKey] || 0) + itemDef.bonuses[bonusKey];
+                                    }
+                                    if (item.level > 1 && itemDef.bonusesPerLevel) {
+                                        for(const bonusKey in itemDef.bonusesPerLevel) {
+                                            equipmentBonuses[bonusKey] = (equipmentBonuses[bonusKey] || 0) + (itemDef.bonusesPerLevel[bonusKey] * (item.level - 1));
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    // --- -------------------------------------------- ---
+
                     const moodEfficiency = p.mood / 100;
                     const baseAbility = pDef.baseAbilities;
                     const perLevelAbility = pDef.abilitiesPerLevel;
@@ -177,18 +239,26 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                         case 'miner':
                             const oreType = assignment.assignment;
                             if (oreType) {
-                                const miningSpeed = (baseAbility.miningSpeed + (p.level - 1) * perLevelAbility.miningSpeed) * moodEfficiency;
+                                let miningSpeed = (baseAbility.miningSpeed + (p.level - 1) * perLevelAbility.miningSpeed);
+                                miningSpeed += (equipmentBonuses.miningSpeed || 0); // Применяем бонус
+                                miningSpeed *= moodEfficiency;
+                                
                                 const amountGained = miningSpeed * deltaTime;
                                 state[oreType] = (state[oreType] || 0) + amountGained;
                                 xpGained = amountGained * GAME_CONFIG.PERSONNEL_XP_PER_RESOURCE_TICK;
+                                p.sessionStats.mined[oreType] = (p.sessionStats.mined[oreType] || 0) + amountGained;
                             }
                             break;
                         case 'smelter':
                             if (state.smeltingProcess) {
-                                const smeltingSpeed = (baseAbility.smeltingSpeed + (p.level - 1) * perLevelAbility.smeltingSpeed) * moodEfficiency;
+                                let smeltingSpeed = (baseAbility.smeltingSpeed + (p.level - 1) * perLevelAbility.smeltingSpeed);
+                                smeltingSpeed += (equipmentBonuses.smeltingSpeed || 0); // Применяем бонус
+                                smeltingSpeed *= moodEfficiency;
+
                                 const progressAdded = smeltingSpeed * deltaTime;
                                 state.smeltingProcess.progress += progressAdded;
                                 xpGained = progressAdded * GAME_CONFIG.PERSONNEL_XP_PER_SMELT_PROGRESS;
+                                p.sessionStats.smeltedProgress = (p.sessionStats.smeltedProgress || 0) + progressAdded;
                             }
                             break;
                         case 'trader':
@@ -196,7 +266,10 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                             if (!isNaN(shelfIndex)) {
                                 const shelf = state.shopShelves[shelfIndex];
                                 if (shelf && shelf.customer) {
-                                    const salesSpeed = (baseAbility.salesSpeedModifier + (p.level - 1) * perLevelAbility.salesSpeedModifier) * moodEfficiency;
+                                    let salesSpeed = (baseAbility.salesSpeedModifier + (p.level - 1) * perLevelAbility.salesSpeedModifier);
+                                    salesSpeed += (equipmentBonuses.salesSpeedModifier || 0); // Применяем бонус
+                                    salesSpeed *= moodEfficiency;
+
                                     const progressAdded = GAME_CONFIG.PROGRESS_PER_SALE_CLICK * salesSpeed * deltaTime;
                                     shelf.saleProgress += progressAdded;
                                     xpGained = progressAdded * GAME_CONFIG.PERSONNEL_XP_PER_SALE_PROGRESS;
@@ -243,7 +316,24 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                     state.sparks -= totalWageCostSparks;
                     state.matter -= totalWageCostMatter;
                     showToast(`Выплачена зарплата персоналу: -${formatNumber(totalWageCostSparks)} искр, -${formatNumber(totalWageCostMatter)} материи.`, 'info');
-                    state.hiredPersonnel.forEach(p => p.mood = Math.min(100, p.mood + 5));
+                    state.hiredPersonnel.forEach(p => {
+                        const stats = p.sessionStats;
+                        let report = `${p.name} | Отчет за смену: `;
+                        let reported = false;
+                        if (stats.salesValue > 0) { report += `Продажи на ${formatNumber(stats.salesValue)} искр. `; reported = true; }
+                        if (stats.smeltedProgress > 0) { report += `Прогресс плавки +${formatNumber(stats.smeltedProgress)}. `; reported = true; }
+                        const minedOres = Object.keys(stats.mined);
+                        if (minedOres.length > 0) {
+                            report += "Добыто: " + minedOres.map(ore => `${formatNumber(stats.mined[ore])} ${definitions.resources[ore].name}`).join(', ') + ". ";
+                            reported = true;
+                        }
+                        if (reported) {
+                           setTimeout(() => showToast(report, 'faction'), 500); 
+                        }
+
+                        p.sessionStats = { mined: {}, smeltedProgress: 0, salesValue: 0, startTime: now };
+                        p.mood = Math.min(100, p.mood + 5);
+                    });
                 } else {
                     showToast("Недостаточно средств для выплаты зарплаты! Эффективность персонала снижена.", "error");
                     state.hiredPersonnel.forEach(p => p.mood = Math.max(0, p.mood - 10));

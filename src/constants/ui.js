@@ -1,5 +1,5 @@
 // src/constants/ui.js
-import { IMAGE_PATHS } from './paths'; // Импортируем новые пути
+import { IMAGE_PATHS } from './paths';
 
 export const UI_CONSTANTS = {
     DEFAULT_AVATAR_SRC: IMAGE_PATHS.AVATARS.DEFAULT_MALE,
@@ -59,4 +59,32 @@ export const UI_CONSTANTS = {
         default: 'ед.',
     },
     TOOLTIP_DELAY: 500,
+};
+
+// ИСПРАВЛЕННЫЙ И ПОЛНЫЙ СЛОВАРЬ ИКОНОК
+export const STAT_ICONS = {
+    damage: 'phishing',
+    defense: 'shield',
+    durability: 'health_and_safety',
+    sharpness: 'carpenter',
+    handling: 'pan_tool',
+    speed: 'speed',
+    utility: 'construction',
+    armorPenetration: 'bolt',
+    energyDamage: 'electric_bolt',
+    resonance: 'waves',
+    appeal: 'grade',
+    critChance: 'casino',
+    comfort: 'airline_seat_recline_normal',
+    flexibility: 'conversion_path',
+    capacity: 'inventory_2',
+    precision: 'track_changes',
+    power: 'bolt',
+    clarity: 'diamond',
+    coreDensity: 'density_medium',
+    structuralIntegrity: 'foundation',
+    energyResistance: 'shield_moon',
+    purity: 'local_drink',
+    weight: 'weight',
+    focusPower: 'filter_center_focus'
 };

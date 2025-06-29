@@ -16,7 +16,7 @@ export const specialItems = {
     blueprint_bastion: { name: "Чертеж: Бастион", description: 'Схема для создания Бастиона Несокрушимости.', cost: { matter: 10000, sparks: 50000 }, requiredFaction: 'court', requiredRep: 'exalted', requiredSkill: 'blueprint_arcaniteMastery'},
     blueprint_quill: { name: "Чертеж: Перо", description: 'Схема для создания Пера Архивариуса.', cost: { matter: 10000, sparks: 50000 }, requiredFaction: 'court', requiredRep: 'exalted', requiredSkill: 'blueprint_arcaniteMastery'},
     component_adamantiteCore: { name: "Адамантитовое ядро", description: "Сердце Бастиона. Тяжелое и прочное." },
-    component_stabilizingGyroscope: { name: "Стабилизирующий Гироскоп", description: "Сложное устройство, использующее принципы резонанса арканита для укрепления структуры любого материала." },
+    component_stabilizingGyroscope: { name: "Укрепляющий Сердечник", description: "Сложное устройство, использующее принципы резонанса для укрепления структуры любого материала." }, // THEMATIC CHANGE
     component_purifiedMithril: { name: "Очищенный Мифрил", description: "Мифрил, избавленный от всех примесей." },
     component_focusingLens: { name: "Фокусирующая Линза", description: "Линза, преобразующая Искры в Материю." },
     
