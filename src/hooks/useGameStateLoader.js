@@ -19,11 +19,11 @@ export const initialGameState = {
     ],
     passiveGeneration: { ironOre: 0, copperOre: 0, ironIngots: 0, sparks: 0 },
     orderQueue: [],
-    activeOrder: { minigameState: null },
+    activeOrder: null,
     smeltingProcess: null,
     smeltingQueue: [],
     smeltingQueueCapacity: 0,
-    activeFreeCraft: { minigameState: null },
+    activeFreeCraft: null,
     currentEpicOrder: null,
     activeWorkstationId: 'anvil',
     workstations: {

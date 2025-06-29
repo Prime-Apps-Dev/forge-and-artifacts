@@ -29,7 +29,7 @@ const ActiveProjectDisplay = memo(() => {
 
     return (
         <>
-            {gameState.activeOrder && (
+            {gameState.activeOrder && gameState.activeOrder.rewards && (
                 <div className="flex items-start gap-4 mb-2">
                     <img src={clientFaceImg} alt="Лицо клиента" className="w-16 h-16 rounded-full border-2 border-gray-600" />
                     <div className="grow">
