@@ -63,16 +63,6 @@ body {
     transition: box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, transform 0.1s ease;
 }
 
-.interactive-element:not(:disabled):active {
-    /* ИСПРАВЛЕНИЕ: Эта строка была причиной бага.
-      Трансформация элемента в момент клика может приводить к тому, 
-      что событие 'mouseup' происходит за его пределами, отменяя 'click'.
-      Мы удаляем это правило для повышения надёжности.
-    */
-    /* transform: scale(0.95); */
-}
-
-
 @keyframes anvil-strike {
   0% { transform: translateY(0); }
   20% { transform: translateY(-5px) rotate(-3deg); }
