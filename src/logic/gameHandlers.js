@@ -39,12 +39,12 @@ export function createGameHandlers({
              return;
         }
 
-        // --- ИСПРАВЛЕНИЕ: Проверка верстака ---
-        if (componentDef.workstation !== state.activeWorkstationId) {
+        // --- ИСПРАВЛЕНИЕ: Проверка верстака теперь происходит только ПОСЛЕ изучения навыка "Разделение труда"
+        if (state.purchasedSkills.divisionOfLabor && componentDef.workstation !== state.activeWorkstationId) {
             showToast(`Неверный верстак! Требуется: ${definitions.workstations[componentDef.workstation].name}`, 'error');
             return;
         }
-        // --- -------------------------------
+        // --- -----------------------------------------------------------------------------------------
 
         state.totalClicks = (state.totalClicks || 0) + 1;
         updateQuestProgress(state, 'totalClicks', {}, showToast);
@@ -212,7 +212,7 @@ export function createGameHandlers({
             applyProgress(state, state.progressPerClick, clickX, clickY);
 
             // Проверяем, не была ли работа заблокирована проверкой верстака
-            if (componentDef.workstation === state.activeWorkstationId) {
+            if (!state.purchasedSkills.divisionOfLabor || componentDef.workstation === state.activeWorkstationId) {
                  audioController.play('click', 'C3');
                  visualEffects.showParticleEffect(clickX, clickY, 'default');
             }
