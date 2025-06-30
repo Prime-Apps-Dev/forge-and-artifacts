@@ -9,6 +9,7 @@ import { IMAGE_PATHS } from '../../constants/paths';
 import { useGame } from '../../context/GameContext.jsx';
 import Button from '../ui/buttons/Button.jsx';
 import { useDraggableModal } from '../../hooks/useDraggableModal.js';
+import ModalDragHandle from '../ui/display/ModalDragHandle.jsx';
 
 const IngotProgressBar = ({ progressPercentage, currentXp, xpToNextLevel }) => {
     const ingotImages = useMemo(() => [
