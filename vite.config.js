@@ -8,23 +8,15 @@ export default defineConfig({
     react(),
     ViteImageOptimizer({
       webp: {
-        // Целевое качество для .webp изображений
         quality: 75,
         lossless: false,
       },
-      // Вы можете добавить настройки и для других форматов
-      // jpg: { quality: 80 },
-      // png: { quality: 80 },
     }),
     VitePWA({
-      // registerType 'autoUpdate' будет автоматически скачивать новую версию игры
-      // и применять её при следующем заходе, как и требуется в ТЗ 4.1.
       registerType: 'autoUpdate',
-      // devOptions включены для тестирования Service Worker в режиме разработки.
       devOptions: {
         enabled: true
       },
-      // Указываем путь к манифесту нашего веб-приложения.
       manifest: {
         name: 'Forge & Artifacts: Зов Наследия',
         short_name: 'Forge & Artifacts',
@@ -36,35 +28,38 @@ export default defineConfig({
         start_url: '/',
         icons: [
           {
-            src: '/img/ui/anvil.webp', // Путь к вашей существующей иконке
+            src: '/img/ui/anvil.webp',
             sizes: '192x192',
-            type: 'image/webp', // Указываем правильный тип файла
+            type: 'image/webp',
           },
           {
-            src: '/img/ui/anvil.webp', // Путь к вашей существующей иконке
+            src: '/img/ui/anvil.webp',
             sizes: '512x512',
-            type: 'image/webp', // Указываем правильный тип файла
+            type: 'image/webp',
           },
         ],
       },
-      // Конфигурация Workbox для генерации Service Worker.
+      // Конфигурация Workbox
       workbox: {
-        // globPatterns будет кэшировать все необходимые ассеты.
-        // Это покрывает требования ТЗ 2.2.1, 2.2.2 и 2.2.3.
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,mp3}'],
-        // Стратегия кэширования для навигационных запросов (основной HTML файл).
+        // ИЗМЕНЕНИЕ: Увеличиваем лимит размера файла для кэширования до 10 МБ.
+        // Этого должно хватить для наших самых больших аудиофайлов.
+        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
+        
+        // ИЗМЕНЕНИЕ: Исключаем аудиофайлы (.mp3) из списка для предварительного кэширования.
+        // Они будут кэшироваться "на лету" благодаря runtimeCaching ниже.
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webp}'],
+        
         navigateFallback: '/index.html',
-        // Стратегии для обработки ресурсов во время работы приложения.
         runtimeCaching: [
           {
-            // Стратегия Stale-While-Revalidate для всех статичных ассетов.
-            // Это соответствует требованию ТЗ 6.1.2.
+            // Эта стратегия по-прежнему будет обрабатывать все ассеты, включая аудио,
+            // но уже во время работы приложения, а не при установке Service Worker.
             urlPattern: ({ request }) => request.destination === 'image' || request.destination === 'script' || request.destination === 'style' || request.destination === 'font' || request.destination === 'audio',
             handler: 'StaleWhileRevalidate',
             options: {
               cacheName: 'static-assets-cache',
               expiration: {
-                maxEntries: 1000, // Максимальное количество файлов в кэше
+                maxEntries: 1000,
                 maxAgeSeconds: 30 * 24 * 60 * 60, // 30 дней
               },
               cacheableResponse: {
@@ -77,6 +72,6 @@ export default defineConfig({
     }),
   ],
   build: {
-    outDir: 'dist', // Папка, куда Vite соберет проект (по умолчанию 'dist')
+    outDir: 'dist',
   }
 });
