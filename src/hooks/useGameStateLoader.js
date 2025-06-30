@@ -1,5 +1,4 @@
 // src/hooks/useGameStateLoader.js
-
 import { useState, useRef, useEffect } from 'react';
 import { definitions } from '../data/definitions/index.js';
 import { recalculateAllModifiers } from '../utils/gameStateUtils.js';
@@ -83,6 +82,7 @@ export const initialGameState = {
     questRewardModifier: 1.0,
     completedAchievements: [],
     appliedAchievementRewards: [],
+    appliedAchievementLevels: {}, // НОВОЕ СВОЙСТВО
     totalItemsCrafted: 0,
     totalIngotsSmelted: 0,
     totalClicks: 0,
@@ -91,7 +91,7 @@ export const initialGameState = {
     totalExpeditionMapsBought: 0,
     totalCourtOrdersCompleted: 0,
     totalRiskyOrdersCompleted: 0,
-    totalOreMinedByPersonnel: 0, // ДОБАВЛЕНО: Новый счетчик для Наследия
+    totalOreMinedByPersonnel: 0,
     playerAvatarId: 'default_avatar_male',
     playerName: 'Безымянный Кузнец',
     claimedMasteryLevelRewards: [],
@@ -138,7 +138,6 @@ export const initialGameState = {
         orders: [],
         nextRefresh: 0,
     },
-    // ДОБАВЛЕНО: Новый объект для хранения данных Наследия
     legacyStats: {
         passiveBonuses: {
             ore: 0,
