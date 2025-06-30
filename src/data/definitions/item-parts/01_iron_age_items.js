@@ -35,7 +35,7 @@ export const ironAgeItems = {
         ]
     },
     ironHelmet: {
-        name: "Железный шлем", icon: IMAGE_PATHS.ITEMS.IRON_HELMET, requiredSkill: 'blueprint_basicArmor', baseIngot: 'ironIngots', baseIngotType: 'basic', hasInlaySlots: true, blueprintId: 'blueprint_basicArmor_item',
+        name: "Железный шлем", icon: IMAGE_PATHS.ITEMS.IRON_HELMET, requiredSkill: 'blueprint_basicArmor', baseIngot: 'ironIngots', baseIngotType: 'basic', hasInlaySlots: true, blueprintId: 'blueprint_ironHelmet',
         components: [
             {
                 id: "dome", name: "Купол", progress: 60, cost: { ironIngots: 5 }, workstation: 'anvil',
@@ -56,7 +56,7 @@ export const ironAgeItems = {
         ]
     },
     ironGreaves: {
-        name: "Железные поножи", icon: IMAGE_PATHS.ITEMS.IRON_GREAVES, requiredSkill: 'blueprint_basicArmor', baseIngot: 'ironIngots', baseIngotType: 'basic', hasInlaySlots: true, blueprintId: 'blueprint_basicArmor_item',
+        name: "Железные поножи", icon: IMAGE_PATHS.ITEMS.IRON_GREAVES, requiredSkill: 'blueprint_basicArmor', baseIngot: 'ironIngots', baseIngotType: 'basic', hasInlaySlots: true, blueprintId: 'blueprint_ironGreaves',
         components: [
             {
                 id: "plates", name: "Пластины", progress: 80, cost: { ironIngots: 7 }, workstation: 'anvil',
@@ -72,7 +72,7 @@ export const ironAgeItems = {
         ]
     },
     twoHandedAxe: {
-        name: "Двуручный топор", icon: IMAGE_PATHS.ITEMS.TWO_HANDED_AXE, requiredSkill: 'blueprint_advancedTools', baseIngot: 'ironIngots', baseIngotType: 'basic', hasInlaySlots: true, blueprintId: 'blueprint_advancedTools_item',
+        name: "Двуручный топор", icon: IMAGE_PATHS.ITEMS.TWO_HANDED_AXE, requiredSkill: 'blueprint_advancedTools', baseIngot: 'ironIngots', baseIngotType: 'basic', hasInlaySlots: true, blueprintId: 'blueprint_twoHandedAxe',
         components: [
             {
                 id: "axehead", name: "Лезвие топора", progress: 120, cost: { ironIngots: 10 }, workstation: 'anvil',
@@ -93,7 +93,7 @@ export const ironAgeItems = {
         ]
     },
     reinforcedShield: {
-        name: "Усиленный щит", icon: IMAGE_PATHS.ITEMS.REINFORCED_SHIELD, requiredSkill: 'blueprint_advancedTools', baseIngot: 'ironIngots', baseIngotType: 'basic', hasInlaySlots: true, blueprintId: 'blueprint_advancedTools_item',
+        name: "Усиленный щит", icon: IMAGE_PATHS.ITEMS.REINFORCED_SHIELD, requiredSkill: 'blueprint_advancedTools', baseIngot: 'ironIngots', baseIngotType: 'basic', hasInlaySlots: true, blueprintId: 'blueprint_reinforcedShield',
         components: [
             {
                 id: "base", name: "Основа", progress: 90, cost: { ironIngots: 8 }, workstation: 'anvil',
@@ -114,7 +114,7 @@ export const ironAgeItems = {
         ]
     },
     ironCrowbar: {
-        name: 'Железный Лом', icon: IMAGE_PATHS.ITEMS.IRON_CROWBAR, requiredSkill: null, baseIngot: 'ironIngots', baseIngotType: 'basic', hasInlaySlots: false, blueprintId: 'sturdyVice_item',
+        name: 'Железный Лом', icon: IMAGE_PATHS.ITEMS.IRON_CROWBAR, requiredSkill: 'sturdyVice', baseIngot: 'ironIngots', baseIngotType: 'basic', hasInlaySlots: false, blueprintId: 'blueprint_ironCrowbar',
         components: [
             { 
                 id: 'shaping', name: "Формовка", progress: 30, cost: { ironIngots: 2 }, workstation: 'anvil',
@@ -129,7 +129,7 @@ export const ironAgeItems = {
         ]
     },
     ironVice: {
-        name: 'Железные Тиски', icon: IMAGE_PATHS.ITEMS.IRON_VICE, requiredSkill: 'divisionOfLabor', baseIngot: 'ironIngots', baseIngotType: 'basic', hasInlaySlots: false, blueprintId: 'divisionOfLabor_item',
+        name: 'Железные Тиски', icon: IMAGE_PATHS.ITEMS.IRON_VICE, requiredSkill: 'divisionOfLabor', baseIngot: 'ironIngots', baseIngotType: 'basic', hasInlaySlots: false, blueprintId: 'blueprint_ironVice',
         components: [
             { 
                 id: 'frame', name: "Основа", progress: 100, cost: { ironIngots: 8 }, workstation: 'anvil',
@@ -145,7 +145,7 @@ export const ironAgeItems = {
         ]
     },
     armorRepairKit: {
-        name: 'Комплект для Ремонта Брони', icon: IMAGE_PATHS.ITEMS.ARMOR_REPAIR_KIT, requiredSkill: 'blueprint_eliteArmor', baseIngot: 'ironIngots', baseIngotType: 'basic', hasInlaySlots: false, blueprintId: 'repairWorkshop_item',
+        name: 'Комплект для Ремонта Брони', icon: IMAGE_PATHS.ITEMS.ARMOR_REPAIR_KIT, requiredSkill: 'repairWorkshop', baseIngot: 'ironIngots', baseIngotType: 'basic', hasInlaySlots: false, blueprintId: 'blueprint_armorRepairKit',
         components: [
             { 
                 id: 'plates', name: "Ремкомплектные пластины", progress: 80, cost: { ironIngots: 5, copperIngots: 3 }, workstation: 'anvil',

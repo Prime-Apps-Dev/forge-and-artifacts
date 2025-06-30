@@ -2,7 +2,8 @@
 import React from 'react';
 import ResourceItem from '../ui/cards/ResourceItem';
 import { definitions } from '../../data/definitions/index.js';
-import { useGame } from '../../context/GameContext.jsx';
+import { useGame } from '../../context/useGame.js'; // ИЗМЕНЕН ПУТЬ ИМПОРТА
+
 
 const ResourcePanel = React.memo(() => {
     const { displayedGameState: gameState } = useGame();

@@ -49,6 +49,9 @@ export const useCraftingAndUpgradeHandlers = ({ updateState, showToast, setCompl
             orderToAccept.activeComponentId = null; 
             orderToAccept.minigameCount = 0;
             orderToAccept.minigameQualityBuffer = {}; 
+            orderToAccept.craftingMetadata = {
+                critSuccessCount: 0,
+            };
 
             state.activeOrder = orderToAccept;
             state.masteryXP = (state.masteryXP || 0) + Math.max(1, Math.floor((definitions.items[orderToAccept.itemKey].components.reduce((sum, c) => sum + c.progress, 0) * 0.05)));
@@ -78,6 +81,9 @@ export const useCraftingAndUpgradeHandlers = ({ updateState, showToast, setCompl
                 activeComponentId: null, 
                 minigameCount: 0,
                 minigameQualityBuffer: {},
+                craftingMetadata: {
+                    critSuccessCount: 0,
+                },
             };
 
             showToast(`Начато создание предмета: ${item.name}`, "info");
@@ -175,9 +181,16 @@ export const useCraftingAndUpgradeHandlers = ({ updateState, showToast, setCompl
             state.lastClickTime = now;
             const region = definitions.regions[state.currentRegion];
             const miningModifier = region?.modifiers?.miningSpeed?.[oreType] || 1.0;
-            const amountGained = state.orePerClick * miningModifier;
+            let amountGained = state.orePerClick * miningModifier;
+
+            if (oreType === 'copperOre' && state.bonusCopperChance > 0) {
+                if (Math.random() < state.bonusCopperChance) {
+                    amountGained++;
+                    showToast("Удача! Найдена дополнительная медная руда!", 'crit');
+                }
+            }
             state[oreType] = (state[oreType] || 0) + amountGained;
-            showToast(`Добыто: +${formatNumber(amountGained)} ед. ${oreType.replace('Ore', ' руды')}!`, 'success');
+            showToast(`Добыто: +${formatNumber(amountGained)} ед. ${definitions.resources[oreType].name}!`, 'success');
 
             return state;
         });
@@ -317,7 +330,6 @@ export const useCraftingAndUpgradeHandlers = ({ updateState, showToast, setCompl
         });
     }, [updateState, showToast]);
     
-    // --- НОВЫЙ ОБРАБОТЧИК ---
     const handleUpgradeItem = useCallback((itemUniqueId) => {
         updateState(state => {
             const item = state.inventory.find(i => i.uniqueId === itemUniqueId);
@@ -336,7 +348,55 @@ export const useCraftingAndUpgradeHandlers = ({ updateState, showToast, setCompl
             item.level += 1;
             showToast(`Предмет "${itemDef.name}" улучшен до уровня ${item.level}!`, 'success');
             audioController.play('levelup', 'D5', '8n');
-            recalculateAllModifiers(state); // Пересчет на случай, если бонусы зависят от уровня
+            recalculateAllModifiers(state); 
+            return state;
+        });
+    }, [updateState, showToast]);
+    
+    const handleDisassembleItem = useCallback((itemUniqueId) => {
+        updateState(state => {
+            const itemIndex = state.inventory.findIndex(i => i.uniqueId === itemUniqueId);
+            if (itemIndex === -1) {
+                showToast("Предмет не найден!", "error");
+                return state;
+            }
+
+            const item = state.inventory[itemIndex];
+            const itemDef = definitions.items[item.itemKey];
+
+            if (!itemDef.components || itemDef.components.length === 0) {
+                 showToast("Этот предмет нельзя разобрать.", "error");
+                return state;
+            }
+
+            const refundedResources = {};
+            itemDef.components.forEach(component => {
+                if (component.cost) {
+                    for (const resource in component.cost) {
+                        refundedResources[resource] = (refundedResources[resource] || 0) + component.cost[resource];
+                    }
+                }
+            });
+
+            let toastMessages = [];
+            for (const resource in refundedResources) {
+                const amountToRefund = Math.floor(refundedResources[resource] * 0.30);
+                if (amountToRefund > 0) {
+                    if (state.hasOwnProperty(resource)) {
+                        state[resource] += amountToRefund;
+                    } else if (state.specialItems.hasOwnProperty(resource)) {
+                        state.specialItems[resource] += amountToRefund;
+                    }
+                    const resourceName = definitions.resources[resource]?.name || definitions.specialItems[resource]?.name || resource;
+                    toastMessages.push(`+${formatNumber(amountToRefund)} ${resourceName}`);
+                }
+            }
+
+            state.inventory.splice(itemIndex, 1);
+            
+            showToast(`Предмет "${itemDef.name}" разобран. Возвращено: ${toastMessages.join(', ')}`, 'success');
+            audioController.play('crit', 'A3', '8n');
+            
             return state;
         });
     }, [updateState, showToast]);
@@ -353,7 +413,8 @@ export const useCraftingAndUpgradeHandlers = ({ updateState, showToast, setCompl
         handleBuyUpgrade,
         handleCraftArtifact,
         handleCancelSmelt,
-        handleUpgradeItem, // Добавляем новый обработчик
+        handleUpgradeItem,
+        handleDisassembleItem,
     }), [
         handleAcceptOrder,
         handleStartFreeCraft,
@@ -365,6 +426,7 @@ export const useCraftingAndUpgradeHandlers = ({ updateState, showToast, setCompl
         handleBuyUpgrade,
         handleCraftArtifact,
         handleCancelSmelt,
-        handleUpgradeItem, // Добавляем в зависимости
+        handleUpgradeItem,
+        handleDisassembleItem, 
     ]);
 };

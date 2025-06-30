@@ -3,7 +3,7 @@ import { IMAGE_PATHS } from '../../../constants/paths';
 
 export const copperBronzeAgeItems = {
     copperBracelet: {
-        name: 'Медный браслет', icon: IMAGE_PATHS.ITEMS.COPPER_BRACELET, requiredSkill: 'jewelryCrafting', baseIngot: 'copperIngots', baseIngotType: 'basic', hasInlaySlots: true, blueprintId: 'jewelryCrafting_item',
+        name: 'Медный браслет', icon: IMAGE_PATHS.ITEMS.COPPER_BRACELET, requiredSkill: 'jewelryCrafting', baseIngot: 'copperIngots', baseIngotType: 'basic', hasInlaySlots: true, blueprintId: 'blueprint_copperBracelet',
         components: [
              {
                   id: "shaping", name: "Формовка", progress: 50, cost: { copperIngots: 4 }, workstation: 'anvil',
@@ -18,7 +18,7 @@ export const copperBronzeAgeItems = {
         ]
     },
     copperAmulet: {
-        name: "Медный амулет", icon: IMAGE_PATHS.ITEMS.COPPER_AMULET, requiredSkill: 'jewelryCrafting', baseIngot: 'copperIngots', baseIngotType: 'basic', hasInlaySlots: true, blueprintId: 'jewelryCrafting_item',
+        name: "Медный амулет", icon: IMAGE_PATHS.ITEMS.COPPER_AMULET, requiredSkill: 'jewelryCrafting', baseIngot: 'copperIngots', baseIngotType: 'basic', hasInlaySlots: true, blueprintId: 'blueprint_copperAmulet',
         components: [
             {
                 id: "pendant", name: "Подвеска", progress: 70, cost: { copperIngots: 6 }, workstation: 'anvil',
@@ -33,7 +33,7 @@ export const copperBronzeAgeItems = {
         ]
     },
     bronzeShield: {
-        name: 'Бронзовый щит', icon: IMAGE_PATHS.ITEMS.BRONZE_SHIELD, requiredSkill: 'artOfAlloys', baseIngot: 'bronzeIngots', baseIngotType: 'uncommon', hasInlaySlots: true, blueprintId: 'artOfAlloys_item',
+        name: 'Бронзовый щит', icon: IMAGE_PATHS.ITEMS.BRONZE_SHIELD, requiredSkill: 'artOfAlloys', baseIngot: 'bronzeIngots', baseIngotType: 'uncommon', hasInlaySlots: true, blueprintId: 'blueprint_bronzeShield',
         components: [
             {
                 id: 'base', name: 'Основа щита', progress: 100, cost: { bronzeIngots: 3 }, workstation: 'anvil',
@@ -54,7 +54,7 @@ export const copperBronzeAgeItems = {
         ]
     },
     bronzeSword: {
-        name: "Бронзовый меч", icon: IMAGE_PATHS.ITEMS.BRONZE_SWORD, requiredSkill: 'artOfAlloys', baseIngot: 'bronzeIngots', baseIngotType: 'uncommon', hasInlaySlots: true, blueprintId: 'blueprint_fineWeapons_item',
+        name: "Бронзовый меч", icon: IMAGE_PATHS.ITEMS.BRONZE_SWORD, requiredSkill: 'blueprint_fineWeapons', baseIngot: 'bronzeIngots', baseIngotType: 'uncommon', hasInlaySlots: true, blueprintId: 'blueprint_bronzeSword',
          components: [
             {
                 id: "blade", name: "Клинок", progress: 150, cost: { bronzeIngots: 8 }, workstation: 'anvil',
@@ -75,7 +75,7 @@ export const copperBronzeAgeItems = {
         ]
     },
     bronzeCuirass: {
-        name: "Бронзовая кираса", icon: IMAGE_PATHS.ITEMS.BRONZE_CUIRASS, requiredSkill: 'blueprint_eliteArmor', baseIngot: 'bronzeIngots', baseIngotType: 'uncommon', hasInlaySlots: true, blueprintId: 'blueprint_eliteArmor_item',
+        name: "Бронзовая кираса", icon: IMAGE_PATHS.ITEMS.BRONZE_CUIRASS, requiredSkill: 'blueprint_eliteArmor', baseIngot: 'bronzeIngots', baseIngotType: 'uncommon', hasInlaySlots: true, blueprintId: 'blueprint_bronzeCuirass',
         components: [
             {
                 id: 'breastplate', name: "Нагрудник", progress: 250, cost: { bronzeIngots: 12 }, workstation: 'anvil',
@@ -96,7 +96,7 @@ export const copperBronzeAgeItems = {
         ]
     },
     bronzeGauntlets: {
-        name: "Бронзовые перчатки", icon: IMAGE_PATHS.ITEMS.BRONZE_GAUNTLETS, requiredSkill: 'blueprint_eliteArmor', baseIngot: 'bronzeIngots', baseIngotType: 'uncommon', hasInlaySlots: true, blueprintId: 'blueprint_eliteArmor_item',
+        name: "Бронзовые перчатки", icon: IMAGE_PATHS.ITEMS.BRONZE_GAUNTLETS, requiredSkill: 'blueprint_eliteArmor', baseIngot: 'bronzeIngots', baseIngotType: 'uncommon', hasInlaySlots: true, blueprintId: 'blueprint_bronzeGauntlets',
          components: [
             {
                 id: 'plates', name: "Пластины", progress: 120, cost: { bronzeIngots: 6 }, workstation: 'anvil',
@@ -117,7 +117,7 @@ export const copperBronzeAgeItems = {
         ]
     },
     bronzeHelmet: {
-        name: "Бронзовый шлем", icon: IMAGE_PATHS.ITEMS.BRONZE_HELMET, requiredSkill: 'blueprint_eliteArmor', baseIngot: 'bronzeIngots', baseIngotType: 'uncommon', hasInlaySlots: true, blueprintId: 'blueprint_eliteArmor_item',
+        name: "Бронзовый шлем", icon: IMAGE_PATHS.ITEMS.BRONZE_HELMET, requiredSkill: 'blueprint_eliteArmor', baseIngot: 'bronzeIngots', baseIngotType: 'uncommon', hasInlaySlots: true, blueprintId: 'blueprint_bronzeHelmet',
         components: [
             {
                 id: "dome", name: "Купол", progress: 200, cost: { bronzeIngots: 8 }, workstation: 'anvil',
@@ -138,7 +138,7 @@ export const copperBronzeAgeItems = {
         ]
     },
     bronzeGreaves: {
-      name: "Бронзовые поножи", icon: IMAGE_PATHS.ITEMS.BRONZE_GREAVES, requiredSkill: 'blueprint_eliteArmor', baseIngot: 'bronzeIngots', baseIngotType: 'uncommon', hasInlaySlots: true, blueprintId: 'blueprint_eliteArmor_item',
+      name: "Бронзовые поножи", icon: IMAGE_PATHS.ITEMS.BRONZE_GREAVES, requiredSkill: 'blueprint_eliteArmor', baseIngot: 'bronzeIngots', baseIngotType: 'uncommon', hasInlaySlots: true, blueprintId: 'blueprint_bronzeGreaves',
       components: [
           {
               id: "plates", name: "Фигурные пластины", progress: 220, cost: { bronzeIngots: 10 }, workstation: 'anvil',
@@ -154,7 +154,7 @@ export const copperBronzeAgeItems = {
       ]
     },
     copperCauldron: {
-        name: 'Медный Котелок', icon: IMAGE_PATHS.ITEMS.COPPER_CAULDRON, requiredSkill: 'findCopper', baseIngot: 'copperIngots', baseIngotType: 'basic', hasInlaySlots: false, blueprintId: 'findCopper_item',
+        name: 'Медный Котелок', icon: IMAGE_PATHS.ITEMS.COPPER_CAULDRON, requiredSkill: 'findCopper', baseIngot: 'copperIngots', baseIngotType: 'basic', hasInlaySlots: false, blueprintId: 'blueprint_copperCauldron',
         components: [
             {
                 id: 'body', name: "Корпус", progress: 80, cost: { copperIngots: 6 }, workstation: 'anvil',
@@ -169,7 +169,7 @@ export const copperBronzeAgeItems = {
         ]
     },
     bronzeGreataxe: {
-        name: 'Бронзовая Секира', icon: IMAGE_PATHS.ITEMS.BRONZE_GREATAXE, requiredSkill: 'blueprint_fineWeapons', baseIngot: 'bronzeIngots', baseIngotType: 'uncommon', hasInlaySlots: true, blueprintId: 'blueprint_fineWeapons_item',
+        name: 'Бронзовая Секира', icon: IMAGE_PATHS.ITEMS.BRONZE_GREATAXE, requiredSkill: 'blueprint_fineWeapons', baseIngot: 'bronzeIngots', baseIngotType: 'uncommon', hasInlaySlots: true, blueprintId: 'blueprint_bronzeGreataxe',
         components: [
             {
                 id: 'axehead', name: "Лезвие секиры", progress: 180, cost: { bronzeIngots: 10 }, workstation: 'anvil',
@@ -190,7 +190,7 @@ export const copperBronzeAgeItems = {
         ]
     },
     copperChain: {
-        name: 'Медная Цепь', icon: IMAGE_PATHS.ITEMS.COPPER_CHAIN, requiredSkill: 'findCopper', baseIngot: 'copperIngots', baseIngotType: 'basic', hasInlaySlots: false, blueprintId: 'chainWeaving_item',
+        name: 'Медная Цепь', icon: IMAGE_PATHS.ITEMS.COPPER_CHAIN, requiredSkill: 'chainWeaving', baseIngot: 'copperIngots', baseIngotType: 'basic', hasInlaySlots: false, blueprintId: 'blueprint_copperChain',
         components: [
             { 
                 id: 'links', name: "Плетение звеньев", progress: 60, cost: { copperIngots: 5 }, workstation: 'workbench',
@@ -205,7 +205,7 @@ export const copperBronzeAgeItems = {
         ]
     },
     bronzeHammer: {
-        name: 'Бронзовый Молот', icon: IMAGE_PATHS.ITEMS.BRONZE_HAMMER, requiredSkill: 'artOfAlloys', baseIngot: 'bronzeIngots', baseIngotType: 'uncommon', hasInlaySlots: true, blueprintId: 'artOfAlloys_item',
+        name: 'Бронзовый Молот', icon: IMAGE_PATHS.ITEMS.BRONZE_HAMMER, requiredSkill: 'artOfAlloys', baseIngot: 'bronzeIngots', baseIngotType: 'uncommon', hasInlaySlots: true, blueprintId: 'blueprint_bronzeHammer',
         components: [
             {
                 id: 'head', name: "Боек", progress: 100, cost: { bronzeIngots: 5 }, workstation: 'anvil',

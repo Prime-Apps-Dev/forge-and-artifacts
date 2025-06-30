@@ -6,26 +6,27 @@ import { getReputationLevel } from '../utils/helpers';
 import { checkForNewQuests } from '../utils/gameEventChecks';
 import { gameConfig as GAME_CONFIG } from '../constants/gameConfig.js';
 import { visualEffects } from '../utils/visualEffects';
+import { getScaledComponentProgress } from '../utils/helpers.js';
 
 export function applyRewardToState(state, reward, showToast) {
     if (!reward) return;
+
     if (reward.sparks) {
         state.sparks += reward.sparks;
         state.totalSparksEarned = (state.totalSparksEarned || 0) + reward.sparks;
     }
     if (reward.matter) state.matter += reward.matter;
-    if (reward.ironOre) state.ironOre += reward.ironOre;
-    if (reward.copperOre) state.copperOre += reward.copperOre;
-    if (reward.mithrilOre) state.mithrilOre += reward.mithrilOre;
-    if (reward.adamantiteOre) state.adamantiteOre += reward.adamantiteOre;
-    if (reward.shopShelf) {
-        for(let i=0; i < reward.shopShelf; i++) {
-            state.shopShelves.push({ id: `shelf_${Date.now()}_${Math.random()}`, itemId: null, customer: null, saleProgress: 0, saleTimer: 0 });
+    if (reward.reputation) {
+        for (const factionId in reward.reputation) {
+            state.reputation[factionId] = (state.reputation[factionId] || 0) + reward.reputation[factionId];
         }
-        showToast(`Получено: +${reward.shopShelf} торговых полок!`, 'success');
     }
-    if (reward.inventoryCapacity) state.inventoryCapacity += reward.inventoryCapacity;
-    if (reward.prestigePoints) state.prestigePoints = (state.prestigePoints || 0) + reward.prestigePoints;
+    if (reward.specialItems) {
+        for (const itemId in reward.specialItems) {
+            state.specialItems[itemId] = (state.specialItems[itemId] || 0) + reward.specialItems[itemId];
+        }
+    }
+    // ... и другие типы наград
 }
 
 export function updateMastery(state, xpEarned, showToast) {
@@ -52,25 +53,21 @@ export function updateMastery(state, xpEarned, showToast) {
     }
 }
 
-function handleQuestCompletion(state, questDef, showToast) {
-    if (!state.journal.activeQuests.some(q => q.id === questDef.id)) return;
+function handleQuestCompletion(state, quest, showToast) {
+    const questId = quest.id;
+    if (!state.journal.activeQuests.some(q => q.id === questId)) return;
     
-    state.journal.completedQuests.push(questDef.id);
-    state.journal.activeQuests = state.journal.activeQuests.filter(q => q.id !== questDef.id);
-    delete state.journal.questProgress[questDef.id];
+    state.journal.completedQuests.push(questId);
+    state.journal.activeQuests = state.journal.activeQuests.filter(q => q.id !== questId);
+    delete state.journal.questProgress[questId];
+    
+    const questDef = quest.type === 'standard' ? definitions.quests[questId] : quest;
     showToast(`Задание "${questDef.title}" выполнено!`, 'levelup');
     audioController.play('levelup', 'G5', '2n');
 
     if (questDef.reward) {
+        applyRewardToState(state, questDef.reward, showToast);
         let xpEarnedForQuest = 0;
-        if(questDef.reward.type === 'item') {
-            state.specialItems[questDef.reward.itemId] = (state.specialItems[questDef.reward.itemId] || 0) + (questDef.reward.amount || 1);
-        } else if (questDef.reward.type === 'reputation') {
-            state.reputation[questDef.reward.factionId] = (state.reputation[questDef.reward.factionId] || 0) + questDef.reward.amount;
-        } else {
-             applyRewardToState(state, questDef.reward, showToast);
-        }
-
         if (questDef.reward.sparks) {
             xpEarnedForQuest += questDef.reward.sparks / GAME_CONFIG.QUEST_XP_SPARK_DIVIDER;
         }
@@ -83,19 +80,66 @@ function handleQuestCompletion(state, questDef, showToast) {
 
 export function updateQuestProgress(state, type, options = {}, showToast) {
     state.journal.activeQuests.forEach(activeQuest => {
-        const questDef = definitions.quests[activeQuest.id];
-        if (!questDef || questDef.target.type !== type) return;
+        const questDef = activeQuest.type === 'bulletin' ? activeQuest : definitions.quests[activeQuest.id];
+        if (!questDef) return;
 
-        let progressMade = false;
-        
-        if (['inlay', 'grave', 'risky_order', 'craft'].includes(type)) {
-            if (type === 'craft' && questDef.target.itemId && options.itemId !== questDef.target.itemId) return;
-            state.journal.questProgress[questDef.id] = (state.journal.questProgress[questDef.id] || 0) + 1;
-            progressMade = true;
-        }
-        
-        if (progressMade && (state.journal.questProgress[questDef.id] >= questDef.target.count)) {
-            handleQuestCompletion(state, questDef, showToast);
+        if (activeQuest.type === 'bulletin' && type === 'craft_free') {
+            const { item, craftingMetadata } = options;
+            const progress = state.journal.questProgress[activeQuest.id];
+            if (!progress) return;
+
+            let allRequirementsMet = true;
+            for(let i = 0; i < questDef.requirements.length; i++) {
+                const req = questDef.requirements[i];
+                let requirementSatisfied = false;
+
+                if (req.type === 'count' && req.itemKey === item.itemKey) {
+                    const subReqs = questDef.requirements.filter(r => r.itemKey === req.itemKey && r.type !== 'count');
+                    const itemSatisfiesSubReqs = subReqs.every(subReq => {
+                        if (subReq.type === 'quality') {
+                            const comparison = subReq.comparison === 'gte' ? item.quality >= subReq.value : item.quality <= subReq.value;
+                            return comparison;
+                        }
+                        if (subReq.type === 'craftingStat') {
+                            const statValue = craftingMetadata[subReq.stat] || 0;
+                            if(subReq.comparison === 'eq') return statValue === subReq.value;
+                            if(subReq.comparison === 'lte') return statValue <= subReq.value;
+                            if(subReq.comparison === 'gte') return statValue >= subReq.value;
+                        }
+                        return true;
+                    });
+                    
+                    if (itemSatisfiesSubReqs && progress[i] && progress[i].length < req.value) {
+                        progress[i].push(item);
+                    }
+                }
+                
+                if (req.type === 'count') {
+                    if (progress[i] && progress[i].length >= req.value) {
+                        requirementSatisfied = true;
+                    }
+                } else {
+                    requirementSatisfied = true; 
+                }
+
+                if (!requirementSatisfied) {
+                    allRequirementsMet = false;
+                }
+            }
+            
+            if (allRequirementsMet) {
+                handleQuestCompletion(state, activeQuest, showToast);
+            }
+
+        } else if (questDef.target?.type === type) {
+            let progressMade = false;
+            if (['inlay', 'grave', 'risky_order'].includes(type) || (type === 'craft' && questDef.target.itemId === options.itemId)) {
+                state.journal.questProgress[questDef.id] = (state.journal.questProgress[questDef.id] || 0) + 1;
+                progressMade = true;
+            }
+            if (progressMade && state.journal.questProgress[questDef.id] >= questDef.target.count) {
+                handleQuestCompletion(state, activeQuest, showToast);
+            }
         }
     });
 }
@@ -145,7 +189,40 @@ export function handleSaleCompletion(state, shelfIndex, showToast) {
     }
     const itemDef = definitions.items[itemSold.itemKey];
     const baseValue = Object.values(itemSold.stats || {}).reduce((sum, statVal) => sum + statVal, 0) * 5;
-    const salePrice = Math.floor((baseValue * GAME_CONFIG.SALE_BASE_PRICE_MULTIPLIER) * itemSold.quality);
+
+    const now = Date.now();
+    const itemKey = itemSold.itemKey;
+    state.marketFatigue = state.marketFatigue || {};
+    state.marketPricePenalties = state.marketPricePenalties || {};
+
+    if (!state.marketFatigue[itemKey]) state.marketFatigue[itemKey] = [];
+    state.marketFatigue[itemKey].push({ timestamp: now });
+
+    const window = GAME_CONFIG.MARKET_FATIGUE_SALE_TRACKING_WINDOW_MS;
+    state.marketFatigue[itemKey] = state.marketFatigue[itemKey].filter(sale => now - sale.timestamp < window);
+
+    const salesCount = state.marketFatigue[itemKey].length;
+    if (salesCount > GAME_CONFIG.MARKET_FATIGUE_THRESHOLD) {
+        const itemsOverThreshold = salesCount - GAME_CONFIG.MARKET_FATIGUE_THRESHOLD;
+        const penalty = Math.min(GAME_CONFIG.MARKET_FATIGUE_MAX_PENALTY, itemsOverThreshold * GAME_CONFIG.MARKET_FATIGUE_PENALTY_PER_ITEM);
+        const duration = GAME_CONFIG.MARKET_FATIGUE_DURATION_MIN_MS + Math.random() * (GAME_CONFIG.MARKET_FATIGUE_DURATION_MAX_MS - GAME_CONFIG.MARKET_FATIGUE_DURATION_MIN_MS);
+        
+        state.marketPricePenalties[itemKey] = { penalty, endTime: now + duration };
+        showToast(`Рынок перенасыщен "${itemDef.name}"! Цена временно снижена.`, 'error');
+    }
+
+    Object.keys(state.marketPricePenalties).forEach(key => {
+        if (key !== itemKey && state.marketPricePenalties[key].endTime > now) {
+            state.marketPricePenalties[key].endTime -= GAME_CONFIG.MARKET_FATIGUE_RECOVERY_PER_SALE_MS;
+        }
+    });
+
+    let priceMultiplier = 1.0;
+    if (state.marketPricePenalties[itemKey] && state.marketPricePenalties[itemKey].endTime > now) {
+        priceMultiplier = 1.0 - state.marketPricePenalties[itemKey].penalty;
+    }
+
+    const salePrice = Math.floor((baseValue * GAME_CONFIG.SALE_BASE_PRICE_MULTIPLIER) * itemSold.quality * priceMultiplier);
     state.sparks += salePrice;
     state.totalSparksEarned += salePrice;
     
@@ -194,8 +271,7 @@ function completeCraft(state, project, showToast, setCompletedOrderInfo) {
     }
 
     const finalStats = {};
-    let totalQuality = 0;
-    let componentCount = 0;
+    let totalQualityBonus = 0;
 
     for (const compId in project.completedComponents) {
         const compData = project.completedComponents[compId];
@@ -204,36 +280,28 @@ function completeCraft(state, project, showToast, setCompletedOrderInfo) {
                 finalStats[statName] = (finalStats[statName] || 0) + compData.finalStats[statName];
             }
         }
-        totalQuality += compData.quality;
-        componentCount++;
+        if (compData.quality > 1.0) {
+            totalQualityBonus += (compData.quality - 1.0);
+        }
     }
-
-    const averageQuality = componentCount > 0 ? totalQuality / componentCount : 1.0;
+    
+    const finalItemQuality = 1.0 + totalQualityBonus;
     state.totalItemsCrafted = (state.totalItemsCrafted || 0) + 1;
     
     const isOrder = !!project.client;
 
-    if (!isOrder) { // FREE CRAFT
-        const newItem = {
-            uniqueId: `item_${Date.now()}_${Math.random()}`,
-            itemKey: project.itemKey,
-            quality: averageQuality,
-            stats: finalStats,
-            location: 'inventory',
-            inlaySlots: [],
-            gravingLevel: state.initialGravingLevel || 0,
-            level: 1, // НОВОЕ ПОЛЕ: Уровень предмета по умолчанию
-        };
-        if (state.inventory.length < state.inventoryCapacity) {
-            state.inventory.push(newItem);
-            showToast(`Создан предмет: "${itemDef.name}" (добавлен в инвентарь)!`, 'success');
-        } else {
-            showToast(`Инвентарь полон! Предмет "${itemDef.name}" утерян.`, 'error');
-        }
-        state.activeFreeCraft = null;
-        let xpEarned = Math.max(1, Math.floor(itemDef.components.reduce((sum, c) => sum + c.progress, 0) / GAME_CONFIG.CRAFT_XP_PROGRESS_DIVIDER));
-        updateMastery(state, Math.floor(xpEarned * (state.masteryXpModifier || 1.0)), showToast);
-    } else { // ORDER
+    const newItem = {
+        uniqueId: `item_${Date.now()}_${Math.random()}`,
+        itemKey: project.itemKey,
+        quality: finalItemQuality,
+        stats: finalStats,
+        location: 'inventory',
+        inlaySlots: [],
+        gravingLevel: state.initialGravingLevel || 0,
+        level: 1, 
+    };
+
+    if (isOrder) { // ORDER
         audioController.play('complete', 'C5', '4n');
         const timeTaken = (Date.now() - project.startTime) / 1000;
         let tier = 'bronze';
@@ -250,7 +318,7 @@ function completeCraft(state, project, showToast, setCompletedOrderInfo) {
         state.totalSparksEarned += finalSparks;
         state.matter += finalMatter;
         
-        let xpEarned = Math.max(1, Math.floor((itemDef.components.reduce((sum, c) => sum + c.progress, 0) / GAME_CONFIG.ORDER_XP_PROGRESS_DIVIDER) * rewardMultiplier));
+        let xpEarned = Math.max(1, Math.floor((getScaledComponentProgress(itemDef, { progress: itemDef.components.reduce((sum, c) => sum + c.progress, 0) }) / GAME_CONFIG.ORDER_XP_PROGRESS_DIVIDER) * rewardMultiplier));
         updateMastery(state, Math.floor(xpEarned * (state.masteryXpModifier || 1.0)), showToast);
         
         if (project.isRisky) {
@@ -262,9 +330,19 @@ function completeCraft(state, project, showToast, setCompletedOrderInfo) {
         }
         setCompletedOrderInfo({ item: itemDef, sparks: finalSparks, matter: finalMatter, tier, reputationChange: {} });
         state.activeOrder = null;
+    } else { // FREE CRAFT
+        if (state.inventory.length < state.inventoryCapacity) {
+            state.inventory.push(newItem);
+            showToast(`Создан предмет: "${itemDef.name}" (добавлен в инвентарь)!`, 'success');
+        } else {
+            showToast(`Инвентарь полон! Предмет "${itemDef.name}" утерян.`, 'error');
+        }
+        state.activeFreeCraft = null;
+        let xpEarned = Math.max(1, Math.floor(getScaledComponentProgress(itemDef, { progress: itemDef.components.reduce((sum, c) => sum + c.progress, 0) }) / GAME_CONFIG.CRAFT_XP_PROGRESS_DIVIDER));
+        updateMastery(state, Math.floor(xpEarned * (state.masteryXpModifier || 1.0)), showToast);
     }
 
-    updateQuestProgress(state, 'craft', { itemId: project.itemKey }, showToast);
+    updateQuestProgress(state, isOrder ? 'craft_order' : 'craft_free', { item: newItem, craftingMetadata: project.craftingMetadata }, showToast);
     checkForNewQuests(state, showToast);
 }
 

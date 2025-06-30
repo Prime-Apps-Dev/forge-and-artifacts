@@ -7,7 +7,17 @@ import { formatNumber } from '../utils/formatters.jsx';
 import { initialGameState } from '../hooks/useGameStateLoader';
 import { gameConfig as GAME_CONFIG } from '../constants/gameConfig';
 
-export const usePrestigeAndEternalHandlers = ({ updateState, showToast, gameStateRef, setIsWorldMapModalOpen }) => { // Removed static deps from args
+function b64EncodeUnicode(str) {
+    try {
+        return btoa(unescape(encodeURIComponent(str)));
+    } catch (e) {
+        console.error("Failed to encode base64 string:", e);
+        return null;
+    }
+}
+
+
+export const usePrestigeAndEternalHandlers = ({ updateState, showToast, gameStateRef, setIsWorldMapModalOpen }) => { 
 
     const handleClaimMasteryReward = useCallback((rewardId) => {
         updateState(state => {
@@ -47,7 +57,7 @@ export const usePrestigeAndEternalHandlers = ({ updateState, showToast, gameStat
             audioController.play('levelup', 'G6', '2n');
             return state;
         });
-    }, [updateState, showToast, recalculateAllModifiers, definitions, audioController]);
+    }, [updateState, showToast]);
 
     const handleClaimShopLevelReward = useCallback((rewardId) => {
         updateState(state => {
@@ -87,7 +97,7 @@ export const usePrestigeAndEternalHandlers = ({ updateState, showToast, gameStat
             audioController.play('levelup', 'G6', '2n');
             return state;
         });
-    }, [updateState, showToast, recalculateAllModifiers, definitions, audioController]);
+    }, [updateState, showToast]);
 
     const handleResetGame = useCallback(() => {
         if (window.confirm("Вы уверены, что хотите сбросить весь игровой прогресс? Это действие необратимо!")) {
@@ -116,14 +126,27 @@ export const usePrestigeAndEternalHandlers = ({ updateState, showToast, gameStat
             gameStateRef.current.regionsVisited = Array.from(new Set([...(state.regionsVisited || []), currentRegionId]));
             gameStateRef.current.isFirstPlaythrough = false;
 
+            // --- ДОБАВЛЕНО: Расчет и сохранение бонусов Наследия ---
+            const artifactsCrafted = completedArtifacts.length;
+            const passiveOre = (state.totalOreMinedByPersonnel || 0) * 0.00005;
+            const passiveSparks = ((state.totalItemsCrafted * 5) + (state.masteryLevel * 1000) + (Math.sqrt(state.totalSparksEarned) * 0.5) ) / 100000;
+            const passiveMatter = ((Math.pow(artifactsCrafted, 2) * 1000) + (Math.sqrt(state.totalMatterSpent) * 2) ) / 500000;
+
+            gameStateRef.current._pendingLegacyBonuses = {
+                ore: passiveOre,
+                sparks: passiveSparks,
+                matter: passiveMatter,
+            };
+            // --- КОНЕЦ ДОБАВЛЕННОГО БЛОКА ---
+
             showToast(`Переселение начинается! Вы заработали ${formatNumber(prestigePointsEarned)} Осколков Памяти.`, 'levelup');
             setIsWorldMapModalOpen(true);
             return state;
         });
-    }, [updateState, showToast, gameStateRef, setIsWorldMapModalOpen, definitions, formatNumber]);
+    }, [updateState, showToast, gameStateRef, setIsWorldMapModalOpen]);
 
     const handleSelectRegion = useCallback((regionId) => {
-        const newState = JSON.parse(JSON.stringify(initialGameState)); // initialGameState is imported, it's a const, so stable.
+        const newState = JSON.parse(JSON.stringify(initialGameState)); 
 
         newState.prestigePoints = gameStateRef.current.prestigePoints;
         newState.regionsVisited = gameStateRef.current.regionsVisited;
@@ -135,6 +158,26 @@ export const usePrestigeAndEternalHandlers = ({ updateState, showToast, gameStat
         newState.playerName = gameStateRef.current.playerName;
         newState.claimedShopLevelRewards = JSON.parse(JSON.stringify(gameStateRef.current.claimedShopLevelRewards));
         newState.eternalAchievementBonuses = JSON.parse(JSON.stringify(gameStateRef.current.eternalAchievementBonuses));
+
+        // --- ДОБАВЛЕНО: Перенос и сохранение бонусов Наследия ---
+        if (gameStateRef.current._pendingLegacyBonuses) {
+            newState.legacyStats = {
+                passiveBonuses: {
+                    ...gameStateRef.current._pendingLegacyBonuses
+                }
+            };
+            try {
+                const legacyString = JSON.stringify(newState.legacyStats);
+                const encodedLegacy = b64EncodeUnicode(legacyString);
+                if (encodedLegacy) {
+                    localStorage.setItem('forgeAndArtifacts_v10_legacy', encodedLegacy);
+                }
+            } catch (e) {
+                console.error("Failed to save legacy state:", e);
+            }
+        }
+        // --- КОНЕЦ ДОБАВЛЕННОГО БЛОКА ---
+
 
         newState.currentRegion = regionId;
 
@@ -150,12 +193,12 @@ export const usePrestigeAndEternalHandlers = ({ updateState, showToast, gameStat
             }
         }
 
-        newState.purchasedSkills = {}; // Reset purchased skills on new settlement
+        newState.purchasedSkills = {};
 
         recalculateAllModifiers(newState);
 
         try {
-            localStorage.setItem('forgeAndArtifacts_v10', JSON.stringify(newState));
+            localStorage.setItem('forgeAndArtifacts_v10', b64EncodeUnicode(JSON.stringify(newState)));
             showToast(`Новая мастерская основана в регионе "${selectedRegionDef.name}"!`, 'levelup');
             window.location.reload();
         }
@@ -163,7 +206,7 @@ export const usePrestigeAndEternalHandlers = ({ updateState, showToast, gameStat
             console.error("Failed to save new game state after settlement:", e);
             showToast("Ошибка при сохранении нового поселения!", "error");
         }
-    }, [showToast, gameStateRef, recalculateAllModifiers, initialGameState, definitions]); // initialGameState, definitions are stable imports
+    }, [showToast, gameStateRef]);
 
     const handleBuyEternalSkill = useCallback((skillId) => {
         updateState(state => {
@@ -193,7 +236,7 @@ export const usePrestigeAndEternalHandlers = ({ updateState, showToast, gameStat
 
             return state;
         });
-    }, [updateState, showToast, recalculateAllModifiers, definitions, formatNumber, audioController]);
+    }, [updateState, showToast]);
 
     return useMemo(() => ({
         handleClaimMasteryReward,

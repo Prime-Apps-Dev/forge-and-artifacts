@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import { definitions } from '../../data/definitions/index.js';
 import ShopUpgradeButton from '../ui/buttons/ShopUpgradeButton';
-import { useGame } from '../../context/GameContext.jsx';
+import { useGame } from '../../context/useGame.js';
 
 const UpgradeShop = () => {
     const { displayedGameState: gameState } = useGame();

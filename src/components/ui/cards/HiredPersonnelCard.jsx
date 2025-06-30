@@ -3,7 +3,7 @@ import React, { memo, useMemo, useState, useEffect, useRef } from 'react';
 import { definitions } from '../../../data/definitions/index.js';
 import { formatCostsJsx, formatNumber } from '../../../utils/formatters.jsx';
 import { gameConfig as GAME_CONFIG } from '../../../constants/gameConfig.js';
-import { useGame } from '../../../context/GameContext.jsx';
+import { useGame } from '../../../context/useGame.js';
 import ImageWithFallback from '../display/ImageWithFallback.jsx';
 import { UI_CONSTANTS } from '../../../constants/ui.js';
 import Tooltip from '../display/Tooltip.jsx';

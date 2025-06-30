@@ -12,6 +12,111 @@ import {
 import { visualEffects } from '../utils/visualEffects';
 import { gameConfig as GAME_CONFIG } from '../constants/gameConfig.js';
 import { canAffordAndPay } from '../utils/gameUtils';
+import { getScaledComponentProgress } from '../utils/helpers.js';
+
+/**
+ * Обрабатывает случайные события во время крафта: применяет активные и генерирует новые.
+ * @param {object} state - Мутируемый объект состояния игры.
+ * @param {function} showToast - Функция для отображения уведомлений.
+ */
+function handleCraftingEvents(state, showToast) {
+    const now = Date.now();
+    
+    // Сбрасываем временные модификаторы перед каждым ударом
+    state.craftingEventModifiers = {
+        progressMultiplier: 1.0,
+        isNextCritGuaranteed: false,
+        skipNextClick: false,
+        minigameZoneSizeModifier: 1.0,
+    };
+
+    // Применяем эффекты от активных событий и уменьшаем их длительность
+    if (state.activeCraftingEvents) {
+        state.activeCraftingEvents = state.activeCraftingEvents.filter(event => {
+            const eventDef = definitions.craftingEvents[event.id];
+            if (!eventDef) return false;
+
+            if (event.duration_type === 'seconds' && now > event.startTime + event.duration * 1000) {
+                return false; // Время вышло
+            }
+            if (event.duration_type === 'clicks' && event.duration <= 0) {
+                return false; // Клики закончились
+            }
+
+            // Применяем активный эффект
+            switch (event.id) {
+                case 'brittle_metal':
+                    state.craftingEventModifiers.progressMultiplier *= 0.5;
+                    break;
+                case 'distraction':
+                    state.craftingEventModifiers.skipNextClick = true;
+                    break;
+                case 'tool_wear':
+                    state.craftingEventModifiers.progressMultiplier *= 0.9;
+                    break;
+                case 'inspiration':
+                    state.craftingEventModifiers.isNextCritGuaranteed = true;
+                    break;
+                case 'master_touch':
+                    state.craftingEventModifiers.minigameZoneSizeModifier = 1.5;
+                    break;
+            }
+            return true;
+        });
+    }
+
+
+    // С шансом 1.5% генерируем новое событие
+    if (Math.random() < 0.015) {
+        const eventPool = Object.values(definitions.craftingEvents);
+        const randomEventDef = eventPool[Math.floor(Math.random() * eventPool.length)];
+        
+        showToast(randomEventDef.name, randomEventDef.type);
+        audioController.play(randomEventDef.type === 'positive' ? 'levelup' : 'crit', 'C4');
+
+        if (randomEventDef.isImmediate) {
+            // Мгновенные события, которые не добавляются в очередь
+            switch (randomEventDef.id) {
+                case 'lucky_strike':
+                    const project = state.activeOrder || state.activeFreeCraft;
+                    if (project && project.activeComponentId) {
+                        const itemDef = definitions.items[project.itemKey];
+                        const componentDef = itemDef.components.find(c => c.id === project.activeComponentId);
+                        if (componentDef) {
+                            const bonusProgress = getScaledComponentProgress(itemDef, componentDef) * 0.1;
+                            project.componentProgress[componentDef.id] = (project.componentProgress[componentDef.id] || 0) + bonusProgress;
+                        }
+                    }
+                    break;
+                case 'resource_find':
+                    const amount = Math.floor(Math.random() * 5) + 1;
+                    state.ironOre += amount;
+                    showToast(`Найдено: +${amount} железной руды!`, 'success');
+                    break;
+                case 'sudden_insight':
+                    const matterAmount = Math.floor(Math.random() * 3) + 1;
+                    state.matter += matterAmount;
+                    showToast(`Озарение: +${matterAmount} материи!`, 'success');
+                    break;
+                case 'slippery_grip':
+                    const sparksLost = Math.floor(state.sparks * 0.01);
+                    state.sparks = Math.max(0, state.sparks - sparksLost);
+                    showToast(`Потеряно: -${sparksLost} искр!`, 'error');
+                    break;
+            }
+        } else {
+            // События с длительностью, добавляем в массив активных
+            const newEvent = {
+                id: randomEventDef.id,
+                duration: randomEventDef.duration,
+                duration_type: randomEventDef.duration_type,
+                startTime: now
+            };
+            state.activeCraftingEvents.push(newEvent);
+        }
+    }
+}
+
 
 export function createGameHandlers({
     updateState,
@@ -26,40 +131,50 @@ export function createGameHandlers({
         workTimeoutRef.current = setTimeout(() => setIsWorking(false), 200);
     };
 
-    /**
-     * Применяет прогресс к активному проекту.
-     * @returns {boolean} - Возвращает true, если прогресс был успешно применен, иначе false.
-     */
     const applyProgress = (state, progressAmount, clickX, clickY) => {
         const activeProject = state.activeOrder || state.activeFreeCraft;
-        if (!activeProject || !activeProject.activeComponentId) {
-            return false;
-        }
+        if (!activeProject || !activeProject.activeComponentId) return false;
 
         const itemDef = definitions.items[activeProject.itemKey];
         const componentDef = itemDef.components.find(c => c.id === activeProject.activeComponentId);
         
-        if (!componentDef || activeProject.completedComponents[componentDef.id]) {
-             return false;
-        }
+        if (!componentDef || activeProject.completedComponents[componentDef.id]) return false;
 
-        // --- ИСПРАВЛЕНИЕ: Проверка верстака теперь происходит только ПОСЛЕ изучения навыка "Разделение труда"
         if (state.purchasedSkills.divisionOfLabor && componentDef.workstation !== state.activeWorkstationId) {
             showToast(`Неверный верстак! Требуется: ${definitions.workstations[componentDef.workstation].name}`, 'error');
             return false;
         }
-        // --- -----------------------------------------------------------------------------------------
+        
+        // Декремент для событий, зависящих от кликов
+        state.activeCraftingEvents.forEach(event => {
+            if(event.duration_type === 'clicks') event.duration -=1;
+        });
+
+        if (state.craftingEventModifiers.skipNextClick) {
+            return false; 
+        }
 
         state.totalClicks = (state.totalClicks || 0) + 1;
         updateQuestProgress(state, 'totalClicks', {}, showToast);
         
+        const isCrit = state.craftingEventModifiers.isNextCritGuaranteed || Math.random() < state.critChance;
+        if(isCrit && activeProject.craftingMetadata) {
+            activeProject.craftingMetadata.critSuccessCount++;
+        }
+        let finalProgress = isCrit ? progressAmount * state.critBonus : progressAmount;
+        finalProgress *= state.craftingEventModifiers.progressMultiplier;
+
         const workstationMod = state.workstationBonus[state.activeWorkstationId] || 1.0;
-        progressAmount *= workstationMod;
+        finalProgress *= workstationMod;
+
+        const materialType = itemDef.baseIngot.replace('Ingots', '');
+        const speedModifiers = state.craftingSpeedModifiers || {};
+        finalProgress *= (speedModifiers.all || 1.0) * (speedModifiers[materialType] || 1.0);
 
         const currentWorkstation = state.workstations[state.activeWorkstationId];
         const workstationDef = definitions.workstations[state.activeWorkstationId];
         if (currentWorkstation && workstationDef && currentWorkstation.level < workstationDef.maxLevel) {
-            currentWorkstation.xp += progressAmount;
+            currentWorkstation.xp += finalProgress;
             if (currentWorkstation.xp >= currentWorkstation.xpToNextLevel) {
                 while (currentWorkstation.xp >= currentWorkstation.xpToNextLevel && currentWorkstation.level < workstationDef.maxLevel) {
                     currentWorkstation.xp -= currentWorkstation.xpToNextLevel;
@@ -74,19 +189,16 @@ export function createGameHandlers({
             }
         }
         
-        if (activeProject.componentProgress[componentDef.id] === undefined) {
-            activeProject.componentProgress[componentDef.id] = 0;
-        }
+        if (activeProject.componentProgress[componentDef.id] === undefined) activeProject.componentProgress[componentDef.id] = 0;
 
         if (activeProject.componentProgress[componentDef.id] === 0 && componentDef.cost) {
-            if (!canAffordAndPay(state, componentDef.cost, showToast)) {
-                return false; // Оплата не удалась, прогресс не засчитываем
-            }
+            if (!canAffordAndPay(state, componentDef.cost, showToast)) return false;
         }
         
-        activeProject.componentProgress[componentDef.id] = Math.min(componentDef.progress, activeProject.componentProgress[componentDef.id] + progressAmount);
+        const scaledRequiredProgress = getScaledComponentProgress(itemDef, componentDef);
+        activeProject.componentProgress[componentDef.id] = Math.min(scaledRequiredProgress, activeProject.componentProgress[componentDef.id] + finalProgress);
 
-        if (activeProject.componentProgress[componentDef.id] >= componentDef.progress) {
+        if (activeProject.componentProgress[componentDef.id] >= scaledRequiredProgress) {
              if (!activeProject.completedComponents[componentDef.id]) {
                 const quality = activeProject.minigameQualityBuffer?.[componentDef.id] || 1.0;
                 
@@ -99,23 +211,18 @@ export function createGameHandlers({
                 activeProject.completedComponents[componentDef.id] = { quality, finalStats };
                 activeProject.activeComponentId = null;
 
-                if(activeProject.minigameQualityBuffer?.[componentDef.id]) {
-                    delete activeProject.minigameQualityBuffer[componentDef.id];
-                }
+                if(activeProject.minigameQualityBuffer?.[componentDef.id]) delete activeProject.minigameQualityBuffer[componentDef.id];
 
                 showToast(`Компонент "${componentDef.name}" завершен!`, 'success');
                 audioController.play('complete', 'A4', '8n');
 
-                const totalComponents = itemDef.components.length;
-                const completedCount = Object.keys(activeProject.completedComponents).length;
-
-                if (completedCount >= totalComponents) {
+                if (Object.keys(activeProject.completedComponents).length >= itemDef.components.length) {
                     if (state.activeOrder) handleOrderCompletion(state, state.activeOrder, showToast, setCompletedOrderInfo);
                     else if (state.activeFreeCraft) handleFreeCraftCompletion(state, activeProject, showToast);
                 }
             }
         }
-        return true; // Прогресс успешно применен
+        return true; 
     };
     
     const handleMinigameCompletion = (state, project, success, quality) => {
@@ -129,8 +236,9 @@ export function createGameHandlers({
         if (success) {
             showToast(`Результат мини-игры: Качество x${quality.toFixed(2)}. Продолжайте работу!`, 'info');
             const currentProgress = project.componentProgress[componentDef.id] || 0;
-            const remainingProgress = componentDef.progress - currentProgress;
-            const calculatedBonus = componentDef.progress * (0.01 + Math.random() * 0.09);
+            const requiredProgress = getScaledComponentProgress(definitions.items[project.itemKey], componentDef);
+            const remainingProgress = requiredProgress - currentProgress;
+            const calculatedBonus = requiredProgress * (0.01 + Math.random() * 0.09);
             const progressBonus = Math.min(calculatedBonus, remainingProgress > 1 ? remainingProgress - 1 : 0);
             
             if (progressBonus > 0) {
@@ -185,38 +293,11 @@ export function createGameHandlers({
                 return state;
             }
             
-            const canTriggerMinigame = (project.minigameCount || 0) < 3;
-            if (componentDef.minigame && canTriggerMinigame && !project.completedComponents[componentDef.id] && Math.random() < componentDef.minigame.triggerChance) {
-                project.minigameCount = (project.minigameCount || 0) + 1;
-                showToast("Момент истины!", "info");
-                audioController.play('complete', 'C4', '8n');
-                project.minigameState = { active: true, type: componentDef.minigame.type, startTime: Date.now() };
-                
-                if (project.minigameState.type === 'click_points') {
-                    project.minigameState.points = [];
-                    project.minigameState.totalPoints = Math.floor(Math.random() * (componentDef.minigame.pointsCount.max - componentDef.minigame.pointsCount.min + 1)) + componentDef.minigame.pointsCount.min;
-                    project.minigameState.hitPoints = 0;
-                }
-                if (project.minigameState.type === 'hold_and_release') {
-                    project.minigameState.fillPercentage = 0;
-                    project.minigameState.isHolding = false;
-                    const zoneSize = Math.floor(Math.random() * (componentDef.minigame.zoneSize.max - componentDef.minigame.zoneSize.min + 1)) + componentDef.minigame.zoneSize.min;
-                    const perfectSize = Math.floor(Math.random() * (componentDef.minigame.perfectZoneSize.max - componentDef.minigame.perfectZoneSize.min + 1)) + componentDef.minigame.perfectZoneSize.min;
-                    const targetStart = Math.random() * (100 - zoneSize);
-                    project.minigameState.targetZone = { from: targetStart, to: targetStart + zoneSize };
-                    const perfectStart = targetStart + Math.random() * (zoneSize - perfectSize);
-                    project.minigameState.perfectZone = { from: perfectStart, to: perfectStart + perfectSize };
-                }
-                if(project.minigameState.type === 'bar_precision') {
-                    project.minigameState.position = 0;
-                }
-                return state;
-            } 
-            
+            handleCraftingEvents(state, showToast);
+
             const wasProgressApplied = applyProgress(state, state.progressPerClick, clickX, clickY);
 
-            // Проверяем, не была ли работа заблокирована проверкой верстака
-            if (!state.purchasedSkills.divisionOfLabor || componentDef.workstation === state.activeWorkstationId) {
+            if (wasProgressApplied) {
                  audioController.play('click', 'C3');
                  visualEffects.showParticleEffect(clickX, clickY, 'default');
             }

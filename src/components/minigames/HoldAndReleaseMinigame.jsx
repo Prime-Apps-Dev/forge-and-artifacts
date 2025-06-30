@@ -4,30 +4,45 @@ import { gameConfig as GAME_CONFIG } from '../../constants/gameConfig';
 
 const HoldAndReleaseMinigame = ({ minigameState, componentDef, onRelease, updateMinigameState }) => {
     const requestRef = useRef();
-
-    const animate = () => {
-        updateMinigameState(state => {
-            if (!state.active || state.type !== 'hold_and_release') return;
-            
-            const speed = componentDef.minigame.releaseSpeed;
-            if (state.isHolding) {
-                state.fillPercentage = Math.min(100, state.fillPercentage + speed);
-            }
-            if (state.fillPercentage >= 100) {
-                onRelease();
-            }
-        });
-        requestRef.current = requestAnimationFrame(animate);
-    };
+    const lastTimeRef = useRef();
 
     useEffect(() => {
+        const animate = (time) => {
+            if (lastTimeRef.current !== undefined) {
+                const deltaTime = (time - lastTimeRef.current) / 1000; // in seconds
+
+                updateMinigameState(state => {
+                    if (!state || !state.active || state.type !== 'hold_and_release' || !state.isHolding) return;
+                    
+                    // releaseSpeed of 1.5 means it takes 1.5s to fill 100%
+                    // so speed is 100/1.5 % per second
+                    const speed = 100 / componentDef.minigame.releaseSpeed;
+                    state.fillPercentage = Math.min(100, state.fillPercentage + speed * deltaTime);
+                    
+                    if (state.fillPercentage >= 100) {
+                        onRelease();
+                    }
+                });
+            }
+            lastTimeRef.current = time;
+            requestRef.current = requestAnimationFrame(animate);
+        };
+
         if (minigameState?.isHolding) {
+            lastTimeRef.current = undefined; // Reset for the first frame
             requestRef.current = requestAnimationFrame(animate);
         } else {
-            cancelAnimationFrame(requestRef.current);
+            if (requestRef.current) {
+                cancelAnimationFrame(requestRef.current);
+            }
         }
-        return () => cancelAnimationFrame(requestRef.current);
-    }, [minigameState?.isHolding]);
+        
+        return () => {
+            if(requestRef.current) {
+                cancelAnimationFrame(requestRef.current);
+            }
+        };
+    }, [minigameState?.isHolding, componentDef, onRelease, updateMinigameState]);
     
     useEffect(() => {
         const timeout = setTimeout(() => {

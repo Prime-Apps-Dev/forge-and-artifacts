@@ -36,7 +36,7 @@ export const IMAGE_PATHS = {
         ROYAL_FORGER: '/img/achievements/royal_forger.webp',
         SECRET_AGENT: '/img/achievements/secret_agent.webp',
         ADVENTURERS_CARTOGRAPHER: '/img/achievements/adventurers_cartographer.webp',
-        DEFAULT: '/img/achievements/default.webp',
+        DEFAULT: '/img/achievements/first_forge.webp', // ИСПРАВЛЕНО: Заменено на существующий ассет
     },
     CLIENTS: {
         FARMER: '/img/clients/farmer.webp',
@@ -134,6 +134,7 @@ export const IMAGE_PATHS = {
     },
     UI: {
         ANVIL: '/img/ui/anvil.webp',
+        SELL_ICON: '/img/ui/anvil.webp', // ИСПРАВЛЕНО: Заменено на существующий ассет как временная мера
     },
     PERSONNEL: {
         MINE_APPRENTICE: '/img/personnel/mine_apprentice.webp',

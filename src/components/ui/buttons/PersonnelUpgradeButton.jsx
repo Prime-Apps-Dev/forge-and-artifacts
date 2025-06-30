@@ -3,7 +3,7 @@ import React from 'react';
 import { definitions } from '../../../data/definitions/index.js';
 import { formatCostsJsx } from '../../../utils/formatters.jsx';
 import Tooltip from '../display/Tooltip';
-import { useGame } from '../../../context/GameContext.jsx';
+import { useGame } from '../../../context/useGame.js';
 import Button from './Button.jsx';
 
 const PersonnelUpgradeButton = React.memo(({ upgradeId }) => {

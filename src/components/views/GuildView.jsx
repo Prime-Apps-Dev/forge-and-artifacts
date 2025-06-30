@@ -3,7 +3,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { definitions } from '../../data/definitions/index.js';
 import { formatNumber } from '../../utils/formatters.jsx';
 import { getItemImageSrc } from '../../utils/helpers';
-import { useGame } from '../../context/GameContext.jsx';
+import { useGame } from '../../context/useGame.js'; // ИЗМЕНЕН ПУТЬ ИМПОРТА
 import Button from '../ui/buttons/Button.jsx';
 
 const MissionRequirement = ({ req, onSelectGear, selectedItemId, allSelectedGear }) => {

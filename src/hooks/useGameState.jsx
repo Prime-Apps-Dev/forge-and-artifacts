@@ -6,6 +6,7 @@ import { useGameStateLoader } from './useGameStateLoader';
 import { usePlayerActions } from './usePlayerActions';
 import { useGameLoops } from './useGameLoops';
 import { assetLoader } from '../utils/assetLoader';
+import { IMAGE_PATHS } from '../constants/paths';
 
 export function useGameState() {
     const { toasts, showToast, removeToast } = useNotifications();
@@ -37,10 +38,14 @@ export function useGameState() {
     const [isEquipItemModalOpen, setIsEquipItemModalOpen] = useState(false);
     const [personnelToEquip, setPersonnelToEquip] = useState({ id: null, slot: null });
 
-    // --- НОВОЕ: Состояния для общих модалок, которые теперь в бургере ---
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isInventoryOpen, setIsInventoryOpen] = useState(false);
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+    
+    // --- НОВЫЕ СОСТОЯНИЯ ДЛЯ УПРАВЛЕНИЯ МОБИЛЬНЫМ ИНТЕРФЕЙСОМ (ТЗ 2.1) ---
+    const [activeMobileView, setActiveMobileView] = useState('forge');
+    const [selectedMineOre, setSelectedMineOre] = useState('ironOre');
+    const [selectedShopShelfIndex, setSelectedShopShelfIndex] = useState(null);
 
 
     const workTimeoutRef = useRef(null);
@@ -96,10 +101,13 @@ export function useGameState() {
         setManagingPersonnelId,
         setIsUpgradeItemModalOpen, setItemToUpgradeId,
         setIsEquipItemModalOpen, setPersonnelToEquip,
-        // --- НОВЫЕ СЕТТЕРЫ ---
         setIsSettingsOpen,
         setIsInventoryOpen,
         setIsProfileModalOpen,
+        // Сеттеры для нового мобильного UI
+        setActiveMobileView, 
+        setSelectedMineOre, 
+        setSelectedShopShelfIndex
     }), [updateState, showToast, gameStateRef, showAchievementRewardModal]);
 
     const handlers = usePlayerActions(handlerProps);
@@ -141,9 +149,12 @@ export function useGameState() {
         isManagePersonnelModalOpen, managingPersonnelId,
         isUpgradeItemModalOpen, itemToUpgradeId,
         isEquipItemModalOpen, personnelToEquip,
-        // --- НОВЫЕ ЗНАЧЕНИЯ ---
         isSettingsOpen, isInventoryOpen, isProfileModalOpen,
         handlers, removeToast, activeInfoModal, handleInitialGesture,
         assetsLoaded, loadProgress, updateState,
+        // --- НОВЫЕ ЗНАЧЕНИЯ ДЛЯ КОНТЕКСТА ---
+        activeMobileView,
+        selectedMineOre,
+        selectedShopShelfIndex,
     };
 }

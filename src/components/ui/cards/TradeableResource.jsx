@@ -4,7 +4,7 @@ import { definitions } from '../../../data/definitions/index.js';
 import { formatNumber } from '../../../utils/formatters.jsx';
 import { getResourceImageSrc, getReputationLevel } from '../../../utils/helpers';
 import SvgIcon from '../display/SvgIcon';
-import { useGame } from '../../../context/GameContext.jsx';
+import { useGame } from '../../../context/useGame.js';
 
 const TradeableResource = React.memo(({ resourceId, name, icon, iconClass }) => {
     const { displayedGameState: gameState, handlers } = useGame();

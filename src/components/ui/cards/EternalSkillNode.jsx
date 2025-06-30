@@ -3,7 +3,7 @@ import React, { memo } from 'react';
 import { definitions } from '../../../data/definitions/index.js';
 import { formatNumber } from '../../../utils/formatters.jsx';
 import Tooltip from '../display/Tooltip';
-import { useGame } from '../../../context/GameContext.jsx';
+import { useGame } from '../../../context/useGame.js';
 
 const EternalSkillNode = memo(({ skillId }) => {
     const { displayedGameState: gameState, handlers } = useGame();

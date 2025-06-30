@@ -2,7 +2,7 @@
 import React, { memo, useState } from 'react';
 import PersonnelOfferCard from '../ui/cards/PersonnelOfferCard';
 import { formatCostsJsx } from '../../utils/formatters.jsx';
-import { useGame } from '../../context/GameContext.jsx';
+import { useGame } from '../../context/useGame.js';
 import Button from '../ui/buttons/Button.jsx';
 import { gameConfig as GAME_CONFIG } from '../../constants/gameConfig.js';
 import { useDraggableModal } from '../../hooks/useDraggableModal.js';

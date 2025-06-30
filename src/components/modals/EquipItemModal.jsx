@@ -1,6 +1,6 @@
 // src/components/modals/EquipItemModal.jsx
 import React, { useMemo } from 'react';
-import { useGame } from '../../context/GameContext';
+import { useGame } from '../../context/useGame.js';
 import { definitions } from '../../data/definitions/index';
 import Button from '../ui/buttons/Button';
 import InventoryItemCard from '../ui/cards/InventoryItemCard';

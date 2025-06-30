@@ -2,7 +2,7 @@
 import React, { useState, useEffect, memo } from 'react';
 import { definitions } from '../../../data/definitions/index.js';
 import { formatNumber } from '../../../utils/formatters.jsx';
-import { useGame } from '../../../context/GameContext.jsx';
+import { useGame } from '../../../context/useGame.js';
 import Button from '../buttons/Button.jsx';
 
 const OrderQueueCard = memo(({ order, isDisabled }) => {

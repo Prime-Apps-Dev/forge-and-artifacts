@@ -17,7 +17,7 @@ export const initialGameState = {
         { id: 'shelf_0', itemId: null, customer: null, saleProgress: 0, saleTimer: 0 },
         { id: 'shelf_1', itemId: null, customer: null, saleProgress: 0, saleTimer: 0 }
     ],
-    passiveGeneration: { ironOre: 0, copperOre: 0, ironIngots: 0, sparks: 0 },
+    passiveGeneration: { ironOre: 0, copperOre: 0, mithrilOre: 0, adamantiteOre: 0, sparks: 0, matter: 0 },
     orderQueue: [],
     activeOrder: null,
     smeltingProcess: null,
@@ -91,7 +91,8 @@ export const initialGameState = {
     totalExpeditionMapsBought: 0,
     totalCourtOrdersCompleted: 0,
     totalRiskyOrdersCompleted: 0,
-    playerAvatarId: IMAGE_PATHS.AVATARS.DEFAULT_MALE,
+    totalOreMinedByPersonnel: 0, // ДОБАВЛЕНО: Новый счетчик для Наследия
+    playerAvatarId: 'default_avatar_male',
     playerName: 'Безымянный Кузнец',
     claimedMasteryLevelRewards: [],
     eternalAchievementBonuses: {},
@@ -117,9 +118,34 @@ export const initialGameState = {
             assistant: false,
         }
     },
-    personnelMoodModifier: 1.0,
     personnelWageReduction: 0,
     lastWagePaymentTime: Date.now(),
+    craftingSpeedModifiers: { all: 1.0, iron: 1.0, copper: 1.0, bronze: 1.0, sparksteel: 1.0, mithril: 1.0, adamantite: 1.0, arcanite: 1.0 },
+    minigameBarSpeedModifier: 1.0,
+    bonusCopperChance: 0,
+    multitouchEnabled: false,
+    unlockedFeatures: { bulletinBoard: false },
+    activeCraftingEvents: [],
+    craftingEventModifiers: {
+        progressMultiplier: 1.0,
+        isNextCritGuaranteed: false,
+        skipNextClick: false,
+        minigameZoneSizeModifier: 1.0,
+    },
+    marketFatigue: {},
+    marketPricePenalties: {},
+    bulletinBoard: {
+        orders: [],
+        nextRefresh: 0,
+    },
+    // ДОБАВЛЕНО: Новый объект для хранения данных Наследия
+    legacyStats: {
+        passiveBonuses: {
+            ore: 0,
+            sparks: 0,
+            matter: 0,
+        }
+    }
 };
 
 function b64DecodeUnicode(str) {
@@ -136,28 +162,55 @@ function b64DecodeUnicode(str) {
 export function useGameStateLoader(showToast) {
     const [displayedGameState, setDisplayedGameState] = useState(() => {
         let savedState = localStorage.getItem('forgeAndArtifacts_v10');
+        let savedLegacyStats = localStorage.getItem('forgeAndArtifacts_v10_legacy'); // ДОБАВЛЕНО
+        
         let parsed = {};
+        let parsedLegacy = {}; // ДОБАВЛЕНО
+
         if (savedState) {
             try {
                 const decodedState = b64DecodeUnicode(savedState);
                 if (decodedState) {
                     parsed = JSON.parse(decodedState);
                 } else {
-                    throw new Error("b64DecodeUnicode failed");
+                    throw new Error("b64DecodeUnicode for main state failed");
                 }
             } catch (e) {
                 console.error("Failed to parse saved state, could be corrupted or old version:", e);
                 showToast("Ошибка загрузки сохранения! Загружена новая игра.", "error");
                 localStorage.removeItem('forgeAndArtifacts_v10');
+                localStorage.removeItem('forgeAndArtifacts_v10_legacy'); // ДОБАВЛЕНО: Очищаем и наследие
                 return initialGameState;
             }
-        } else {
-            return initialGameState;
+        }
+        
+        // ДОБАВЛЕНО: Загрузка данных Наследия
+        if (savedLegacyStats) {
+             try {
+                const decodedLegacy = b64DecodeUnicode(savedLegacyStats);
+                 if (decodedLegacy) {
+                    parsedLegacy = JSON.parse(decodedLegacy);
+                } else {
+                    throw new Error("b64DecodeUnicode for legacy state failed");
+                }
+             } catch(e) {
+                console.error("Failed to parse legacy stats:", e);
+                localStorage.removeItem('forgeAndArtifacts_v10_legacy');
+                parsedLegacy = {};
+             }
         }
 
         const tempState = JSON.parse(JSON.stringify(initialGameState));
+        
+        // ДОБАВЛЕНО: Интегрируем загруженное наследие
+        if(parsedLegacy) {
+            tempState.legacyStats = { ...initialGameState.legacyStats, ...parsedLegacy };
+        }
 
         Object.keys(initialGameState).forEach(key => {
+            // ИСКЛЮЧЕНИЕ: Не перезаписываем legacyStats, если они уже загружены
+            if (key === 'legacyStats') return;
+
             if (parsed[key] === undefined) {
                  tempState[key] = initialGameState[key];
                  return;
@@ -181,16 +234,7 @@ export function useGameStateLoader(showToast) {
                         }
                     });
                 }
-            } else if (key === 'activeOrder' || key === 'activeFreeCraft') {
-                const project = parsed[key];
-                if (project && typeof project === 'object') {
-                    // Сбрасываем проекты при загрузке, чтобы избежать проблем с новой логикой
-                    tempState[key] = null;
-                } else {
-                    tempState[key] = null;
-                }
-            }
-            else if (['lastClickTime', 'clickCount', 'activeReforge', 'activeInlay', 'activeGraving', 'activeInfoModal', 'currentEpicOrder', 'activeSale', 'smeltingProcess'].includes(key)) {
+            } else if (['activeOrder', 'activeFreeCraft', 'lastClickTime', 'clickCount', 'activeReforge', 'activeInlay', 'activeGraving', 'activeInfoModal', 'currentEpicOrder', 'activeSale', 'smeltingProcess', 'activeCraftingEvents', 'craftingEventModifiers', 'marketFatigue', 'marketPricePenalties', 'bulletinBoard'].includes(key)) {
                  tempState[key] = initialGameState[key];
             } else if (typeof initialGameState[key] === 'object' && initialGameState[key] !== null && !Array.isArray(initialGameState[key])) {
                  tempState[key] = { ...(initialGameState[key]), ...(parsed[key] || {}) };
@@ -198,8 +242,7 @@ export function useGameStateLoader(showToast) {
                  tempState[key] = parsed[key];
             }
         });
-
-        // --- НОВАЯ ЛОГИКА ДЛЯ СОВМЕСТИМОСТИ СОХРАНЕНИЙ ---
+        
         if (tempState.hiredPersonnel && Array.isArray(tempState.hiredPersonnel)) {
              tempState.hiredPersonnel.forEach(p => {
                  p.previousAssignment = p.previousAssignment || null;
@@ -207,7 +250,7 @@ export function useGameStateLoader(showToast) {
                  p.traits = p.traits || [];
                  p.timeWorked = p.timeWorked || 0;
                  p.giftsReceived = p.giftsReceived || 0;
-                 p.equipment = p.equipment || { tool: null, gear: null }; // Инициализация экипировки
+                 p.equipment = p.equipment || { tool: null, gear: null }; 
                  if (!p.sessionStats) {
                      p.sessionStats = {
                          mined: {},
@@ -221,11 +264,10 @@ export function useGameStateLoader(showToast) {
         }
         if (tempState.inventory && Array.isArray(tempState.inventory)) {
             tempState.inventory.forEach(item => {
-                item.level = item.level || 1; // Инициализация уровня предмета
+                item.level = item.level || 1; 
             });
         }
-        // --- -------------------------------------------- ---
-
+        
         recalculateAllModifiers(tempState);
 
         return tempState;

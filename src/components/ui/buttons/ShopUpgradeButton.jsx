@@ -3,7 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { definitions } from '../../../data/definitions/index.js';
 import { formatCostsJsx } from '../../../utils/formatters.jsx';
 import Tooltip from '../display/Tooltip';
-import { useGame } from '../../../context/GameContext.jsx';
+import { useGame } from '../../../context/useGame.js';
 
 const ShopUpgradeButton = React.memo(({ upgradeId, upgradeType = 'upgrades' }) => {
     const { displayedGameState: gameState, handlers } = useGame();

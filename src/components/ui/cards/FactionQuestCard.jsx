@@ -2,7 +2,7 @@
 import React from 'react';
 import { definitions } from '../../../data/definitions/index.js';
 import { hasReputation } from '../../../utils/helpers';
-import { useGame } from '../../../context/GameContext.jsx';
+import { useGame } from '../../../context/useGame.js';
 import Button from '../buttons/Button.jsx';
 
 const FactionQuestCard = React.memo(({ factionId }) => {

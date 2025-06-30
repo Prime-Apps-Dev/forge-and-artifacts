@@ -1,7 +1,8 @@
 // src/components/ui/cards/ComponentItem.jsx
 import React, { memo, useMemo } from 'react';
 import { definitions } from '../../../data/definitions/index.js';
-import { useGame } from '../../../context/GameContext.jsx';
+import { useGame } from '../../../context/useGame.js'; // ИЗМЕНЕН ПУТЬ ИМПОРТА
+import { getScaledComponentProgress } from '../../../utils/helpers.js';
 
 const STAT_NAMES = {
     damage: 'Урон',
@@ -32,10 +33,15 @@ const STAT_NAMES = {
 
 const ComponentItem = memo(({ component, orderState }) => {
     const { displayedGameState: gameState, handlers } = useGame();
+    const itemDef = definitions.items[orderState.itemKey];
 
     const progress = orderState.componentProgress[component.id] || 0;
     const isComplete = !!orderState.completedComponents[component.id];
     const isActive = orderState.activeComponentId === component.id;
+
+    const scaledRequiredProgress = useMemo(() => 
+        getScaledComponentProgress(itemDef, component),
+    [itemDef, component]);
 
     const dependenciesMet = useMemo(() => 
         !component.requires || component.requires.every(reqId => 
@@ -96,7 +102,7 @@ const ComponentItem = memo(({ component, orderState }) => {
                 <div className="w-full bg-gray-900 rounded-full h-2.5 mt-2 relative overflow-hidden border border-black/20">
                     <div
                         className="bg-orange-500 h-full rounded-full transition-width duration-200"
-                        style={{ width: `${(progress / component.progress) * 100}%` }}
+                        style={{ width: `${(progress / scaledRequiredProgress) * 100}%` }}
                     ></div>
                 </div>
             ) : (

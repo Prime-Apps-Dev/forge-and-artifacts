@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import { definitions } from '../../data/definitions/index.js';
 import AchievementCard from '../ui/cards/AchievementCard';
-import { useGame } from '../../context/GameContext.jsx';
+import { useGame } from '../../context/useGame.js';
 
 const AchievementsPanel = () => {
     const { displayedGameState: gameState } = useGame();

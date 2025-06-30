@@ -4,7 +4,7 @@ import { definitions } from '../../data/definitions/index.js';
 import { formatCostsJsx } from '../../utils/formatters.jsx';
 import { hasReputation } from '../../utils/helpers';
 import TradeableResource from '../ui/cards/TradeableResource';
-import { useGame } from '../../context/GameContext.jsx'; // Используем контекст
+import { useGame } from '../../context/useGame.js'; // Используем контекст
 
 const ShopView = () => {
     const { displayedGameState: gameState, handlers } = useGame(); // Получаем всё из контекста

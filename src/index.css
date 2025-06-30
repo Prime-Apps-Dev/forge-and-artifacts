@@ -8,7 +8,6 @@ body {
     overflow: hidden;
     background-attachment: fixed;
     
-    /* ИСПРАВЛЕНИЕ: Добавляем правило для запрета выделения */
     -webkit-user-select: none; /* Safari */
     -ms-user-select: none; /* IE 10+ */
     user-select: none; /* Стандартный синтаксис */
@@ -54,7 +53,6 @@ body {
     animation: toast-fade-out 0.4s ease-out forwards !important;
 }
 
-/* --- НОВЫЕ АНИМАЦИИ ДЛЯ МОБИЛЬНЫХ МОДАЛОК --- */
 @keyframes slide-in-up {
     from { transform: translateY(100%); }
     to { transform: translateY(0); }
@@ -62,12 +60,20 @@ body {
 .animate-slide-in-up {
     animation: slide-in-up 0.3s ease-out forwards;
 }
-/* ------------------------------------------- */
 
 
 .interactive-element {
     transition: box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, transform 0.1s ease;
 }
+
+/* --- НОВОЕ ПРАВИЛО ДЛЯ АНИМАЦИИ НАЖАТИЯ --- */
+/* Применяется, когда кнопка мыши зажата или палец касается элемента */
+.interactive-element:active {
+    transform: scale(0.95); /* Слегка уменьшаем элемент */
+    transition-duration: 0.05s; /* Делаем реакцию на нажатие почти мгновенной */
+}
+/* ------------------------------------------- */
+
 
 @keyframes anvil-strike {
   0% { transform: translateY(0); }
@@ -113,7 +119,6 @@ body {
     .right-panel { width: 40%; min-width: 40%; overflow-x: hidden; }
 }
 
-/* --- ИЗМЕНЕННЫЕ СТИЛИ ДЛЯ УВЕДОМЛЕНИЙ --- */
 .toast-container {
     position: fixed !important;
     z-index: 10000 !important;
@@ -136,7 +141,6 @@ body {
         max-width: 320px !important;
     }
 }
-/* --------------------------------------- */
 
 
 .img-rounded-corners {
@@ -196,4 +200,26 @@ body {
 
 .confirm-btn-animate {
     transition: width 0.3s ease-in-out, background-color 0.3s ease-in-out, padding 0.3s ease-in-out;
+}
+
+/* --- СТИЛИ ДЛЯ ИНДИКАТОРА СЕТИ --- */
+.network-status-indicator {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    z-index: 10000;
+    pointer-events: all; /* Чтобы всплывающая подсказка работала */
+    cursor: help;
+}
+/* На мобильных устройствах индикатор будет над нижней панелью */
+@media (max-width: 767px) {
+    .network-status-indicator {
+        bottom: 88px; /* 80px высота панели + 8px отступ */
+    }
+}
+/* На десктопе, если нижняя панель скрыта, индикатор опускается ниже */
+@media (min-width: 768px) {
+    .bottom-bar-panel-hidden + .network-status-indicator-wrapper .network-status-indicator {
+        bottom: 16px;
+    }
 }

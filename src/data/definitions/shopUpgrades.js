@@ -17,7 +17,7 @@ export const shopUpgrades = {
         cost: { sparks: 3000, copperIngots: 20 },
         requiredShopReputation: 250,
         isMultiLevel: false,
-        apply: (state) => { state.shopShelves.push({ itemId: null, customer: null, saleProgress: 0, saleTimer: 0 }); }
+        apply: (state) => { state.shopShelves.push({ id: `shelf_${Date.now()}_${Math.random()}`, itemId: null, customer: null, saleProgress: 0, saleTimer: 0 }); }
     },
     fancyShopSign: {
         id: 'fancyShopSign',
@@ -53,12 +53,43 @@ export const shopUpgrades = {
         id: 'personnelOffice',
         name: "Офис найма",
         description: "Снижает стоимость реролла предложений персонала на 10% за уровень.",
-        cost: { sparks: 5000, bronzeIngots: 50, matter: 150 },
         requiredShopReputation: 400,
         isMultiLevel: true,
         maxLevel: 5,
         baseCost: { sparks: 5000, bronzeIngots: 50, matter: 150 },
         costIncrease: 2.0,
         apply: (state) => { state.personnelRollCostReduction = (state.personnelRollCostReduction || 0) + 0.1; }
+    },
+    // --- НОВЫЕ УЛУЧШЕНИЯ (ТЗ 5.1, 6.2) ---
+    eloquence: {
+        id: 'eloquence',
+        name: "Красноречие",
+        description: "Увеличивает скорость продажи на 5% за уровень и позволяет комфортно продавать более качественные товары.",
+        requiredShopReputation: 300,
+        isMultiLevel: true,
+        maxLevel: 10,
+        baseCost: { sparks: 4000, matter: 75 },
+        costIncrease: 1.6,
+        apply: (state) => { state.playerShopSalesSpeedModifier += 0.05; }
+    },
+    patientCustomer: {
+        id: 'patientCustomer',
+        name: "Терпеливый клиент",
+        description: "Увеличивает время ожидания клиента на 10% за уровень.",
+        requiredShopReputation: 200,
+        isMultiLevel: true,
+        maxLevel: 5,
+        baseCost: { sparks: 3500, copperIngots: 40 },
+        costIncrease: 1.7,
+        apply: (state) => { state.timeLimitModifier += 0.1; }
+    },
+    guildLicense: {
+        id: 'guildLicense',
+        name: "Лицензия гильдии",
+        description: "Дает доступ к Доске объявлений с особыми и выгодными заказами.",
+        cost: { sparks: 10000, bronzeIngots: 50 },
+        requiredShopReputation: 600,
+        isMultiLevel: false,
+        apply: (state) => { state.unlockedFeatures = { ...(state.unlockedFeatures || {}), bulletinBoard: true }; }
     }
 };

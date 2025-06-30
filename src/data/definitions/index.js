@@ -19,7 +19,9 @@ import { upgrades } from './upgrades.js';
 import { shopUpgrades } from './shopUpgrades.js';
 import { recipes } from './recipes.js';
 import { gameConfig } from '../../constants/gameConfig.js';
-import { personnelTraits } from './personnelTraits.js'; // НОВЫЙ ИМПОРТ
+import { personnelTraits } from './personnelTraits.js';
+import { craftingEvents } from './craftingEvents.js';
+import { bulletinBoardOrders } from './bulletinBoardOrders.js'; // НОВЫЙ ИМПОРТ
 
 /**
  * Централизованный объект, содержащий все игровые определения.
@@ -36,7 +38,7 @@ export const definitions = {
     eternalSkills,
     avatars,
     personnel,
-    personnelTraits, // НОВОЕ СВОЙСТВО
+    personnelTraits, 
     masteryLevelRewards,
     playerRanks,
     shopLevels,
@@ -46,6 +48,8 @@ export const definitions = {
     shopUpgrades,
     recipes,
     gameConfig,
+    craftingEvents,
+    bulletinBoardOrders, // НОВОЕ СВОЙСТВО
     // Определения из shared.js
     factions: sharedDefinitions.factions,
     reputationLevels: sharedDefinitions.reputationLevels,

@@ -4,7 +4,7 @@ import { definitions } from '../../../data/definitions/index.js';
 import { formatCostsJsx } from '../../../utils/formatters.jsx';
 import { hasReputation } from '../../../utils/helpers';
 import Tooltip from '../display/Tooltip';
-import { useGame } from '../../../context/GameContext.jsx';
+import { useGame } from '../../../context/useGame.js';
 
 const FactionUpgradeButton = React.memo(({ upgradeId }) => {
     const { displayedGameState: gameState, handlers } = useGame();

@@ -3,7 +3,7 @@ import { definitions } from '../data/definitions/index.js';
 
 export function recalculateAllModifiers(state) {
     // Сбрасываем все модификаторы до базовых значений
-    state.passiveGeneration = { ironOre: 0, copperOre: 0, mithrilOre: 0, adamantiteOre: 0, ironIngots: 0, sparks: 0, matter: 0 };
+    state.passiveGeneration = { ironOre: 0, copperOre: 0, mithrilOre: 0, adamantiteOre: 0, sparks: 0, matter: 0 };
     state.sparksModifier = 1.0;
     state.matterModifier = 1.0;
     state.smeltingSpeedModifier = 1.0;
@@ -31,7 +31,20 @@ export function recalculateAllModifiers(state) {
     state.tipChance = 0;
     state.missionMinQualityReduction = 0;
     state.personnelWageReduction = 0;
+    state.craftingSpeedModifiers = { all: 1.0, iron: 1.0, copper: 1.0, bronze: 1.0, sparksteel: 1.0, mithril: 1.0, adamantite: 1.0, arcanite: 1.0 };
+    state.minigameBarSpeedModifier = 1.0;
+    state.bonusCopperChance = 0;
+    state.multitouchEnabled = false;
+    state.unlockedFeatures = { ...(state.unlockedFeatures || {}), bulletinBoard: false };
 
+    // ДОБАВЛЕНО: Применяем бонусы Наследия
+    if (state.legacyStats?.passiveBonuses) {
+        state.passiveGeneration.ore = (state.passiveGeneration.ore || 0) + (state.legacyStats.passiveBonuses.ore || 0);
+        // Примечание: пассивный доход руды от наследия будет добавляться ко всем типам руды в игровом цикле.
+        state.passiveGeneration.sparks = (state.passiveGeneration.sparks || 0) + (state.legacyStats.passiveBonuses.sparks || 0);
+        state.passiveGeneration.matter = (state.passiveGeneration.matter || 0) + (state.legacyStats.passiveBonuses.matter || 0);
+    }
+    
     // Применяем постоянные бонусы от достижений (из eternalAchievementBonuses)
     for (const key in state.eternalAchievementBonuses) {
         const value = state.eternalAchievementBonuses[key];

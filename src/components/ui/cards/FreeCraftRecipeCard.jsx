@@ -2,7 +2,7 @@
 import React from 'react';
 import { getItemImageSrc } from '../../../utils/helpers';
 import { definitions } from '../../../data/definitions/index.js';
-import { useGame } from '../../../context/GameContext.jsx';
+import { useGame } from '../../../context/useGame.js';
 import Button from '../buttons/Button.jsx';
 
 const FreeCraftRecipeCard = ({ itemDef, itemKey, isDisabled }) => {

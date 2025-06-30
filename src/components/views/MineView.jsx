@@ -4,7 +4,7 @@ import MineButton from '../ui/buttons/MineButton';
 import { formatNumber } from '../../utils/formatters.jsx';
 import Tooltip from '../ui/display/Tooltip';
 import { definitions } from '../../data/definitions/index.js';
-import { useGame } from '../../context/GameContext.jsx';
+import { useGame } from '../../context/useGame.js';
 
 const MinerIndicator = ({ oreType }) => {
     const { displayedGameState: gameState } = useGame();
@@ -30,7 +30,7 @@ const MinerIndicator = ({ oreType }) => {
 };
 
 const MineView = () => {
-    const { displayedGameState: gameState, handlers } = useGame();
+    const { displayedGameState: gameState, handlers, selectedMineOre } = useGame();
     
     const ores = useMemo(() => {
         const getOreData = (oreType, skillRequired = null, lockedByPlaythrough = false) => {
@@ -50,7 +50,7 @@ const MineView = () => {
             getOreData('copperOre', 'findCopper'),
             getOreData('mithrilOre', 'mithrilProspecting', true),
             getOreData('adamantiteOre', 'adamantiteMining', true),
-        ].filter(ore => !ore.isLocked); // Фильтруем массив, оставляя только разблокированные руды
+        ].filter(ore => !ore.isLocked);
 
     }, [gameState.purchasedSkills, gameState.isFirstPlaythrough, gameState.ironOre, gameState.copperOre, gameState.mithrilOre, gameState.adamantiteOre]);
 
@@ -59,16 +59,15 @@ const MineView = () => {
             <h2 className="font-cinzel text-2xl accent-glow-color text-shadow-glow flex items-center gap-2 border-b border-gray-700 pb-4 mb-6">
                 <span className="material-icons-outlined">terrain</span> Шахта
             </h2>
-            <p className="text-gray-400 mb-6">Здесь можно добыть ценную руду для будущих шедевров. Назначайте шахтёров, чтобы автоматизировать добычу.</p>
+            <p className="text-gray-400 mb-6">Выберите жилу для добычи. На мобильных устройствах используйте центральную кнопку внизу для добычи выбранной руды.</p>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {ores.map(ore => (
                     <div key={ore.oreType} className="relative flex flex-col items-center">
                         <MineButton
                             oreType={ore.oreType}
                             name={ore.name}
-                            onClick={handlers.handleMineOre}
-                            isLocked={false}
-                            lockText=""
+                            onSelect={handlers.handleSelectMineOre}
+                            isSelected={selectedMineOre === ore.oreType}
                         />
                         <MinerIndicator oreType={ore.oreType} />
                         <p className={`text-sm mt-2 ${ore.oreType === 'mithrilOre' ? 'text-cyan-400' : ore.oreType === 'adamantiteOre' ? 'text-indigo-400' : 'text-gray-400'}`}>

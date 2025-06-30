@@ -1,6 +1,7 @@
 // src/utils/helpers.js
 import { definitions } from '../data/definitions/index.js';
 import { UI_CONSTANTS } from '../constants/ui';
+import { gameConfig } from '../constants/gameConfig.js';
 
 export const getReputationLevel = (reputation) => {
     let currentLevel = definitions.reputationLevels[0];
@@ -41,4 +42,17 @@ export const getArtifactImageSrc = (artifactId, size = 64) => {
         return UI_CONSTANTS.PLACEHOLDER_ARTIFACT_SRC(size);
     }
     return artifactDef.icon;
+};
+
+/**
+ * Рассчитывает сложность компонента с учетом его эпохи.
+ * @param {object} itemDef - Определение предмета.
+ * @param {object} component - Определение компонента.
+ * @returns {number} - Требуемый прогресс с учетом множителя сложности.
+ */
+export const getScaledComponentProgress = (itemDef, component) => {
+    if (!itemDef || !component) return 0;
+    const epochLevel = gameConfig.EPOCH_DEFINITIONS[itemDef.baseIngot] || 1;
+    const multiplier = 1 + (epochLevel - 1) * gameConfig.EPOCH_DIFFICULTY_MULTIPLIER;
+    return component.progress * multiplier;
 };

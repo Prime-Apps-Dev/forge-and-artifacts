@@ -1,6 +1,6 @@
 // src/components/modals/ManagePersonnelModal.jsx
 import React, { memo, useState, useMemo } from 'react';
-import { useGame } from '../../context/GameContext.jsx';
+import { useGame } from '../../context/useGame.js';
 import { definitions } from '../../data/definitions/index.js';
 import Button from '../ui/buttons/Button.jsx';
 import ImageWithFallback from '../ui/display/ImageWithFallback.jsx';

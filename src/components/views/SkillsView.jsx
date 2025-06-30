@@ -1,7 +1,7 @@
 // src/components/views/SkillsView.jsx
 import React from 'react';
 import SkillNode from '../ui/cards/SkillNode';
-import { useGame } from '../../context/GameContext.jsx';
+import { useGame } from '../../context/useGame.js';
 
 const SkillsView = () => {
     const { displayedGameState: gameState } = useGame();

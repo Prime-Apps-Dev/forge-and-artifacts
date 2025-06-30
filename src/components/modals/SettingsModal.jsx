@@ -1,6 +1,6 @@
 // src/components/modals/SettingsModal.jsx
 import React from 'react';
-import { useGame } from '../../context/GameContext.jsx';
+import { useGame } from '../../context/useGame.js';
 import Button from '../ui/buttons/Button.jsx';
 import { useDraggableModal } from '../../hooks/useDraggableModal.js';
 import ModalDragHandle from '../ui/display/ModalDragHandle.jsx';

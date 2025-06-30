@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import { definitions } from '../../data/definitions/index.js';
 import SmeltButton from '../ui/buttons/SmeltButton';
-import { useGame } from '../../context/GameContext.jsx';
+import { useGame } from '../../context/useGame.js';
 import { getResourceImageSrc } from '../../utils/helpers';
 import Tooltip from '../ui/display/Tooltip';
 

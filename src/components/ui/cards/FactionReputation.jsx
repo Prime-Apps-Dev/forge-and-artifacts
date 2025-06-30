@@ -3,7 +3,7 @@ import React from 'react';
 import { definitions } from '../../../data/definitions/index.js';
 import { formatNumber } from '../../../utils/formatters.jsx';
 import { getReputationLevel } from '../../../utils/helpers';
-import { useGame } from '../../../context/GameContext.jsx';
+import { useGame } from '../../../context/useGame.js';
 
 const FactionReputation = React.memo(({ factionId }) => {
     const { displayedGameState: gameState } = useGame();

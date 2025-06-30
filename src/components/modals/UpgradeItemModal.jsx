@@ -1,6 +1,6 @@
 // src/components/modals/UpgradeItemModal.jsx
 import React from 'react';
-import { useGame } from '../../context/GameContext';
+import { useGame } from '../../context/useGame.js';
 import { definitions } from '../../data/definitions/index';
 import { formatCostsJsx, formatNumber } from '../../utils/formatters';
 import Button from '../ui/buttons/Button';

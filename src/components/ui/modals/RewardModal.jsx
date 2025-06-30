@@ -4,7 +4,7 @@ import { formatNumber } from '../../../utils/formatters.jsx';
 import { definitions } from '../../../data/definitions/index.js';
 import { getArtifactImageSrc } from '../../../utils/helpers';
 import Button from '../buttons/Button.jsx';
-import { useGame } from '../../../context/GameContext.jsx';
+import { useGame } from '../../../context/useGame.js'; // ИЗМЕНЕН ПУТЬ ИМПОРТА
 import { useDraggableModal } from '../../../hooks/useDraggableModal.js';
 import ModalDragHandle from '../display/ModalDragHandle.jsx';
 

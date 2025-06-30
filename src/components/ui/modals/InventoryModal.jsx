@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import { definitions } from '../../../data/definitions/index.js';
 import InventoryItemCard from '../cards/InventoryItemCard';
-import { useGame } from '../../../context/GameContext.jsx';
+import { useGame } from '../../../context/useGame.js';
 import Button from '../buttons/Button.jsx';
 import { useDraggableModal } from '../../../hooks/useDraggableModal.js';
 import ModalDragHandle from '../display/ModalDragHandle.jsx';

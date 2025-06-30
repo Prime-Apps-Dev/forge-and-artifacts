@@ -1,7 +1,7 @@
 // src/components/panels/PersonnelView.jsx
 import React from 'react';
 import HiredPersonnelCard from '../ui/cards/HiredPersonnelCard';
-import { useGame } from '../../context/GameContext.jsx';
+import { useGame } from '../../context/useGame.js';
 import Button from '../ui/buttons/Button.jsx';
 
 const PersonnelView = () => {

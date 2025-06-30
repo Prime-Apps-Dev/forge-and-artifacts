@@ -35,7 +35,6 @@ export function usePlayerActions(props) {
                 return state;
             });
         },
-        // НОВЫЕ ОБРАБОТЧИКИ ДЛЯ МИНИ-ИГР
         handleUpdateMinigameState: (minigameStateUpdater) => {
             props.updateState(state => {
                 const project = state.activeOrder || state.activeFreeCraft;
@@ -44,7 +43,18 @@ export function usePlayerActions(props) {
                 }
                 return state;
             });
-        }
+        },
+        // --- НОВЫЕ ОБРАБОТЧИКИ ДЛЯ МОБИЛЬНОГО UI ---
+        handleSetMobileView: (viewId) => {
+            props.setActiveMobileView(viewId);
+        },
+        handleSelectMineOre: (oreType) => {
+            props.setSelectedMineOre(oreType);
+        },
+        handleSelectShopShelf: (index) => {
+            // Если кликаем по уже выбранной, снимаем выделение
+            props.setSelectedShopShelfIndex(prev => prev === index ? null : index);
+        },
     }), [
         coreHandlers, modals, skillAndFaction, marketAndShop, 
         craftingAndUpgrade, questAndMission, prestigeAndEternal, personnel, 

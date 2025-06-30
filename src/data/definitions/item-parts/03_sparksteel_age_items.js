@@ -8,7 +8,7 @@ export const sparksteelAgeItems = {
         requiredSkill: 'artOfAlloys',
         baseIngot: 'sparksteelIngots',
         baseIngotType: 'uncommon',
-        hasInlaySlots: true, blueprintId: 'artOfAlloys_item',
+        hasInlaySlots: true, blueprintId: 'blueprint_sparksteelMace',
         components: [
             {
                 id: "head", name: "Навершие из Искростали", progress: 350, cost: { sparksteelIngots: 5 }, workstation: 'anvil',
@@ -29,7 +29,7 @@ export const sparksteelAgeItems = {
         ]
     },
     sparksteelToolset: {
-        name: 'Комплект инструментов из Искростали', icon: IMAGE_PATHS.ITEMS.SPARKSTEEL_TOOLSET, requiredSkill: 'optimizedSmelting', baseIngot: 'sparksteelIngots', baseIngotType: 'uncommon', hasInlaySlots: false, blueprintId: 'optimizedSmelting_item',
+        name: 'Комплект инструментов из Искростали', icon: IMAGE_PATHS.ITEMS.SPARKSTEEL_TOOLSET, requiredSkill: 'optimizedSmelting', baseIngot: 'sparksteelIngots', baseIngotType: 'uncommon', hasInlaySlots: false, blueprintId: 'blueprint_sparksteelToolset',
         components: [
             {
                 id: 'hammer_head', name: "Боек молота", progress: 150, cost: { sparksteelIngots: 2 }, workstation: 'anvil',
@@ -55,7 +55,7 @@ export const sparksteelAgeItems = {
         ]
     },
     sparksteelJewelersKit: {
-        name: 'Набор ювелирных инструментов из Искростали', icon: IMAGE_PATHS.ITEMS.SPARKSTEEL_JEWELERS_KIT, requiredSkill: 'jewelryCrafting', baseIngot: 'sparksteelIngots', baseIngotType: 'uncommon', hasInlaySlots: false, blueprintId: 'jewelersKit_item',
+        name: 'Набор ювелирных инструментов из Искростали', icon: IMAGE_PATHS.ITEMS.SPARKSTEEL_JEWELERS_KIT, requiredSkill: 'jewelersKit', baseIngot: 'sparksteelIngots', baseIngotType: 'uncommon', hasInlaySlots: false, blueprintId: 'blueprint_sparksteelJewelersKit',
         components: [
             {
                 id: 'mini_anvil', name: "Мини-наковальня", progress: 100, cost: { sparksteelIngots: 1 }, workstation: 'anvil',
@@ -76,7 +76,7 @@ export const sparksteelAgeItems = {
         ]
     },
     sparksteelCrossbow: {
-        name: 'Арбалет из Искростали', icon: IMAGE_PATHS.ITEMS.SPARKSTEEL_CROSSBOW, requiredSkill: 'blueprint_fineWeapons', baseIngot: 'sparksteelIngots', baseIngotType: 'uncommon', hasInlaySlots: true, blueprintId: 'crossbowMastery_item',
+        name: 'Арбалет из Искростали', icon: IMAGE_PATHS.ITEMS.SPARKSTEEL_CROSSBOW, requiredSkill: 'crossbowMastery', baseIngot: 'sparksteelIngots', baseIngotType: 'uncommon', hasInlaySlots: true, blueprintId: 'blueprint_sparksteelCrossbow',
         components: [
             {
                 id: 'limb_core', name: "Плечи арбалета", progress: 400, cost: { sparksteelIngots: 5 }, workstation: 'anvil',
@@ -97,7 +97,7 @@ export const sparksteelAgeItems = {
         ]
     },
     sparksteelPincers: {
-        name: 'Клещи из Искростали', icon: IMAGE_PATHS.ITEMS.SPARKSTEEL_PINCERS, requiredSkill: 'artOfAlloys', baseIngot: 'sparksteelIngots', baseIngotType: 'uncommon', hasInlaySlots: false, blueprintId: 'universalPincers_item',
+        name: 'Клещи из Искростали', icon: IMAGE_PATHS.ITEMS.SPARKSTEEL_PINCERS, requiredSkill: 'universalPincers', baseIngot: 'sparksteelIngots', baseIngotType: 'uncommon', hasInlaySlots: false, blueprintId: 'blueprint_sparksteelPincers',
         components: [
             { 
                 id: 'jaws', name: "Губки", progress: 100, cost: { sparksteelIngots: 2 }, workstation: 'anvil',
@@ -118,7 +118,7 @@ export const sparksteelAgeItems = {
         ]
     },
     sparksteelArmorPlates: {
-        name: 'Бронепластины из Искростали', icon: IMAGE_PATHS.ITEMS.SPARKSTEEL_ARMOR_PLATES, requiredSkill: 'blueprint_eliteArmor', baseIngot: 'sparksteelIngots', baseIngotType: 'uncommon', hasInlaySlots: true, blueprintId: 'armorPlating_item',
+        name: 'Бронепластины из Искростали', icon: IMAGE_PATHS.ITEMS.SPARKSTEEL_ARMOR_PLATES, requiredSkill: 'armorPlating', baseIngot: 'sparksteelIngots', baseIngotType: 'uncommon', hasInlaySlots: true, blueprintId: 'blueprint_sparksteelArmorPlates',
         components: [
             {
                 id: 'molding', name: "Формовка", progress: 300, cost: { sparksteelIngots: 4 }, workstation: 'anvil',
@@ -138,7 +138,7 @@ export const sparksteelAgeItems = {
         ]
     },
     sparksteelWatch: {
-        name: 'Часы из Искростали', icon: IMAGE_PATHS.ITEMS.SPARKSTEEL_WATCH, requiredSkill: 'legendaryClients', baseIngot: 'sparksteelIngots', baseIngotType: 'uncommon', hasInlaySlots: true, blueprintId: 'precisionChronometry_item',
+        name: 'Часы из Искростали', icon: IMAGE_PATHS.ITEMS.SPARKSTEEL_WATCH, requiredSkill: 'precisionChronometry', baseIngot: 'sparksteelIngots', baseIngotType: 'uncommon', hasInlaySlots: true, blueprintId: 'blueprint_sparksteelWatch',
         components: [
             { 
                 id: 'gear_assembly', name: "Сборка шестеренок", progress: 200, cost: { sparksteelIngots: 2 }, workstation: 'workbench',

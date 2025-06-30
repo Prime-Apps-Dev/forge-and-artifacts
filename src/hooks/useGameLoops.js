@@ -1,6 +1,7 @@
 // src/hooks/useGameLoops.js
 import { useEffect, useRef } from 'react';
-import { startGameLoop, startMarketLoop, startOrderGenerationLoop, generateNewOrder } from '../logic/gameLogic';
+// ИСПРАВЛЕНО: generateNewOrder больше не импортируется здесь
+import { startGameLoop, startMarketLoop, startOrderGenerationLoop } from '../logic/gameLogic';
 
 export function useGameLoops(updateState, handlers, showToast, showAchievementRewardModal, assetsLoaded) {
     const gameLoopIntervalRef = useRef(null);
@@ -16,7 +17,8 @@ export function useGameLoops(updateState, handlers, showToast, showAchievementRe
             console.log("Game loops starting...");
             gameLoopIntervalRef.current = startGameLoop(updateState, handlers, showToast, showAchievementRewardModal);
             marketLoopIntervalRef.current = startMarketLoop(updateState, showToast);
-            orderGenerationIntervalRef.current = startOrderGenerationLoop(updateState, generateNewOrder, handlers.checkForNewQuests, showToast);
+            // ИСПРАВЛЕНО: Обновлен вызов startOrderGenerationLoop
+            orderGenerationIntervalRef.current = startOrderGenerationLoop(updateState, handlers.checkForNewQuests, showToast);
         }
 
         return () => {
@@ -24,7 +26,7 @@ export function useGameLoops(updateState, handlers, showToast, showAchievementRe
                 console.log("Game loops cleaning up...");
                 clearInterval(gameLoopIntervalRef.current);
                 clearInterval(marketLoopIntervalRef.current);
-                clearInterval(orderGenerationIntervalRef.current);
+                clearTimeout(orderGenerationIntervalRef.current); // Используем clearTimeout, так как цикл использует setTimeout
                 gameLoopIntervalRef.current = null;
                 marketLoopIntervalRef.current = null;
                 orderGenerationIntervalRef.current = null;

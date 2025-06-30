@@ -3,7 +3,7 @@ import React, { memo } from 'react';
 import Tooltip from '../display/Tooltip';
 import { definitions } from '../../../data/definitions/index.js';
 import { formatCostsJsx } from '../../../utils/formatters.jsx';
-import { useGame } from '../../../context/GameContext.jsx';
+import { useGame } from '../../../context/useGame.js';
 import Button from '../buttons/Button.jsx';
 import ImageWithFallback from '../display/ImageWithFallback.jsx';
 import { UI_CONSTANTS } from '../../../constants/ui.js';

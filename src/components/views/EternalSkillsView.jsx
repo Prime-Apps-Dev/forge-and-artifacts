@@ -2,7 +2,7 @@
 import React, { useRef } from 'react';
 import { formatNumber } from '../../utils/formatters.jsx';
 import EternalSkillNode from '../ui/cards/EternalSkillNode';
-import { useGame } from '../../context/GameContext.jsx';
+import { useGame } from '../../context/useGame.js';
 
 const EternalSkillsView = () => {
     const { displayedGameState: gameState } = useGame();

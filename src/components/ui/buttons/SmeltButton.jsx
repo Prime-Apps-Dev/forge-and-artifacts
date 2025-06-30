@@ -3,7 +3,7 @@ import React, { memo } from 'react';
 import Tooltip from '../display/Tooltip';
 import { definitions } from '../../../data/definitions/index.js';
 import { getResourceImageSrc } from '../../../utils/helpers';
-import { useGame } from '../../../context/GameContext.jsx';
+import { useGame } from '../../../context/useGame.js';
 
 const SmeltButton = memo(({ recipeId }) => {
     const { displayedGameState: gameState, handlers } = useGame();

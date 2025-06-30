@@ -1,9 +1,11 @@
 // src/components/minigames/QualityMinigameBar.jsx
 import React, { useEffect, useRef } from 'react';
-import { useGame } from '../../context/GameContext';
+import { useGame } from '../../context/useGame.js';
+import { definitions } from '../../data/definitions';
+import { gameConfig } from '../../constants/gameConfig';
 
 const QualityMinigameBar = ({ minigameState, componentDef }) => {
-    const { handlers } = useGame();
+    const { handlers, displayedGameState: gameState } = useGame();
     const animationFrameId = useRef(null);
     
     useEffect(() => {
@@ -13,9 +15,19 @@ const QualityMinigameBar = ({ minigameState, componentDef }) => {
             }
             return;
         }
+        
+        const activeProject = gameState.activeOrder || gameState.activeFreeCraft;
+        if (!activeProject) return;
 
-        const barSpeed = componentDef.minigame.barSpeed || 1.5;
-        const speed = 100 / barSpeed; 
+        const itemDef = definitions.items[activeProject.itemKey];
+        const epochLevel = gameConfig.EPOCH_DEFINITIONS[itemDef.baseIngot] || 1;
+        const epochSpeedMultiplier = gameConfig.EPOCH_MINIGAME_SPEED_MULTIPLIERS[epochLevel] || 1.0;
+        
+        // ИСПРАВЛЕНИЕ: Формула расчета скорости ползунка приведена в соответствие с ТЗ.
+        const baseSpeed = componentDef.minigame.barSpeed || 1.5;
+        const finalBarSpeed = baseSpeed * gameState.minigameBarSpeedModifier * epochSpeedMultiplier;
+        
+        const speed = 100 / finalBarSpeed; 
         let lastUpdateTime = Date.now();
         let direction = 1;
 
@@ -49,7 +61,7 @@ const QualityMinigameBar = ({ minigameState, componentDef }) => {
                 cancelAnimationFrame(animationFrameId.current);
             }
         };
-    }, [minigameState?.active, componentDef.minigame.barSpeed, handlers]);
+    }, [minigameState?.active, componentDef.minigame.barSpeed, handlers, gameState]);
 
     if (!minigameState?.active || !componentDef?.minigame || minigameState.type !== 'bar_precision') {
         return null;

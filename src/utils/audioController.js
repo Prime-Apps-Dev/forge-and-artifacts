@@ -10,6 +10,9 @@ export const audioController = {
     sfxVolume: new Tone.Volume(-10).toDestination(),
     musicVolume: new Tone.Volume(-18).toDestination(),
     meter: null,
+    // --- НОВЫЕ СВОЙСТВА ---
+    loadedTracks: new Set(),
+    currentTrackIndex: -1,
 
     init() {
         if (this.isInitialized) return;
@@ -30,12 +33,17 @@ export const audioController = {
                     this.musicPlayer.loop = false;
                     this.musicPlayer.fadeIn = 2;
                     this.musicPlayer.fadeOut = 2;
-                    this.currentTrackIndex = 0;
-
+                    
                     this.meter = new Tone.Meter();
                     this.musicPlayer.connect(this.meter);
 
-                    this.loadAndPlayNextTrack();
+                    // --- ИЗМЕНЕННАЯ ЛОГИКА ---
+                    // Отмечаем первый трек как "загруженный", т.к. assetLoader его уже загрузил
+                    if (AUDIO_PATHS.MUSIC.length > 0) {
+                        this.loadedTracks.add(AUDIO_PATHS.MUSIC[0]);
+                    }
+                    this.playNextTrack(); // Запускаем воспроизведение
+                    this.loadRemainingTracksInBackground(); // Начинаем фоновую загрузку остальных
                 }
 
                 Tone.Transport.start();
@@ -47,29 +55,52 @@ export const audioController = {
             }
         }).catch(e => console.error("Tone.start() failed", e));
     },
+    
+    // --- НОВАЯ ФУНКЦИЯ ФОНОВОЙ ЗАГРУЗКИ ---
+    loadRemainingTracksInBackground() {
+        console.log("Starting background audio loading...");
+        AUDIO_PATHS.MUSIC.forEach(trackUrl => {
+            if (!this.loadedTracks.has(trackUrl)) {
+                new Tone.Buffer(
+                    trackUrl,
+                    () => {
+                        this.loadedTracks.add(trackUrl);
+                        console.log(`Background loaded track: ${trackUrl}. Total loaded: ${this.loadedTracks.size}`);
+                    },
+                    (error) => {
+                        console.error(`Failed to load background track ${trackUrl}:`, error);
+                    }
+                );
+            }
+        });
+    },
 
-    loadAndPlayNextTrack() {
-        if (AUDIO_PATHS.MUSIC.length === 0) {
-            console.warn("No music tracks defined.");
+    // --- ИЗМЕНЕННАЯ ЛОГИКА ВОСПРОИЗВЕДЕНИЯ ---
+    playNextTrack() {
+        const availableTracks = Array.from(this.loadedTracks);
+        if (availableTracks.length === 0) {
+            console.warn("No music tracks loaded to play.");
             return;
         }
 
-        let nextTrackIndex;
-        if (AUDIO_PATHS.MUSIC.length > 1) {
+        let nextTrackUrl;
+        if (availableTracks.length > 1) {
+            let nextTrackIndex;
             do {
-                nextTrackIndex = Math.floor(Math.random() * AUDIO_PATHS.MUSIC.length);
-            } while (nextTrackIndex === this.currentTrackIndex);
+                nextTrackIndex = Math.floor(Math.random() * availableTracks.length);
+            } while (availableTracks[nextTrackIndex] === this.musicPlayer.buffer.url && availableTracks.length > 1);
+            nextTrackUrl = availableTracks[nextTrackIndex];
         } else {
-            nextTrackIndex = 0;
+            nextTrackUrl = availableTracks[0];
         }
-        this.currentTrackIndex = nextTrackIndex;
-        const nextTrackUrl = AUDIO_PATHS.MUSIC[this.currentTrackIndex];
 
-        console.log(`Loading music track: ${nextTrackUrl}`);
+        if (this.musicPlayer.state === 'started' && this.musicPlayer.buffer.url === nextTrackUrl) {
+            return; 
+        }
 
+        console.log(`Loading music track to player: ${nextTrackUrl}`);
         this.musicPlayer.load(nextTrackUrl).then(() => {
-            console.log(`Music track loaded: ${nextTrackUrl}`);
-
+            console.log(`Music player loaded: ${nextTrackUrl}`);
             if (this.musicPlayer.state !== 'started') {
                 this.musicPlayer.start();
                 console.log(`Music started: ${nextTrackUrl}`);
@@ -78,16 +109,16 @@ export const audioController = {
             if (this._nextTrackEventId) {
                  Tone.Transport.clear(this._nextTrackEventId);
             }
-
+            
             const currentDuration = this.musicPlayer.buffer.duration;
             const fadeOutTime = this.musicPlayer.fadeOut || 0;
             this._nextTrackEventId = Tone.Transport.scheduleOnce(() => {
-                this.loadAndPlayNextTrack();
+                this.playNextTrack();
             }, `+${currentDuration - (fadeOutTime / 2)}`);
 
         }).catch(error => {
-            console.error(`Failed to load music track ${nextTrackUrl}:`, error);
-            setTimeout(() => this.loadAndPlayNextTrack(), 3000);
+            console.error(`Failed to load music track ${nextTrackUrl} into player:`, error);
+            setTimeout(() => this.playNextTrack(), 5000); // Повторная попытка через 5 сек в случае ошибки
         });
     },
 
@@ -111,7 +142,7 @@ export const audioController = {
          const db = level === 0 ? -Infinity : Tone.gainToDb(level / 100);
          this.musicPlayer.volume.rampTo(db, 0.1);
          if (level > 0 && this.musicPlayer.state === 'stopped' && this.isInitialized) {
-             this.loadAndPlayNextTrack();
+             this.playNextTrack();
          }
     },
 

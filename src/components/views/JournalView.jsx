@@ -1,7 +1,7 @@
 // src/components/views/JournalView.jsx
 import React from 'react';
 import { definitions } from '../../data/definitions/index.js';
-import { useGame } from '../../context/GameContext.jsx';
+import { useGame } from '../../context/useGame.js'; // ИЗМЕНЕН ПУТЬ ИМПОРТА
 import Button from '../ui/buttons/Button.jsx';
 import { formatNumber } from '../../utils/formatters.jsx';
 

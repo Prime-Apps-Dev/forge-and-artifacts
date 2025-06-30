@@ -1,6 +1,6 @@
 // src/components/panels/StatsPanel.jsx
 import React from 'react';
-import { useGame } from '../../context/GameContext.jsx';
+import { useGame } from '../../context/useGame.js';
 
 const StatRow = ({ label, value, unit = '' }) => (
     <div className="flex justify-between text-sm py-1 border-b border-gray-800">

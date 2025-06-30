@@ -3,7 +3,7 @@ import React from 'react';
 import { definitions } from '../../data/definitions/index.js';
 import FactionReputation from '../ui/cards/FactionReputation';
 import FactionUpgradeButton from '../ui/buttons/FactionUpgradeButton';
-import { useGame } from '../../context/GameContext.jsx';
+import { useGame } from '../../context/useGame.js';
 
 const FactionsPanel = () => {
     const { displayedGameState: gameState } = useGame();

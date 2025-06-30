@@ -1,7 +1,7 @@
 // src/components/views/ArtifactsView.jsx
 import React from 'react';
 import ArtifactCard from '../ui/cards/ArtifactCard';
-import { useGame } from '../../context/GameContext.jsx';
+import { useGame } from '../../context/useGame.js'; // ИЗМЕНЕН ПУТЬ ИМПОРТА
 
 const ArtifactsView = () => {
     const { displayedGameState: gameState } = useGame();

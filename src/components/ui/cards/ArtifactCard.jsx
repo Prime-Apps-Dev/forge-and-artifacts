@@ -1,7 +1,7 @@
 // src/components/ui/cards/ArtifactCard.jsx
 import React from 'react';
 import { getArtifactImageSrc } from '../../../utils/helpers';
-import { useGame } from '../../../context/GameContext.jsx';
+import { useGame } from '../../../context/useGame.js'; // ИЗМЕНЕН ПУТЬ ИМПОРТА
 import Button from '../buttons/Button.jsx';
 
 const ArtifactCard = React.memo(({ artifact, id }) => {
