@@ -80,6 +80,7 @@ const ForgeView = () => {
                     <img src={IMAGE_PATHS.UI.ANVIL} alt="Наковальня" className="w-48 h-48 drop-shadow-lg" />
                 </div>
             </div>
+            <div className="h-16 md:hidden"></div>
         </div>
     );
 };

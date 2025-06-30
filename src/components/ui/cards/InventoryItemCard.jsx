@@ -42,7 +42,7 @@ const InventoryItemCard = ({ item, onAction, actionLabel, isAnyActiveProject }) 
 
     return (
         <>
-            <div className={`bg-gradient-to-b ${rarityClass.bg} ${rarityClass.border} border-2 rounded-lg p-3 flex flex-col justify-between relative overflow-hidden shadow-lg ${rarityClass.shadow} transition-all duration-300 min-w-[280px] h-full`}>
+            <div className={`bg-gradient-to-b ${rarityClass.bg} ${rarityClass.border} border-2 rounded-lg p-3 flex flex-col justify-between relative overflow-hidden shadow-lg ${rarityClass.shadow} transition-all duration-300 h-full`}>
                 <div className="absolute top-2 right-2 flex flex-col gap-2 z-10">
                      {isPersonnelItem && (
                         <Tooltip text={`Предмет для персонала (Ур. ${item.level})`}>
@@ -117,11 +117,18 @@ const InventoryItemCard = ({ item, onAction, actionLabel, isAnyActiveProject }) 
                 
                 <div className="w-full mt-auto space-y-2">
                     {isPersonnelItem ? (
-                        canBeUpgraded && (
-                            <Button onClick={() => handlers.handleOpenUpgradeItemModal(item.uniqueId)} disabled={actionButtonDisabled} className="w-full py-2 bg-teal-700 hover:enabled:bg-teal-600">
-                               Улучшить
-                            </Button>
-                        )
+                        <div className="space-y-2">
+                            {onAction && (
+                                <Button onClick={onAction} disabled={actionButtonDisabled} className="w-full py-2">
+                                    {actionLabel}
+                                </Button>
+                            )}
+                            {canBeUpgraded && (
+                                <Button onClick={() => handlers.handleOpenUpgradeItemModal(item.uniqueId)} disabled={actionButtonDisabled} className="w-full py-2 bg-teal-700 hover:enabled:bg-teal-600">
+                                   Улучшить
+                                </Button>
+                            )}
+                        </div>
                     ) : (
                         onAction && (
                             <div className="flex gap-2">
