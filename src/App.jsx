@@ -1,14 +1,11 @@
 // src/App.jsx
 import React from 'react';
-import { GameProvider } from './context/GameContext';
-import Game from './Game'; // Импортируем наш новый основной компонент
+import Game from './Game';
 
-// App теперь отвечает только за предоставление контекста
 function App() {
+  // Теперь здесь нет провайдера, так как он находится на уровень выше
   return (
-    <GameProvider>
-      <Game />
-    </GameProvider>
+    <Game />
   );
 }
 

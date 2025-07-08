@@ -21,7 +21,10 @@ export const useModalsHandlers = ({
     setItemToUpgradeId,
     setIsEquipItemModalOpen,
     setPersonnelToEquip,
-    // --- НОВЫЕ СЕТТЕРЫ ---
+    setIsSetPriceModalOpen, 
+    setItemToSetPriceFor,
+    setIsEquipPlayerItemModalOpen, 
+    setPlayerSlotToEquip,
     setIsSettingsOpen,
     setIsInventoryOpen,
     setIsProfileModalOpen,
@@ -133,6 +136,26 @@ export const useModalsHandlers = ({
         setPersonnelToEquip({ id: null, slot: null });
     }, [setIsEquipItemModalOpen, setPersonnelToEquip]);
 
+    const handleOpenSetPriceModal = useCallback((shelfIndex) => {
+        setItemToSetPriceFor(shelfIndex);
+        setIsSetPriceModalOpen(true);
+    }, [setItemToSetPriceFor, setIsSetPriceModalOpen]);
+
+    const handleCloseSetPriceModal = useCallback(() => {
+        setIsSetPriceModalOpen(false);
+        setItemToSetPriceFor(null);
+    }, [setIsSetPriceModalOpen, setItemToSetPriceFor]);
+
+    const handleOpenEquipPlayerItemModal = useCallback((slotType) => {
+        setPlayerSlotToEquip(slotType);
+        setIsEquipPlayerItemModalOpen(true);
+    }, [setPlayerSlotToEquip, setIsEquipPlayerItemModalOpen]);
+
+    const handleCloseEquipPlayerItemModal = useCallback(() => {
+        setIsEquipPlayerItemModalOpen(false);
+        setPlayerSlotToEquip(null);
+    }, [setIsEquipPlayerItemModalOpen, setPlayerSlotToEquip]);
+
 
     return useMemo(() => ({
         handleCloseInfoModal,
@@ -154,7 +177,10 @@ export const useModalsHandlers = ({
         handleCloseUpgradeItemModal,
         handleOpenEquipItemModal,
         handleCloseEquipItemModal,
-        // --- НОВЫЕ ОБРАБОТЧИКИ ---
+        handleOpenSetPriceModal,
+        handleCloseSetPriceModal,
+        handleOpenEquipPlayerItemModal,
+        handleCloseEquipPlayerItemModal,
         handleOpenProfileModal,
         handleCloseProfileModal,
         handleOpenSettingsModal,
@@ -169,6 +195,8 @@ export const useModalsHandlers = ({
         handleOpenHirePersonnelModal, handleCloseHirePersonnelModal,
         handleOpenManagePersonnelModal, handleCloseManagePersonnelModal,
         handleOpenUpgradeItemModal, handleCloseUpgradeItemModal, handleOpenEquipItemModal, handleCloseEquipItemModal,
+        handleOpenSetPriceModal, handleCloseSetPriceModal,
+        handleOpenEquipPlayerItemModal, handleCloseEquipPlayerItemModal,
         handleOpenProfileModal, handleCloseProfileModal, handleOpenSettingsModal, handleCloseSettingsModal, handleOpenInventoryModal, handleCloseInventoryModal,
     ]);
 };

@@ -2,7 +2,7 @@
 import { IMAGE_PATHS } from '../../constants/paths';
 
 export const specialItems = {
-    gem: { name: "Редкий самоцвет", description: "Драгоценный камень, используемый в самых дорогих изделиях." },
+    gem: { name: "Редкий самоцвет", icon: "diamond", description: "Драгоценный камень, используемый в самых дорогих изделиях." },
     expeditionMap: { name: "Карта вылазки", description: "Открывает доступ к особой локации с добычей.", cost: { sparks: 1000, ironIngots: 10 }, requiredFaction: 'adventurers', requiredRep: 'respect' },
 
     // --- КОМПОНЕНТЫ АРТЕФАКТОВ ---

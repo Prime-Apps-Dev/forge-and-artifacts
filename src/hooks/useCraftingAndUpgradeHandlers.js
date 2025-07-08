@@ -179,9 +179,29 @@ export const useCraftingAndUpgradeHandlers = ({ updateState, showToast, setCompl
             const minTimeBetweenClicks = GAME_CONFIG.DEFAULT_MIN_TIME_BETWEEN_CLICKS;
             if (now - state.lastClickTime < minTimeBetweenClicks) { return state; }
             state.lastClickTime = now;
+
+            let playerEpoch = 1;
+            if (state.purchasedSkills.adamantiteMining) playerEpoch = 7;
+            else if (state.purchasedSkills.mithrilProspecting) playerEpoch = 5;
+            else if (state.purchasedSkills.artOfAlloys) playerEpoch = 3;
+            else if (state.purchasedSkills.findCopper) playerEpoch = 2;
+
+            const oreEpochKey = oreType.replace('Ore', 'Ingots');
+            const oreEpoch = GAME_CONFIG.EPOCH_DEFINITIONS[oreEpochKey] || 1;
+            const epochDifference = playerEpoch - oreEpoch;
+            
+            let multiplier = 1.0;
+            if (epochDifference === -1) {
+                multiplier = 0.5;
+            } else if (epochDifference < -1) {
+                multiplier = 0.25;
+            }
+
+            let amountGained = state.orePerClick * multiplier;
+            
             const region = definitions.regions[state.currentRegion];
             const miningModifier = region?.modifiers?.miningSpeed?.[oreType] || 1.0;
-            let amountGained = state.orePerClick * miningModifier;
+            amountGained *= miningModifier;
 
             if (oreType === 'copperOre' && state.bonusCopperChance > 0) {
                 if (Math.random() < state.bonusCopperChance) {
@@ -414,7 +434,7 @@ export const useCraftingAndUpgradeHandlers = ({ updateState, showToast, setCompl
         handleCraftArtifact,
         handleCancelSmelt,
         handleUpgradeItem,
-        handleDisassembleItem,
+        handleDisassembleItem, 
     }), [
         handleAcceptOrder,
         handleStartFreeCraft,

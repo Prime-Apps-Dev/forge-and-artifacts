@@ -16,7 +16,7 @@ export const sharedDefinitions = {
     ],
     workstations: {
         anvil: { name: "Наковальня", icon: "hardware", maxLevel: 100, baseXpToNextLevel: 100, xpToNextLevelMultiplier: 1.1, bonusesPerLevel: { progressPerClick: 0.1, critChance: 0.001, } },
-        workbench: { name: "Верстак", icon: "handyman", maxLevel: 100, baseXpToNextLevel: 100, xpToNextLevelMultiplier: 1.1, bonusesPerLevel: { componentCostReduction: 0.05, matterModifier: 0.001, } },
+        workbench: { name: "Верстак", icon: "handyman", maxLevel: 100, baseXpToNextLevel: 100, xpToNextLevelMultiplier: 1.1, bonusesPerLevel: { matterModifier: 0.001, } },
         grindstone: { name: "Точильный станок", icon: "healing", maxLevel: 100, baseXpToNextLevel: 100, xpToNextLevelMultiplier: 1.1, bonusesPerLevel: { critBonus: 0.05, smeltingSpeedModifier: 0.001, } }
     },
 

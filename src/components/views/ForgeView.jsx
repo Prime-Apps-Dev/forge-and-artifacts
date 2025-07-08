@@ -6,8 +6,8 @@ import FreeCraftRecipeCard from '../ui/cards/FreeCraftRecipeCard';
 import InventoryItemCard from '../ui/cards/InventoryItemCard';
 import { IMAGE_PATHS } from '../../constants/paths';
 import { useGame } from '../../context/useGame.js';
-import ActiveProjectDisplay from './forge/ActiveProjectDisplay.jsx'; // Новый импорт
-import WorkstationSelector from './forge/WorkstationSelector.jsx'; // Новый импорт
+import ActiveProjectDisplay from './forge/ActiveProjectDisplay.jsx';
+import WorkstationSelector from './forge/WorkstationSelector.jsx';
 
 const ForgeView = () => {
     const { displayedGameState: gameState, handlers, isWorking } = useGame();

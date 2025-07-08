@@ -176,16 +176,16 @@ export const achievements = {
     shop_expansion: {
         id: 'shop_expansion',
         category: 'Магазин',
-        title: 'Магазинное Пространство',
-        description: 'Вы продали 5 предметов в вашем магазине. Ваше дело расширяется, и вы открываете новую торговую полку.',
-        effectName: '+1 Торговая Полка',
+        title: 'Развитие Торговли',
+        description: 'Вы успешно продали несколько товаров, заработав репутацию у покупателей. Ваше дело расширяется!',
+        effectName: '+2500 Искр',
         icon: IMAGE_PATHS.ACHIEVEMENTS.SHOP_EXPANSION,
         isOneTimeReward: true, // ФЛАГ: это разовая награда
         check: (state, defs) => {
             return { current: state.shopXP, target: 500, isComplete: state.shopXP >= 500 };
         },
         apply: (state) => {
-            state.shopShelves.push({ id: `shelf_ach_${Date.now()}_${Math.random()}`, itemId: null, customer: null, saleProgress: 0, saleTimer: 0 }); // Разовая награда
+            state.sparks += 2500; // Разовая награда
         }
     },
     novice_collector: {

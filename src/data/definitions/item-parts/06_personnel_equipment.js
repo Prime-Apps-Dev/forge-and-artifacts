@@ -3,23 +3,22 @@ import { IMAGE_PATHS } from '../../../constants/paths';
 
 export const personnelEquipment = {
     minersPickaxe: {
-        name: "Кирка шахтёра",
-        icon: IMAGE_PATHS.ITEMS.TWO_HANDED_AXE, // ЗАГЛУШКА
-        purpose: 'personnel', // Указывает, что это предмет для персонала
-        targetRole: 'miner', // Для какой роли предназначен
-        equipSlot: 'tool', // В какой слот экипируется
+        name: "Тяжелая кирка рудокопа",
+        icon: IMAGE_PATHS.ITEMS.BRONZE_GREATAXE, // Иконка секиры, похожая на кирку
+        purpose: 'personnel', 
+        targetRole: 'miner', 
+        equipSlot: 'tool', 
         maxLevel: 3,
-        bonuses: { // Бонусы 1-го уровня
+        bonuses: { 
             miningSpeed: 0.01,
         },
-        bonusesPerLevel: { // Прибавка за каждый уровень, начиная со 2-го
+        bonusesPerLevel: { 
             miningSpeed: 0.015,
         },
-        upgradeCosts: [ // Стоимость улучшения до уровня 2, 3
+        upgradeCosts: [ 
             { sparks: 1000, ironIngots: 50 },
             { sparks: 5000, bronzeIngots: 25 },
         ],
-        // Стандартные поля для крафта
         requiredSkill: 'apprenticeship', 
         baseIngot: 'ironIngots',
         baseIngotType: 'basic',
@@ -31,8 +30,8 @@ export const personnelEquipment = {
         ]
     },
     tradersLedger: {
-        name: "Счётная книга торговца",
-        icon: IMAGE_PATHS.ITEMS.SPARKSTEEL_TOOLSET, // ЗАГЛУШКА
+        name: "Торговый гроссбух",
+        icon: IMAGE_PATHS.ITEMS.SPARKSTEEL_TOOLSET, // Набор инструментов как символ учёта
         purpose: 'personnel',
         targetRole: 'trader',
         equipSlot: 'tool',

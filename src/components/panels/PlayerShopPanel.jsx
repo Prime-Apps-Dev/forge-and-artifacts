@@ -4,8 +4,9 @@ import { definitions } from '../../data/definitions/index.js';
 import ShopUpgradeButton from '../ui/buttons/ShopUpgradeButton';
 import Tooltip from '../ui/display/Tooltip';
 import { getItemImageSrc } from '../../utils/helpers';
-import { useGame } from '../../context/useGame.js'; // ИЗМЕНЕН ПУТЬ ИМПОРТА
+import { useGame } from '../../context/useGame.js';
 import Button from '../ui/buttons/Button.jsx';
+import { formatNumber } from '../../utils/formatters.jsx';
 
 const ShopShelf = ({ shelf, index, isSelected, onSelect }) => {
     const { displayedGameState: gameState, handlers } = useGame();
@@ -19,7 +20,7 @@ const ShopShelf = ({ shelf, index, isSelected, onSelect }) => {
     
     if (!item) {
         return (
-            <div className="h-full bg-black/20 border-2 border-dashed border-gray-700 rounded-lg flex items-center justify-center relative min-h-[220px]">
+            <div className="h-full bg-black/20 border-2 border-dashed border-gray-700 rounded-lg flex items-center justify-center relative min-h-[220px] w-48 flex-shrink-0">
                 {assignedTrader && (
                     <div className="absolute top-1 left-1 z-10">
                          <Tooltip text={`Торговец: ${assignedTrader.name} (Ур. ${assignedTrader.level})`}>
@@ -45,14 +46,14 @@ const ShopShelf = ({ shelf, index, isSelected, onSelect }) => {
     const comfortableQuality = 1.0 + (eloquenceLevel * 0.5);
     const showQualityWarning = item.quality > comfortableQuality;
     
-    const baseValue = itemDef.components.reduce((sum, c) => sum + c.progress, 0);
-    const requiredProgress = (baseValue * item.quality) * definitions.gameConfig.SALE_REQUIRED_PROGRESS_MULTIPLIER;
+    const qualityPenalty = 1 + Math.max(0, item.quality - gameState.maxComfortableQuality);
+    const requiredProgress = shelf.marketPrice * definitions.gameConfig.SALE_REQUIRED_PROGRESS_MULTIPLIER * qualityPenalty;
     const saleProgressPercentage = (shelf.saleProgress / Math.max(50, requiredProgress)) * 100;
 
     return (
         <div 
             onClick={() => onSelect(index)}
-            className={`bg-black/40 border rounded-lg p-3 flex flex-col text-center items-center transition-all duration-300 relative cursor-pointer min-h-[220px] ${borderColor}`}
+            className={`bg-black/40 border rounded-lg p-3 flex flex-col text-center items-center transition-all duration-300 relative cursor-pointer min-h-[220px] w-48 flex-shrink-0 ${borderColor}`}
         >
             {assignedTrader && (
                 <div className="absolute top-1 left-1 z-10">
@@ -94,8 +95,8 @@ const ShopShelf = ({ shelf, index, isSelected, onSelect }) => {
                                 </div>
                             </div>
                             <div className="flex items-center text-xs text-gray-400 gap-1 flex-shrink-0">
-                                <span className="material-icons-outlined text-base">timer</span>
-                                <span>{Math.ceil(shelf.saleTimer)}с</span>
+                                <span className="material-icons-outlined text-sm">timer</span>
+                                <span className="text-xs">{Math.ceil(shelf.saleTimer)}с</span>
                             </div>
                         </div>
                         
@@ -110,15 +111,26 @@ const ShopShelf = ({ shelf, index, isSelected, onSelect }) => {
                         </div>
                     </div>
                 ) : (
-                     <div className="h-full flex items-end">
-                        <Button
-                            onClick={(e) => { e.stopPropagation(); handlers.handleRemoveItemFromShelf(item.uniqueId); }}
-                            disabled={!!gameState.activeOrder || !!gameState.activeFreeCraft || !!gameState.currentEpicOrder}
-                            variant="danger"
-                            className="py-1 text-sm bg-red-800/70 hover:enabled:bg-red-700"
-                        >
-                            Убрать с полки
-                        </Button>
+                     <div className="h-full flex flex-col items-center justify-end gap-2">
+                        <div className="text-center">
+                            <p className="text-xs text-gray-400">Цена:</p>
+                            <p className="font-bold text-lg text-white">{formatNumber(shelf.userPrice)}</p>
+                        </div>
+                        <div className="flex gap-1 w-full">
+                            {gameState.purchasedSkills.marketInsight && (
+                                <Button onClick={(e) => { e.stopPropagation(); handlers.handleOpenSetPriceModal(index); }} variant="secondary" className="py-1 text-sm grow">
+                                    <span className="material-icons-outlined text-base">sell</span>
+                                </Button>
+                            )}
+                            <Button
+                                onClick={(e) => { e.stopPropagation(); handlers.handleRemoveItemFromShelf(item.uniqueId); }}
+                                disabled={!!gameState.activeOrder || !!gameState.activeFreeCraft || !!gameState.currentEpicOrder}
+                                variant="danger"
+                                className="py-1 text-sm grow"
+                            >
+                                <span className="material-icons-outlined text-base">inventory_2</span>
+                            </Button>
+                        </div>
                     </div>
                 )}
             </div>
@@ -148,7 +160,7 @@ const PlayerShopPanel = () => {
             <p className="text-gray-400 text-sm mb-4">Выставляйте предметы на продажу. Когда появится клиент, у вас будет ограниченное время, чтобы обслужить его быстрыми кликами! Назначенные торговцы будут делать это за вас.</p>
             
             <h4 className="font-cinzel text-orange-400 text-lg mb-3">Торговые Полки ({gameState.shopShelves.filter(s => s.itemId !== null).length}/{gameState.shopShelves.length})</h4>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-flow-col auto-cols-max gap-4 overflow-x-auto pb-3">
                 {gameState.shopShelves.map((shelf, index) => (
                     <ShopShelf 
                         key={shelf.id || index} 

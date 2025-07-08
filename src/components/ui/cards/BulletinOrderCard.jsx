@@ -1,7 +1,7 @@
 // src/components/ui/cards/BulletinOrderCard.jsx
 import React from 'react';
 import { definitions } from '../../../data/definitions';
-import { useGame } from '../../../context/useGame.js'; // ИЗМЕНЕН ПУТЬ ИМПОРТА
+import { useGame } from '../../../context/useGame.js';
 import { formatCostsJsx } from '../../../utils/formatters';
 import Button from '../buttons/Button';
 
@@ -32,7 +32,7 @@ const RequirementLine = ({ req }) => {
 };
 
 const BulletinOrderCard = ({ order }) => {
-    const { handlers } = useGame();
+    const { handlers, displayedGameState: gameState } = useGame();
 
     const handleAccept = () => {
         handlers.handleAcceptBulletinQuest(order.id);
@@ -56,7 +56,7 @@ const BulletinOrderCard = ({ order }) => {
                 <div>
                     <h4 className="font-bold text-base text-gray-200 mb-2">Награда:</h4>
                     <div className="flex flex-col gap-2">
-                        {formatCostsJsx(order.reward, {})}
+                        {formatCostsJsx(order.reward, gameState)}
                     </div>
                 </div>
                 <div className="mt-4">

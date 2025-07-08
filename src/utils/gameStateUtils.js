@@ -36,11 +36,13 @@ export function recalculateAllModifiers(state) {
     state.bonusCopperChance = 0;
     state.multitouchEnabled = false;
     state.unlockedFeatures = { ...(state.unlockedFeatures || {}), bulletinBoard: false };
+    state.maxComfortableQuality = 1.2;
+    state.maxMatterTip = 10;
+
 
     // ДОБАВЛЕНО: Применяем бонусы Наследия
     if (state.legacyStats?.passiveBonuses) {
         state.passiveGeneration.ore = (state.passiveGeneration.ore || 0) + (state.legacyStats.passiveBonuses.ore || 0);
-        // Примечание: пассивный доход руды от наследия будет добавляться ко всем типам руды в игровом цикле.
         state.passiveGeneration.sparks = (state.passiveGeneration.sparks || 0) + (state.legacyStats.passiveBonuses.sparks || 0);
         state.passiveGeneration.matter = (state.passiveGeneration.matter || 0) + (state.legacyStats.passiveBonuses.matter || 0);
     }
@@ -167,6 +169,28 @@ export function recalculateAllModifiers(state) {
             }
         }
     });
+
+    // Бонусы от экипировки игрока
+    if (state.playerEquipment) {
+        Object.values(state.playerEquipment).forEach(itemId => {
+            if (itemId) {
+                const item = state.inventory.find(i => i.uniqueId === itemId);
+                if (item) {
+                    const itemDef = definitions.items[item.itemKey];
+                    if (itemDef?.bonuses) {
+                         for (const bonusKey in itemDef.bonuses) {
+                            state[bonusKey] = (state[bonusKey] || 0) + itemDef.bonuses[bonusKey];
+                        }
+                    }
+                    if (item.level > 1 && itemDef?.bonusesPerLevel) {
+                        for(const bonusKey in itemDef.bonusesPerLevel) {
+                            state[bonusKey] = (state[bonusKey] || 0) + (itemDef.bonusesPerLevel[bonusKey] * (item.level - 1));
+                        }
+                    }
+                }
+            }
+        });
+    }
 
     // Бонусы от нанятого персонала
     state.hiredPersonnel.forEach(p => {

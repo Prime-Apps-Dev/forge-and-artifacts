@@ -382,7 +382,7 @@ const ManagePersonnelModal = ({ personnelId, onClose }) => {
                                             onClick={() => handlers.handlePersonnelAction(personnel.uniqueId, 'give_gift', itemKey)}
                                         >
                                             <p className="mb-1">{itemDef.name}</p>
-                                            ({formatCostsJsx(cost, gameState)})
+                                            {formatCostsJsx(cost, gameState)}
                                         </Button>
                                     );
                                 })}

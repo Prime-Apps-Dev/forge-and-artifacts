@@ -306,9 +306,8 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                                     xpGained = progressAdded * GAME_CONFIG.PERSONNEL_XP_PER_SALE_PROGRESS;
                                     const item = state.inventory.find(i => i.uniqueId === shelf.itemId);
                                     if (item) {
-                                        const itemDef = definitions.items[item.itemKey];
-                                        const baseValue = itemDef.components.reduce((sum, c) => sum + c.progress, 0);
-                                        const requiredProgress = (baseValue * item.quality) * GAME_CONFIG.SALE_REQUIRED_PROGRESS_MULTIPLIER;
+                                        const qualityPenalty = 1 + Math.max(0, item.quality - state.maxComfortableQuality);
+                                        const requiredProgress = shelf.marketPrice * GAME_CONFIG.SALE_REQUIRED_PROGRESS_MULTIPLIER * qualityPenalty;
                                         if (shelf.saleProgress >= Math.max(50, requiredProgress)) {
                                             handleSaleCompletion(state, shelfIndex, showToast);
                                         }
@@ -391,9 +390,12 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                         showToast("Клиент ушел, не дождавшись обслуживания!", "error");
                     }
                 } else if (shelf.itemId) {
-                    if (Math.random() < (0.005 * state.playerShopSalesSpeedModifier)) {
+                    const priceDeviation = shelf.marketPrice > 0 ? (shelf.userPrice / shelf.marketPrice) : 1;
+                    const chanceModifier = Math.max(0.1, Math.min(5, 1 / priceDeviation));
+                    if (Math.random() < (0.005 * state.playerShopSalesSpeedModifier * chanceModifier)) {
                         shelf.customer = definitions.clients[Math.floor(Math.random() * definitions.clients.length)];
-                        shelf.saleTimer = (15 + Math.random() * 15) * state.timeLimitModifier;
+                        const timeModifier = priceDeviation;
+                        shelf.saleTimer = (15 + Math.random() * 15) * state.timeLimitModifier * timeModifier;
                         showToast(`Новый клиент интересуется товаром на полке #${index + 1}!`, "info");
                     }
                 }
@@ -410,34 +412,30 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                 return true;
             });
             
-            // --- ИСПРАВЛЕННАЯ ЛОГИКА ПРОВЕРКИ ДОСТИЖЕНИЙ ---
             achievementCheckTimer += deltaTime;
-            if (achievementCheckTimer >= 1) { // Проверяем раз в секунду
+            if (achievementCheckTimer >= 1) { 
                 achievementCheckTimer = 0;
                 Object.values(definitions.achievements).forEach(achievementDef => {
                     const status = achievementDef.check(state, definitions);
                     
-                    if (achievementDef.levels) { // Логика для многоуровневых достижений
+                    if (achievementDef.levels) { 
                         state.appliedAchievementLevels = state.appliedAchievementLevels || {};
                         const lastAppliedLevel = state.appliedAchievementLevels[achievementDef.id] || 0;
 
                         if (status.currentLevel > lastAppliedLevel) {
-                            // Применяем награды для всех новых достигнутых уровней
                             for (let i = lastAppliedLevel; i < status.currentLevel; i++) {
                                 const levelRewardData = achievementDef.levels[i];
                                 if (levelRewardData && levelRewardData.reward) {
                                     achievementDef.apply(state, levelRewardData.reward);
-                                    // Показываем модальное окно с наградой для конкретного уровня
                                     showAchievementRewardModal({ ...achievementDef, effectName: levelRewardData.effectName });
                                 }
                             }
                             state.appliedAchievementLevels[achievementDef.id] = status.currentLevel;
                             recalculateAllModifiers(state);
                         }
-                    } else { // Логика для одноразовых достижений
+                    } else { 
                         if (status.isComplete && !state.completedAchievements.includes(achievementDef.id)) {
                             state.completedAchievements.push(achievementDef.id);
-                            // Для разовых наград, применяем только если они еще не были применены
                             if (!state.appliedAchievementRewards.includes(achievementDef.id)) {
                                 if (achievementDef.apply) {
                                     achievementDef.apply(state);
@@ -450,7 +448,6 @@ export function startGameLoop(updateState, handlers, showToast, showAchievementR
                     }
                 });
             }
-            // --- КОНЕЦ ИСПРАВЛЕННОЙ ЛОГИКИ ---
 
             marketFatigueCheckTimer += deltaTime;
             if (marketFatigueCheckTimer >= 1) { 
@@ -520,7 +517,7 @@ export function generateNewOrder(state, showToast) {
     const availableClients = definitions.clients.filter(c => state.masteryLevel >= c.unlockLevel && (!c.unlockSkill || state.purchasedSkills[c.unlockSkill]));
     if (availableClients.length === 0) return state;
     const client = availableClients[Math.floor(Math.random() * availableClients.length)];
-    const availableItems = Object.entries(definitions.items).filter(([id, def]) => !def.isQuestRecipe && (!def.requiredSkill || state.purchasedSkills[def.requiredSkill]) && (!def.firstPlaythroughLocked || !state.isFirstPlaythrough));
+    const availableItems = Object.entries(definitions.items).filter(([id, def]) => !def.isQuestRecipe && def.purpose !== 'personnel' && def.purpose !== 'player' && (!def.requiredSkill || state.purchasedSkills[def.requiredSkill]) && (!def.firstPlaythroughLocked || !state.isFirstPlaythrough));
     if (availableItems.length === 0) return state;
     
     const [itemId, itemDef] = availableItems[Math.floor(Math.random() * availableItems.length)];
@@ -533,7 +530,10 @@ export function generateNewOrder(state, showToast) {
     const baseSparks = scaledTotalProgress * 10;
     const baseMatter = itemDef.components.length * 5 * difficultyMultiplier;
 
-    let rewards = { sparks: Math.floor(baseSparks * client.demands.reward * state.sparksModifier), matter: Math.floor(baseMatter * client.demands.reward * state.matterModifier) };
+    let rewards = { 
+        sparks: Math.floor((baseSparks / 10) * client.demands.reward * state.sparksModifier), 
+        matter: Math.floor((baseMatter / 3) * client.demands.reward * state.matterModifier) 
+    };
     let factionId = null;
     if (state.purchasedSkills.guildContracts) {
         const potentialFactions = Object.keys(definitions.factions).filter(fid => (state.reputation[fid] || 0) > 0);
@@ -563,7 +563,6 @@ export function generateNewOrder(state, showToast) {
     return state;
 }
 
-// ИСПРАВЛЕНИЕ: Убрана передача generateNewOrder как аргумента
 export function startOrderGenerationLoop(updateState, checkForNewQuestsHandler, showToast) {
     if (orderGenerationTimeout) clearTimeout(orderGenerationTimeout);
     let isRunning = false;
@@ -571,7 +570,6 @@ export function startOrderGenerationLoop(updateState, checkForNewQuestsHandler, 
         if(isRunning) return;
         isRunning = true;
         updateState(state => {
-            // ИСПРАВЛЕНО: Прямой вызов generateNewOrder
             const newState = generateNewOrder(state, showToast);
             checkForNewQuestsHandler(newState, showToast);
             return newState;

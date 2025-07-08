@@ -35,14 +35,18 @@ export function useGameState() {
     const [managingPersonnelId, setManagingPersonnelId] = useState(null);
     const [isUpgradeItemModalOpen, setIsUpgradeItemModalOpen] = useState(false);
     const [itemToUpgradeId, setItemToUpgradeId] = useState(null);
-    const [isEquipItemModalOpen, setIsEquipItemModalOpen] = useState(false);
+    const [isEquipItemModalOpen, setIsEquipItemModalOpen] = useState(false); // Для персонала
     const [personnelToEquip, setPersonnelToEquip] = useState({ id: null, slot: null });
+    const [isSetPriceModalOpen, setIsSetPriceModalOpen] = useState(false);
+    const [itemToSetPriceFor, setItemToSetPriceFor] = useState(null);
+    const [isEquipPlayerItemModalOpen, setIsEquipPlayerItemModalOpen] = useState(false); // Для игрока
+    const [playerSlotToEquip, setPlayerSlotToEquip] = useState(null);
+
 
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isInventoryOpen, setIsInventoryOpen] = useState(false);
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
     
-    // --- НОВЫЕ СОСТОЯНИЯ ДЛЯ УПРАВЛЕНИЯ МОБИЛЬНЫМ ИНТЕРФЕЙСОМ (ТЗ 2.1) ---
     const [activeMobileView, setActiveMobileView] = useState('forge');
     const [selectedMineOre, setSelectedMineOre] = useState('ironOre');
     const [selectedShopShelfIndex, setSelectedShopShelfIndex] = useState(null);
@@ -101,10 +105,11 @@ export function useGameState() {
         setManagingPersonnelId,
         setIsUpgradeItemModalOpen, setItemToUpgradeId,
         setIsEquipItemModalOpen, setPersonnelToEquip,
+        setIsSetPriceModalOpen, setItemToSetPriceFor,
+        setIsEquipPlayerItemModalOpen, setPlayerSlotToEquip,
         setIsSettingsOpen,
         setIsInventoryOpen,
         setIsProfileModalOpen,
-        // Сеттеры для нового мобильного UI
         setActiveMobileView, 
         setSelectedMineOre, 
         setSelectedShopShelfIndex
@@ -149,10 +154,11 @@ export function useGameState() {
         isManagePersonnelModalOpen, managingPersonnelId,
         isUpgradeItemModalOpen, itemToUpgradeId,
         isEquipItemModalOpen, personnelToEquip,
+        isSetPriceModalOpen, itemToSetPriceFor,
+        isEquipPlayerItemModalOpen, playerSlotToEquip,
         isSettingsOpen, isInventoryOpen, isProfileModalOpen,
         handlers, removeToast, activeInfoModal, handleInitialGesture,
         assetsLoaded, loadProgress, updateState,
-        // --- НОВЫЕ ЗНАЧЕНИЯ ДЛЯ КОНТЕКСТА ---
         activeMobileView,
         selectedMineOre,
         selectedShopShelfIndex,

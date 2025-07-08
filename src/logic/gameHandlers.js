@@ -174,7 +174,7 @@ export function createGameHandlers({
         const currentWorkstation = state.workstations[state.activeWorkstationId];
         const workstationDef = definitions.workstations[state.activeWorkstationId];
         if (currentWorkstation && workstationDef && currentWorkstation.level < workstationDef.maxLevel) {
-            currentWorkstation.xp += finalProgress;
+            currentWorkstation.xp += 1;
             if (currentWorkstation.xp >= currentWorkstation.xpToNextLevel) {
                 while (currentWorkstation.xp >= currentWorkstation.xpToNextLevel && currentWorkstation.level < workstationDef.maxLevel) {
                     currentWorkstation.xp -= currentWorkstation.xpToNextLevel;
@@ -257,9 +257,30 @@ export function createGameHandlers({
         updateState(state => {
             const project = state.activeOrder || state.activeFreeCraft;
 
-            if (state.activeReforge) { /* Reforge logic */ return state; }
-            if (state.activeInlay) { /* Inlay logic */ return state; }
-            if (state.activeGraving) { /* Graving logic */ return state; }
+            if (state.activeReforge) {
+                state.activeReforge.progress += state.progressPerClick;
+                if (state.activeReforge.progress >= state.activeReforge.requiredProgress) {
+                    handleCompleteReforge(state, state.activeReforge, showToast);
+                }
+                audioController.play('click', 'D3');
+                return state;
+            }
+            if (state.activeInlay) {
+                state.activeInlay.progress += state.progressPerClick;
+                if (state.activeInlay.progress >= state.activeInlay.requiredProgress) {
+                    handleCompleteInlay(state, state.activeInlay, showToast);
+                }
+                audioController.play('click', 'E3');
+                return state;
+            }
+            if (state.activeGraving) {
+                state.activeGraving.progress += state.progressPerClick;
+                if (state.activeGraving.progress >= state.activeGraving.requiredProgress) {
+                    handleCompleteGraving(state, state.activeGraving, showToast);
+                }
+                audioController.play('click', 'F3');
+                return state;
+            }
             if (state.currentEpicOrder) { /* Epic order logic */ return state; }
 
             if (!project) {

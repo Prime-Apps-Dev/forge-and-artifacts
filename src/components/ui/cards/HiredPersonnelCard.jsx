@@ -1,7 +1,7 @@
 // src/components/ui/cards/HiredPersonnelCard.jsx
 import React, { memo, useMemo, useState, useEffect, useRef } from 'react';
 import { definitions } from '../../../data/definitions/index.js';
-import { formatCostsJsx, formatNumber } from '../../../utils/formatters.jsx';
+import { formatCostsJsx, formatCostsString, formatNumber } from '../../../utils/formatters.jsx';
 import { gameConfig as GAME_CONFIG } from '../../../constants/gameConfig.js';
 import { useGame } from '../../../context/useGame.js';
 import ImageWithFallback from '../display/ImageWithFallback.jsx';
@@ -19,7 +19,7 @@ const ActionButton = ({ action, personnel, levelUpCost, confirmation, setConfirm
         levelUp: {
             icon: 'arrow_upward',
             color: 'orange',
-            tooltip: `Повысить уровень. Стоимость: ${levelUpCost ? formatCostsJsx(levelUpCost, gameState).map(el => el.props.children).flat().join(' ') : 'N/A'}`,
+            tooltip: `Повысить уровень. Стоимость: ${levelUpCost ? formatCostsString(levelUpCost) : 'N/A'}`,
             disabled: isMaxLevel || !canAffordLevelUp || personnel.xp < personnel.xpToNextLevel,
             handler: () => handlers.handlePersonnelLevelUp(personnel.uniqueId, levelUpCost),
             confirmText: "Повысить?"

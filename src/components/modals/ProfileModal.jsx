@@ -4,6 +4,7 @@ import { formatNumber } from '../../utils/formatters.jsx';
 import { definitions } from '../../data/definitions/index.js';
 import AchievementsPanel from '../panels/AchievementsPanel';
 import StatsPanel from '../panels/StatsPanel';
+import EquipmentPanel from '../panels/EquipmentPanel.jsx'; // НОВЫЙ ИМПОРТ
 import Tooltip from '../ui/display/Tooltip';
 import { IMAGE_PATHS } from '../../constants/paths';
 import { useGame } from '../../context/useGame.js';
@@ -104,6 +105,16 @@ const ProfileModal = ({ isOpen, onClose }) => {
         }).filter(Boolean).join(', ');
     };
 
+    const getTabTitle = () => {
+        switch(activeTab) {
+            case 'profile': return 'Профиль Мастера';
+            case 'equipment': return 'Экипировка';
+            case 'achievements': return 'Достижения';
+            case 'mastery_rewards': return 'Награды Мастерства';
+            default: return 'Профиль';
+        }
+    };
+
     return (
         <div className="fixed inset-0 bg-black/80 flex items-end justify-center md:items-center z-50 modal-backdrop" onClick={onClose}>
             <div 
@@ -111,14 +122,14 @@ const ProfileModal = ({ isOpen, onClose }) => {
                 onClick={e => e.stopPropagation()}
                 {...touchHandlers}
             >
-                {/* Mobile Drag Handle */}
                 <ModalDragHandle />
 
                 <div className="flex justify-between items-center mb-4 flex-shrink-0">
-                    <h2 className="font-cinzel text-xl md:text-2xl text-orange-400">{activeTab === 'profile' ? 'Профиль Мастера' : activeTab === 'achievements' ? 'Достижения' : 'Награды Мастерства'}</h2>
+                    <h2 className="font-cinzel text-xl md:text-2xl text-orange-400">{getTabTitle()}</h2>
                     <div className="flex items-center gap-1 md:gap-2">
                         <Tooltip text="Репутация магазина"><button onClick={() => { onClose(); handlers.handleOpenShopReputationModal();}} className="interactive-element p-2 rounded-lg material-icons-outlined text-gray-400 hover:text-white">store</button></Tooltip>
                         <Tooltip text="Профиль"><button onClick={() => setActiveTab('profile')} className={`interactive-element p-2 rounded-lg material-icons-outlined ${activeTab === 'profile' ? 'text-yellow-400' : 'text-gray-400 hover:text-white'}`}>person</button></Tooltip>
+                        <Tooltip text="Экипировка"><button onClick={() => setActiveTab('equipment')} className={`interactive-element p-2 rounded-lg material-icons-outlined ${activeTab === 'equipment' ? 'text-yellow-400' : 'text-gray-400 hover:text-white'}`}>inventory</button></Tooltip>
                         <Tooltip text="Достижения"><button onClick={() => setActiveTab('achievements')} className={`interactive-element p-2 rounded-lg material-icons-outlined ${activeTab === 'achievements' ? 'text-yellow-400' : 'text-gray-400 hover:text-white'}`}>emoji_events</button></Tooltip>
                         <Tooltip text="Награды"><button onClick={() => setActiveTab('mastery_rewards')} className={`interactive-element p-2 rounded-lg material-icons-outlined ${activeTab === 'mastery_rewards' ? 'text-yellow-400' : 'text-gray-400 hover:text-white'}`}>military_tech</button></Tooltip>
                         <button onClick={onClose} className="hidden md:block text-gray-400 hover:text-white material-icons-outlined">close</button>
@@ -135,6 +146,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
                             <StatsPanel />
                         </>
                     )}
+                    {activeTab === 'equipment' && <EquipmentPanel />}
                     {activeTab === 'achievements' && <AchievementsPanel />}
                     {activeTab === 'mastery_rewards' && (
                         <div className="w-full">
@@ -144,7 +156,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
                                 {Object.values(definitions.masteryLevelRewards).map(rewardDef => {
                                     const isClaimed = gameState.claimedMasteryLevelRewards.includes(rewardDef.id);
                                     const isAvailable = gameState.masteryLevel >= rewardDef.level && !isClaimed;
-                                    let rewardStatusText = `Ур. ${rewardDef.level}`;
+                                    let rewardStatusText = `Ур. ${levelDef.level}`;
                                     let statusColor = "text-gray-500";
                                     if (isClaimed) { rewardStatusText = "Получено"; statusColor = "text-green-400"; } 
                                     else if (isAvailable) { rewardStatusText = "Доступно!"; statusColor = "text-yellow-400 animate-pulse"; }

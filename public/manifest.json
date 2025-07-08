@@ -1,0 +1,31 @@
+{
+  "name": "Forge & Artifacts",
+  "short_name": "Forge",
+  "description": "Сага о вашем мастерстве, влиянии на мир и наследии, которое вы оставите после себя.",
+  "icons": [
+    {
+      "src": "/img/ui/anvil.webp",
+      "sizes": "192x192",
+      "type": "image/webp",
+      "purpose": "any"
+    },
+    {
+      "src": "/img/ui/anvil.webp",
+      "sizes": "512x512",
+      "type": "image/webp",
+      "purpose": "any"
+    },
+    {
+      "src": "/img/ui/anvil.webp",
+      "sizes": "192x192",
+      "type": "image/webp",
+      "purpose": "maskable"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#1f2937",
+  "background_color": "#111827",
+  "scope": "/",
+  "orientation": "portrait"
+}

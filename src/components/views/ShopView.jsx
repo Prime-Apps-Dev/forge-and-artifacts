@@ -1,20 +1,19 @@
 // src/components/views/ShopView.jsx
-import React, { useMemo } from 'react'; // Добавляем useMemo
+import React, { useMemo } from 'react';
 import { definitions } from '../../data/definitions/index.js';
 import { formatCostsJsx } from '../../utils/formatters.jsx';
 import { hasReputation } from '../../utils/helpers';
 import TradeableResource from '../ui/cards/TradeableResource';
-import { useGame } from '../../context/useGame.js'; // Используем контекст
+import { useGame } from '../../context/useGame.js';
 
 const ShopView = () => {
-    const { displayedGameState: gameState, handlers } = useGame(); // Получаем всё из контекста
+    const { displayedGameState: gameState, handlers } = useGame();
 
     const market = gameState.market;
     const currentEvent = gameState.market.worldEvent;
     const isConflict = currentEvent.type === 'faction_conflict';
     const conflictingFactions = isConflict ? currentEvent.conflictingFactions : [];
 
-    // Оборачиваем вычисление доступных чертежей в useMemo
     const availableBlueprints = useMemo(() => {
         return Object.entries(definitions.specialItems).filter(([id, item]) =>
             id.includes('blueprint') &&

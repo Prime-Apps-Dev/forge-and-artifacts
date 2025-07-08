@@ -1,5 +1,5 @@
 // src/Game.jsx
-import React, { useState, memo, useRef, useEffect, useCallback, Suspense, lazy } from 'react';
+import React, { useState, memo, useRef, useEffect, useCallback, Suspense } from 'react';
 import { useGame } from './context/useGame.js';
 import { audioController } from './utils/audioController';
 import { IMAGE_PATHS } from './constants/paths.js';
@@ -21,30 +21,32 @@ import HirePersonnelModal from './components/modals/HirePersonnelModal';
 import ManagePersonnelModal from './components/modals/ManagePersonnelModal.jsx';
 import UpgradeItemModal from './components/modals/UpgradeItemModal.jsx';
 import EquipItemModal from './components/modals/EquipItemModal.jsx';
+import EquipPlayerItemModal from './components/modals/EquipPlayerItemModal.jsx'; // НОВЫЙ ИМПОРТ
 import LoadingScreen from './components/LoadingScreen';
 import ShopReputationModal from './components/modals/ShopReputationModal.jsx';
+import SetPriceModal from './components/modals/SetPriceModal.jsx';
 import BottomBar from './components/layout/BottomBar';
 import BurgerMenu from './components/layout/BurgerMenu.jsx';
 import MobileHeader from './components/layout/MobileHeader.jsx';
 import AudioVisualizer from './components/effects/AudioVisualizer';
 import ParticleEmitter from './components/effects/ParticleEmitter';
 
-// --- ДИНАМИЧЕСКИ ЗАГРУЖАЕМЫЕ КОМПОНЕНТЫ (CODE SPLITTING) ---
-const ForgeView = lazy(() => import('./components/views/ForgeView'));
-const MineView = lazy(() => import('./components/views/MineView'));
-const SmelterView = lazy(() => import('./components/views/SmelterView'));
-const ShopView = lazy(() => import('./components/views/ShopView'));
-const SkillsView = lazy(() => import('./components/views/SkillsView'));
-const ArtifactsView = lazy(() => import('./components/views/ArtifactsView'));
-const JournalView = lazy(() => import('./components/views/JournalView'));
-const GuildView = lazy(() => import('./components/views/GuildView'));
-const BulletinBoardView = lazy(() => import('./components/views/BulletinBoardView.jsx'));
-const ResourcePanel = lazy(() => import('./components/panels/ResourcePanel'));
-const PlayerShopPanel = lazy(() => import('./components/panels/PlayerShopPanel'));
-const UpgradeShop = lazy(() => import('./components/panels/UpgradeShop'));
-const PersonnelView = lazy(() => import('./components/panels/PersonnelView'));
-const FactionsPanel = lazy(() => import('./components/panels/FactionsPanel'));
-const EternalSkillsView = lazy(() => import('./components/views/EternalSkillsView'));
+// --- ОТЛАДОЧНЫЙ ШАГ: ЗАМЕНА LAZY ИМПОРТОВ НА СТАТИЧЕСКИЕ ---
+import ForgeView from './components/views/ForgeView';
+import MineView from './components/views/MineView';
+import SmelterView from './components/views/SmelterView';
+import ShopView from './components/views/ShopView';
+import SkillsView from './components/views/SkillsView';
+import ArtifactsView from './components/views/ArtifactsView';
+import JournalView from './components/views/JournalView';
+import GuildView from './components/views/GuildView';
+import BulletinBoardView from './components/views/BulletinBoardView.jsx';
+import ResourcePanel from './components/panels/ResourcePanel';
+import PlayerShopPanel from './components/panels/PlayerShopPanel';
+import UpgradeShop from './components/panels/UpgradeShop';
+import PersonnelView from './components/panels/PersonnelView';
+import FactionsPanel from './components/panels/FactionsPanel';
+import EternalSkillsView from './components/views/EternalSkillsView';
 
 
 const useHorizontalScroll = () => {
@@ -82,16 +84,6 @@ const RightPanelButton = memo(({ id, icon, label, onClick, activeView }) => (
     </button>
 ));
 
-// --- КОМПОНЕНТ-ЗАГЛУШКА ДЛЯ SUSPENSE ---
-const SuspenseFallback = () => (
-    <div className="w-full h-full flex items-center justify-center">
-        <div className="text-center">
-            <span className="material-icons-outlined text-orange-400 text-5xl animate-spin">autorenew</span>
-            <p className="text-gray-400 mt-2">Загрузка...</p>
-        </div>
-    </div>
-);
-
 const ViewRenderer = ({ viewId }) => {
     switch (viewId) {
         case 'forge': return <ForgeView />;
@@ -115,7 +107,7 @@ const ViewRenderer = ({ viewId }) => {
 
 export default function Game() {
     const gameContext = useGame();
-    const { displayedGameState, handlers, assetsLoaded, loadProgress, activeMobileView } = gameContext;
+    const { displayedGameState: gameState, handlers, assetsLoaded, loadProgress, activeMobileView } = gameContext;
 
     const [activeLeftView, setActiveLeftView] = useState('forge');
     const [activeRightView, setActiveRightView] = useState('resources');
@@ -158,13 +150,13 @@ export default function Game() {
         { id: 'skills', icon: 'schema', label: 'Навыки' },
         { id: 'artifacts', icon: 'auto_stories', label: 'Артефакты' },
         { id: 'journal', icon: 'book', label: 'Журнал' },
-        { id: 'guild', icon: 'hub', label: 'Гильдия', condition: displayedGameState.purchasedSkills.guildContracts },
+        { id: 'guild', icon: 'hub', label: 'Гильдия', condition: gameState.purchasedSkills.guildContracts },
     ];
 
     const rightPanelViews = [
         { id: 'resources', icon: 'inventory', label: 'Ресурсы' },
         { id: 'playerShop', icon: 'shopping_bag', label: 'Мой магазин' },
-        { id: 'bulletinBoard', icon: 'article', label: 'Доска объявлений', condition: displayedGameState.unlockedFeatures?.bulletinBoard },
+        { id: 'bulletinBoard', icon: 'article', label: 'Доска объявлений', condition: gameState.unlockedFeatures?.bulletinBoard },
         { id: 'upgrades', icon: 'storefront', label: 'Улучшения' },
         { id: 'personnel', icon: 'engineering', label: 'Персонал' },
         { id: 'factions', icon: 'groups', label: 'Фракции' },
@@ -196,6 +188,8 @@ export default function Game() {
             {gameContext.isManagePersonnelModalOpen && <ManagePersonnelModal personnelId={gameContext.managingPersonnelId} onClose={handlers.handleCloseManagePersonnelModal} />}
             {gameContext.isUpgradeItemModalOpen && <UpgradeItemModal isOpen={gameContext.isUpgradeItemModalOpen} onClose={handlers.handleCloseUpgradeItemModal} itemId={gameContext.itemToUpgradeId} />}
             {gameContext.isEquipItemModalOpen && <EquipItemModal isOpen={gameContext.isEquipItemModalOpen} onClose={handlers.handleCloseEquipItemModal} personnelId={gameContext.personnelToEquip.id} equipSlot={gameContext.personnelToEquip.slot} />}
+            {gameContext.isEquipPlayerItemModalOpen && <EquipPlayerItemModal isOpen={gameContext.isEquipPlayerItemModalOpen} onClose={handlers.handleCloseEquipPlayerItemModal} equipSlot={gameContext.playerSlotToEquip} />}
+            {gameContext.isSetPriceModalOpen && <SetPriceModal isOpen={gameContext.isSetPriceModalOpen} onClose={handlers.handleCloseSetPriceModal} shelfIndex={gameContext.itemToSetPriceFor} />}
             
             <BurgerMenu isOpen={isBurgerMenuOpen} onClose={() => setIsBurgerMenuOpen(false)} onNavigate={handleViewChange} />
 
@@ -206,9 +200,7 @@ export default function Game() {
                             {leftPanelViews.map(view => (view.condition !== false) && <LeftPanelButton key={view.id} {...view} onClick={setActiveLeftView} activeView={activeLeftView} />)}
                         </div>
                         <div className="p-6 overflow-y-auto flex-grow">
-                           <Suspense fallback={<SuspenseFallback />}>
-                               <ViewRenderer viewId={activeLeftView} />
-                           </Suspense>
+                           <ViewRenderer viewId={activeLeftView} />
                         </div>
                     </div>
                     <div className="right-panel bg-gray-800/80 backdrop-blur-md border-2 border-gray-700 rounded-lg flex flex-col w-2/5">
@@ -216,9 +208,7 @@ export default function Game() {
                            {rightPanelViews.map(view => (view.condition !== false) && <RightPanelButton key={view.id} {...view} onClick={setActiveRightView} activeView={activeRightView} />)}
                         </div>
                         <div className="p-6 overflow-y-auto flex-grow">
-                           <Suspense fallback={<SuspenseFallback />}>
-                               <ViewRenderer viewId={activeRightView} />
-                           </Suspense>
+                           <ViewRenderer viewId={activeRightView} />
                         </div>
                     </div>
                 </div>
@@ -226,9 +216,7 @@ export default function Game() {
                 <div className="lg:hidden flex flex-col h-full w-full text-gray-200 z-10">
                     <MobileHeader onBurgerClick={() => setIsBurgerMenuOpen(true)} viewTitle={currentViewTitle} />
                     <div className="flex-grow overflow-y-auto p-4 pb-24">
-                        <Suspense fallback={<SuspenseFallback />}>
-                           <ViewRenderer viewId={activeMobileView} />
-                        </Suspense>
+                        <ViewRenderer viewId={activeMobileView} />
                     </div>
                 </div>
             </main>

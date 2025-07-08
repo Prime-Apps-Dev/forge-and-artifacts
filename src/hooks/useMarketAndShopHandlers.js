@@ -6,20 +6,34 @@ import { handleSaleCompletion } from '../logic/gameCompletions';
 import { gameConfig as GAME_CONFIG } from '../constants/gameConfig';
 import { audioController } from '../utils/audioController';
 import { hasReputation } from '../utils/helpers';
-import { canAffordAndPay } from '../utils/gameUtils'; // <--- НОВЫЙ ИМПОРТ
+import { canAffordAndPay } from '../utils/gameUtils';
 
-export const useMarketAndShopHandlers = ({ updateState, showToast, gameStateRef }) => { // <--- УДАЛЕН canAffordAndPay
+export const useMarketAndShopHandlers = ({ updateState, showToast, gameStateRef }) => {
 
     const handleMoveItemToShelf = useCallback((itemUniqueId) => {
         updateState(state => {
             if (state.isShopLocked) { showToast("Ваш магазин заблокирован! Попробуйте позже.", "error"); return state; }
             const emptyShelfIndex = state.shopShelves.findIndex(shelf => shelf.itemId === null);
             if (emptyShelfIndex === -1) { showToast("Все полки в магазине заняты!", 'error'); return state; }
+            
             const itemToMove = state.inventory.find(item => item.uniqueId === itemUniqueId);
             if (!itemToMove || itemToMove.location !== 'inventory') return state;
+
+            const itemDef = definitions.items[itemToMove.itemKey];
+            const baseValue = Object.values(itemToMove.stats || {}).reduce((sum, statVal) => sum + statVal, 0) * 5;
+            const marketPrice = Math.floor((baseValue * GAME_CONFIG.SALE_BASE_PRICE_MULTIPLIER) * itemToMove.quality);
+
             itemToMove.location = 'shelf';
-            state.shopShelves[emptyShelfIndex] = { id: `${Date.now()}_${Math.random()}`, itemId: itemUniqueId, customer: null, saleProgress: 0, saleTimer: 0 };
-            showToast(`Предмет "${definitions.items[itemToMove.itemKey].name}" выставлен на продажу!`, "info");
+            state.shopShelves[emptyShelfIndex] = { 
+                id: `${Date.now()}_${Math.random()}`, 
+                itemId: itemUniqueId, 
+                customer: null, 
+                saleProgress: 0, 
+                saleTimer: 0,
+                marketPrice: marketPrice,
+                userPrice: marketPrice 
+            };
+            showToast(`Предмет "${itemDef.name}" выставлен на продажу!`, "info");
             return state;
         });
     }, [updateState, showToast]);
@@ -30,11 +44,22 @@ export const useMarketAndShopHandlers = ({ updateState, showToast, gameStateRef 
             if (shelfToClearIndex === -1) return state;
             const itemToReturn = state.inventory.find(item => item.uniqueId === itemUniqueId);
             if (!itemToReturn) {
-                state.shopShelves[shelfToClearIndex] = { id: `${Date.now()}_${Math.random()}`, itemId: null, customer: null, saleProgress: 0, saleTimer: 0 }; return state;
+                state.shopShelves[shelfToClearIndex] = { id: `${Date.now()}_${Math.random()}`, itemId: null, customer: null, saleProgress: 0, saleTimer: 0, marketPrice: 0, userPrice: 0 }; 
+                return state;
             }
             itemToReturn.location = 'inventory';
-            state.shopShelves[shelfToClearIndex] = { id: `${Date.now()}_${Math.random()}`, itemId: null, customer: null, saleProgress: 0, saleTimer: 0 };
+            state.shopShelves[shelfToClearIndex] = { id: `${Date.now()}_${Math.random()}`, itemId: null, customer: null, saleProgress: 0, saleTimer: 0, marketPrice: 0, userPrice: 0 };
             showToast(`Предмет "${definitions.items[itemToReturn.itemKey].name}" убран с полки.`, "info");
+            return state;
+        });
+    }, [updateState, showToast]);
+    
+    const handleSetItemPrice = useCallback((shelfIndex, newPrice) => {
+        updateState(state => {
+            if (state.shopShelves[shelfIndex]) {
+                state.shopShelves[shelfIndex].userPrice = newPrice;
+                showToast(`Цена на "${definitions.items[state.inventory.find(i => i.uniqueId === state.shopShelves[shelfIndex].itemId).itemKey].name}" установлена: ${formatNumber(newPrice)} искр.`, 'success');
+            }
             return state;
         });
     }, [updateState, showToast]);
@@ -48,11 +73,14 @@ export const useMarketAndShopHandlers = ({ updateState, showToast, gameStateRef 
             const saleProgressPerClick = GAME_CONFIG.PROGRESS_PER_SALE_CLICK * clientSaleModifier;
             shelf.saleProgress += saleProgressPerClick;
             const item = state.inventory.find(i => i.uniqueId === shelf.itemId);
-            if (!item) { showToast("Ошибка: проданный предмет не найден в инвентаре!", "error"); state.shopShelves[shelfIndex] = { id: `${Date.now()}_${Math.random()}`, itemId: null, customer: null, saleProgress: 0, saleTimer: 0 }; return state; }
-            const itemDef = definitions.items[item.itemKey];
-            const baseValue = itemDef.components.reduce((sum, c) => sum + c.progress, 0);
-            const requiredProgress = (baseValue * item.quality) * GAME_CONFIG.SALE_REQUIRED_PROGRESS_MULTIPLIER;
-            if (shelf.saleProgress >= Math.max(50, requiredProgress)) { handleSaleCompletion(state, shelfIndex, showToast); }
+            if (!item) { showToast("Ошибка: проданный предмет не найден в инвентаре!", "error"); state.shopShelves[shelfIndex] = { id: `${Date.now()}_${Math.random()}`, itemId: null, customer: null, saleProgress: 0, saleTimer: 0, marketPrice: 0, userPrice: 0 }; return state; }
+            
+            const qualityPenalty = 1 + Math.max(0, item.quality - state.maxComfortableQuality);
+            const requiredProgress = shelf.marketPrice * GAME_CONFIG.SALE_REQUIRED_PROGRESS_MULTIPLIER * qualityPenalty;
+
+            if (shelf.saleProgress >= Math.max(50, requiredProgress)) { 
+                handleSaleCompletion(state, shelfIndex, showToast); 
+            }
             return state;
         });
     }, [updateState, showToast]);
@@ -116,6 +144,7 @@ export const useMarketAndShopHandlers = ({ updateState, showToast, gameStateRef 
     return useMemo(() => ({
         handleMoveItemToShelf,
         handleRemoveItemFromShelf,
+        handleSetItemPrice,
         handleClickSale,
         handleBuyResource,
         handleSellResource,
@@ -124,6 +153,7 @@ export const useMarketAndShopHandlers = ({ updateState, showToast, gameStateRef 
     }), [
         handleMoveItemToShelf,
         handleRemoveItemFromShelf,
+        handleSetItemPrice,
         handleClickSale,
         handleBuyResource,
         handleSellResource,

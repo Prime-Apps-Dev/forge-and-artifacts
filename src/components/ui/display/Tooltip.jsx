@@ -8,15 +8,11 @@ const Tooltip = ({ text, children }) => {
     const wrapperRef = useRef(null);
     const tooltipRef = useRef(null);
     
-    // ИСПРАВЛЕНИЕ: Этот вызов хука useRef перенесен внутрь компонента.
-    // Теперь он не нарушает "Правила Хуков".
     const isTouchDeviceRef = useRef(
         typeof window !== 'undefined' && 
         ('ontouchstart' in window || navigator.maxTouchPoints > 0)
     );
 
-    // Этот эффект вычисляет позицию tooltip ПЕРЕД тем, как браузер его отрисует.
-    // Это предотвращает "прыжки" элемента.
     useLayoutEffect(() => {
         if (isVisible && wrapperRef.current && tooltipRef.current) {
             const wrapperRect = wrapperRef.current.getBoundingClientRect();
@@ -25,21 +21,17 @@ const Tooltip = ({ text, children }) => {
                 width: window.innerWidth,
                 height: window.innerHeight
             };
-            const margin = 16; // Требуемый отступ от края экрана
+            const margin = 16; 
 
             let pos = {
-                // По умолчанию, располагаем по центру над элементом
                 top: wrapperRect.top - tooltipRect.height - 8,
                 left: wrapperRect.left + (wrapperRect.width / 2) - (tooltipRect.width / 2)
             };
 
-            // Проверка и корректировка по вертикали
-            // Если не помещается сверху, ставим снизу
             if (pos.top < margin) {
                 pos.top = wrapperRect.bottom + 8;
             }
 
-            // Проверка и корректировка по горизонтали
             if (pos.left < margin) {
                 pos.left = margin;
             } else if (pos.left + tooltipRect.width > viewport.width - margin) {
@@ -48,9 +40,8 @@ const Tooltip = ({ text, children }) => {
 
             setPosition(pos);
         }
-    }, [isVisible, text]); // Пересчитываем позицию, если изменился текст (и, возможно, размер)
+    }, [isVisible, text, children]); 
 
-    // Этот эффект отвечает за закрытие tooltip при клике вне его области
     useEffect(() => {
         if (!isTouchDeviceRef.current || !isVisible) return;
 
@@ -76,7 +67,7 @@ const Tooltip = ({ text, children }) => {
 
     const handleClick = (e) => {
         if (isTouchDeviceRef.current) {
-            e.stopPropagation(); // Предотвращаем немедленное закрытие через listener на документе
+            e.stopPropagation();
             setIsVisible(prev => !prev);
         }
     };
@@ -84,6 +75,15 @@ const Tooltip = ({ text, children }) => {
     const tooltipVisibilityClasses = isVisible
         ? 'opacity-100'
         : 'opacity-0 pointer-events-none';
+
+    // Рендерим содержимое в зависимости от типа пропа 'text'
+    const renderTooltipContent = () => {
+        if (typeof text === 'string') {
+            return <div dangerouslySetInnerHTML={{ __html: text.replace(/\n/g, '<br />') }} />;
+        }
+        // Если 'text' - это JSX или массив JSX, просто рендерим его
+        return text;
+    };
 
     return (
         <div 
@@ -106,7 +106,7 @@ const Tooltip = ({ text, children }) => {
                 `}
                 style={{ top: `${position.top}px`, left: `${position.left}px` }}
             >
-                <div dangerouslySetInnerHTML={{ __html: text.replace(/\n/g, '<br />') }} />
+                {renderTooltipContent()}
             </div>
         </div>
     );

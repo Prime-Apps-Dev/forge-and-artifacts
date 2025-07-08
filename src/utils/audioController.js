@@ -7,8 +7,8 @@ export const audioController = {
     isInitialized: false,
     synths: {},
     musicPlayer: null,
-    sfxVolume: new Tone.Volume(-10).toDestination(),
-    musicVolume: new Tone.Volume(-18).toDestination(),
+    sfxVolume: null,
+    musicVolume: null,
     meter: null,
     // --- НОВЫЕ СВОЙСТВА ---
     loadedTracks: new Set(),
@@ -19,6 +19,11 @@ export const audioController = {
 
         return Tone.start().then(() => {
             try {
+                // Создаем узлы громкости ПОСЛЕ того, как контекст был запущен
+                this.sfxVolume = new Tone.Volume(-10).toDestination();
+                this.musicVolume = new Tone.Volume(-18).toDestination();
+                
+                // Подключаем все синтезаторы к созданному узлу громкости
                 this.synths.click = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.1, sustain: 0, release: 0.1 } }).connect(this.sfxVolume);
                 this.synths.crit = new Tone.MetalSynth({ frequency: 50, envelope: { attack: 0.01, decay: 0.2, release: 0.1 }, harmonicity: 8.5, modulationIndex: 20, resonance: 4000, octaves: 1.5 }).connect(this.sfxVolume);
                 this.synths.complete = new Tone.Synth({ oscillator: { type: 'triangle' }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.5, release: 0.1 } }).connect(this.sfxVolume);
@@ -29,6 +34,7 @@ export const audioController = {
                 }).connect(this.sfxVolume);
 
                 if (!this.musicPlayer) {
+                    // Подключаем плеер к созданному узлу громкости
                     this.musicPlayer = new Tone.Player().connect(this.musicVolume);
                     this.musicPlayer.loop = false;
                     this.musicPlayer.fadeIn = 2;
@@ -132,15 +138,15 @@ export const audioController = {
     },
 
     setSfxVolume(level) {
-        if (!this.isInitialized) return;
+        if (!this.isInitialized || !this.sfxVolume) return;
         const db = level === 0 ? -Infinity : Tone.gainToDb(level / 100);
         this.sfxVolume.volume.rampTo(db, 0.1);
     },
 
     setMusicVolume(level) {
-         if (!this.isInitialized || !this.musicPlayer) return;
+         if (!this.isInitialized || !this.musicPlayer || !this.musicVolume) return;
          const db = level === 0 ? -Infinity : Tone.gainToDb(level / 100);
-         this.musicPlayer.volume.rampTo(db, 0.1);
+         this.musicVolume.volume.rampTo(db, 0.1);
          if (level > 0 && this.musicPlayer.state === 'stopped' && this.isInitialized) {
              this.playNextTrack();
          }

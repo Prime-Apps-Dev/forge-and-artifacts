@@ -184,11 +184,14 @@ export function handleSaleCompletion(state, shelfIndex, showToast) {
     if (!shelf || !shelf.itemId) return;
     const itemSold = state.inventory.find(item => item.uniqueId === shelf.itemId);
     if (!itemSold) {
-        state.shopShelves[shelfIndex] = { id: `shelf_${shelfIndex}`, itemId: null, customer: null, saleProgress: 0, saleTimer: 0 };
+        state.shopShelves[shelfIndex] = { id: `shelf_${shelfIndex}`, itemId: null, customer: null, saleProgress: 0, saleTimer: 0, marketPrice: 0, userPrice: 0 };
         return;
     }
     const itemDef = definitions.items[itemSold.itemKey];
-    const baseValue = Object.values(itemSold.stats || {}).reduce((sum, statVal) => sum + statVal, 0) * 5;
+    
+    const salePrice = shelf.userPrice;
+    state.sparks += salePrice;
+    state.totalSparksEarned += salePrice;
 
     const now = Date.now();
     const itemKey = itemSold.itemKey;
@@ -217,15 +220,6 @@ export function handleSaleCompletion(state, shelfIndex, showToast) {
         }
     });
 
-    let priceMultiplier = 1.0;
-    if (state.marketPricePenalties[itemKey] && state.marketPricePenalties[itemKey].endTime > now) {
-        priceMultiplier = 1.0 - state.marketPricePenalties[itemKey].penalty;
-    }
-
-    const salePrice = Math.floor((baseValue * GAME_CONFIG.SALE_BASE_PRICE_MULTIPLIER) * itemSold.quality * priceMultiplier);
-    state.sparks += salePrice;
-    state.totalSparksEarned += salePrice;
-    
     const assignmentEntry = Object.entries(state.personnelAssignment).find(
         ([pId, assignment]) => assignment.role === 'trader' && assignment.assignment === `shelf_${shelfIndex}`
     );
@@ -240,10 +234,17 @@ export function handleSaleCompletion(state, shelfIndex, showToast) {
     const client = shelf.customer;
     const tipChance = (client?.demands?.tipChance || 0) + (state.tipChance || 0);
     if (Math.random() < tipChance) {
-        const tipAmount = Math.floor(salePrice * 0.1);
-        state.sparks += tipAmount;
-        state.totalSparksEarned += tipAmount;
-        showToast(`Клиент в восторге! Вы получили ${formatNumber(tipAmount)} искр в качестве чаевых!`, 'crit');
+        const tipAmountSparks = Math.floor(salePrice * 0.1);
+        state.sparks += tipAmountSparks;
+        state.totalSparksEarned += tipAmountSparks;
+        showToast(`Клиент в восторге! Вы получили ${formatNumber(tipAmountSparks)} искр в качестве чаевых!`, 'crit');
+
+        if (state.purchasedSkills.marketInsight) {
+            const maxMatterTip = state.maxMatterTip || 10;
+            const tipAmountMatter = Math.floor(Math.random() * maxMatterTip) + 1;
+            state.matter += tipAmountMatter;
+            showToast(`...и ${formatNumber(tipAmountMatter)} материи!`, 'crit');
+        }
     }
     state.shopXP = (state.shopXP || 0) + GAME_CONFIG.SHOP_REPUTATION_XP_PER_SALE;
     const nextShopLevelDef = definitions.shopLevels.find(lvl => lvl.level === state.shopLevel + 1);
@@ -258,7 +259,7 @@ export function handleSaleCompletion(state, shelfIndex, showToast) {
     xpEarned = Math.floor(xpEarned * (state.masteryXpModifier || 1.0));
     updateMastery(state, xpEarned, showToast);
     state.inventory = state.inventory.filter(item => item.uniqueId !== shelf.itemId);
-    state.shopShelves[shelfIndex] = { id: `shelf_${shelfIndex}`, itemId: null, customer: null, saleProgress: 0, saleTimer: 0 };
+    state.shopShelves[shelfIndex] = { id: `shelf_${shelfIndex}`, itemId: null, customer: null, saleProgress: 0, saleTimer: 0, marketPrice: 0, userPrice: 0 };
     showToast(`Продан "${itemDef.name}" за ${formatNumber(salePrice)} искр!`, 'success');
     audioController.play('cash', 'C5', '16n');
     checkForNewQuests(state, showToast);

@@ -13,9 +13,10 @@ export const initialGameState = {
     inventory: [], 
     inventoryCapacity: 8,
     shopShelves: [
-        { id: 'shelf_0', itemId: null, customer: null, saleProgress: 0, saleTimer: 0 },
-        { id: 'shelf_1', itemId: null, customer: null, saleProgress: 0, saleTimer: 0 }
+        { id: 'shelf_0', itemId: null, customer: null, saleProgress: 0, saleTimer: 0, marketPrice: 0, userPrice: 0 },
+        { id: 'shelf_1', itemId: null, customer: null, saleProgress: 0, saleTimer: 0, marketPrice: 0, userPrice: 0 }
     ],
+    playerEquipment: { tool: null, gear: null, accessory1: null, accessory2: null, accessory3: null },
     passiveGeneration: { ironOre: 0, copperOre: 0, mithrilOre: 0, adamantiteOre: 0, sparks: 0, matter: 0 },
     orderQueue: [],
     activeOrder: null,
@@ -43,7 +44,19 @@ export const initialGameState = {
     purchasedSkills: {},
     reputation: { merchants: 0, adventurers: 0, court: 0 },
     market: {
-        prices: { ironOre: { buy: 5, sell: 2 }, copperOre: { buy: 12, sell: 6 }, mithrilOre: { buy: 40, sell: 25 }, adamantiteOre: { buy: 100, sell: 60}, ironIngots: { buy: 25, sell: 15 }, copperIngots: { buy: 50, sell: 30 }, bronzeIngots: { buy: 100, sell: 70 }, sparksteelIngots: { buy: 200, sell: 150 }, mithrilIngots: { buy: 500, sell: 350 }, adamantiteIngots: { buy: 1000, sell: 600 }, arcaniteIngots: { buy: 2500, sell: 1800 } },
+        prices: {
+            ironOre: { buy: 30, sell: 5 },
+            copperOre: { buy: 90, sell: 14 },
+            mithrilOre: { buy: 40, sell: 25 },
+            adamantiteOre: { buy: 100, sell: 60 },
+            ironIngots: { buy: 100, sell: 15 },
+            copperIngots: { buy: 300, sell: 45 },
+            bronzeIngots: { buy: 900, sell: 135 },
+            sparksteelIngots: { buy: 2700, sell: 405 },
+            mithrilIngots: { buy: 8100, sell: 1215 },
+            adamantiteIngots: { buy: 24300, sell: 3645 },
+            arcaniteIngots: { buy: 72900, sell: 10935 }
+        },
         worldEvent: { id: 'stable', message: "Рынок стабилен", effects: {}, endTime: 0 },
         nextEventIn: 300
     },
@@ -82,7 +95,7 @@ export const initialGameState = {
     questRewardModifier: 1.0,
     completedAchievements: [],
     appliedAchievementRewards: [],
-    appliedAchievementLevels: {}, // НОВОЕ СВОЙСТВО
+    appliedAchievementLevels: {}, 
     totalItemsCrafted: 0,
     totalIngotsSmelted: 0,
     totalClicks: 0,
@@ -144,7 +157,9 @@ export const initialGameState = {
             sparks: 0,
             matter: 0,
         }
-    }
+    },
+    maxComfortableQuality: 1.2,
+    maxMatterTip: 10,
 };
 
 function b64DecodeUnicode(str) {
@@ -161,10 +176,10 @@ function b64DecodeUnicode(str) {
 export function useGameStateLoader(showToast) {
     const [displayedGameState, setDisplayedGameState] = useState(() => {
         let savedState = localStorage.getItem('forgeAndArtifacts_v10');
-        let savedLegacyStats = localStorage.getItem('forgeAndArtifacts_v10_legacy'); // ДОБАВЛЕНО
+        let savedLegacyStats = localStorage.getItem('forgeAndArtifacts_v10_legacy'); 
         
         let parsed = {};
-        let parsedLegacy = {}; // ДОБАВЛЕНО
+        let parsedLegacy = {}; 
 
         if (savedState) {
             try {
@@ -178,12 +193,11 @@ export function useGameStateLoader(showToast) {
                 console.error("Failed to parse saved state, could be corrupted or old version:", e);
                 showToast("Ошибка загрузки сохранения! Загружена новая игра.", "error");
                 localStorage.removeItem('forgeAndArtifacts_v10');
-                localStorage.removeItem('forgeAndArtifacts_v10_legacy'); // ДОБАВЛЕНО: Очищаем и наследие
+                localStorage.removeItem('forgeAndArtifacts_v10_legacy');
                 return initialGameState;
             }
         }
         
-        // ДОБАВЛЕНО: Загрузка данных Наследия
         if (savedLegacyStats) {
              try {
                 const decodedLegacy = b64DecodeUnicode(savedLegacyStats);
@@ -201,13 +215,11 @@ export function useGameStateLoader(showToast) {
 
         const tempState = JSON.parse(JSON.stringify(initialGameState));
         
-        // ДОБАВЛЕНО: Интегрируем загруженное наследие
         if(parsedLegacy) {
             tempState.legacyStats = { ...initialGameState.legacyStats, ...parsedLegacy };
         }
 
         Object.keys(initialGameState).forEach(key => {
-            // ИСКЛЮЧЕНИЕ: Не перезаписываем legacyStats, если они уже загружены
             if (key === 'legacyStats') return;
 
             if (parsed[key] === undefined) {
